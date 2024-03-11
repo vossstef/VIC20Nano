@@ -1,8 +1,8 @@
 # VIC20Nano
-The VIC20Nano is a port of the
-[MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) 
+The VIC20Nano is a port of some
+[MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
 [ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) to the 
-[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k)<br>with VHDL top level and HDMI Video and Audio Output.<br><br>
+[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br><br>
 Original VIC-20 core by MikeJ (Mike Johnson) and T65 WoS (Wolfgang Scherr)<br>
 All HID and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
 c1541 by https://github.com/darfpga<br>
