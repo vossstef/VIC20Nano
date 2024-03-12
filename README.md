@@ -18,6 +18,8 @@ Features:
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card<br>
 * c1541 DOS ROM selection (CBM DOS)
 * On Screen Display (OSD) for configuration and D64 image selection<br>
+* 3K, 8K, 16K, 24K RAM Expansion<br>
+* 8K RAM at $A000 as loadable Cartridge Slot<br>
 <br>
 <img src="./.assets/vic20nano.png" alt="image" width="80%" height="auto">
 <br>
@@ -42,6 +44,16 @@ LIST<br>
 Load first program from Disk:<br> 
 LOAD"*",8<br>
 RUN<br>
+
+## loadable Cartridge RAM Slot
+Some Cartridge based games can be be simply loaded from a [VIC20](https://vic20reloaded.com) D64 Disk Image.<br>
+Example: 16 k Cartridge Game<br>
+Enable RAM Expansion at $2000 (or $6000) and $A000<br>
+Save setting and do a Cold Boot Reset.<br>
+``` LOAD "xyz.200",8,1```   (Block 1)<br>
+``` LOAD "xyz.A00",8,1```   (Block 5)<br>
+Start Game by command: SYS40960 (general start Address for Cartridge)<br>
+There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart.<br> At the moment a loaded Cartridge can only be exited by a Power Cycle of the TN20k to clean the memory.<br>
 
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>

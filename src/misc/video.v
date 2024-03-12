@@ -42,9 +42,9 @@ module video (
 /* -------------------- HDMI video and audio -------------------- */
 
 reg vic20_en = 0;
-always @(negedge clk) begin
-	reg [1:0] div;
+reg [1:0] div = 0;
 
+always @(negedge clk) begin
 	div <= div + 1'd1;
 	vic20_en <= !div;
 end
