@@ -928,6 +928,7 @@ module_inst: entity work.sysctrl
   system_i_ram_ext3   => i_ram_ext(3),
   system_i_ram_ext4   => i_ram_ext(4),
   system_i_center     => i_center,
+  system_crt_write    => open,
 
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),

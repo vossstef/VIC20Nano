@@ -43,7 +43,8 @@ module sysctrl (
   output reg        system_i_ram_ext2,
   output reg        system_i_ram_ext3,
   output reg        system_i_ram_ext4,
-  output reg [1:0]  system_i_center
+  output reg [1:0]  system_i_center,
+  output reg        system_crt_write
 );
 
 reg [3:0] state;
@@ -78,7 +79,7 @@ always @(posedge clk) begin
       system_volume <= 2'b10;
       system_wide_screen <= 1'b0;
       system_floppy_wprot <= 2'b00;
-      system_port_1 <= 3'b111;  // Off
+      system_port_1 <= 3'b000;
       system_dos_sel <= 2'b00;
       system_video_std <= 1'b0;
       system_i_ram_ext0 <= 1'b0;
@@ -87,6 +88,7 @@ always @(posedge clk) begin
       system_i_ram_ext3 <= 1'b0;
       system_i_ram_ext4 <= 1'b0;
       system_i_center <= 2'b00;
+      system_crt_write <= 1'b1;
 
    end else begin
       int_ack <= 8'h00;
@@ -167,7 +169,8 @@ always @(posedge clk) begin
                     if(id == "G") system_i_ram_ext4 <= data_in[0];
                     // display center
                     if(id == "J") system_i_center <= data_in[1:0];
-
+                    // crt writeable
+                    if(id == "V") system_crt_write <= data_in[0];
                 end
             end
 
