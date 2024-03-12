@@ -42,7 +42,8 @@ module sysctrl (
   output reg        system_i_ram_ext1,
   output reg        system_i_ram_ext2,
   output reg        system_i_ram_ext3,
-  output reg        system_i_ram_ext4
+  output reg        system_i_ram_ext4,
+  output reg [1:0]  system_i_center
 );
 
 reg [3:0] state;
@@ -85,6 +86,7 @@ always @(posedge clk) begin
       system_i_ram_ext2 <= 1'b0;
       system_i_ram_ext3 <= 1'b0;
       system_i_ram_ext4 <= 1'b0;
+      system_i_center <= 2'b00;
 
    end else begin
       int_ack <= 8'h00;
@@ -163,6 +165,9 @@ always @(posedge clk) begin
                     if(id == "N") system_i_ram_ext3 <= data_in[0];
                     // 8k $A
                     if(id == "G") system_i_ram_ext4 <= data_in[0];
+                    // display center
+                    if(id == "J") system_i_center <= data_in[1:0];
+
                 end
             end
 

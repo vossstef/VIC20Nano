@@ -262,6 +262,7 @@ signal vic_audio       : std_logic_vector(5 downto 0);
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal i_ram_ext       : std_logic_vector(4 downto 0) := "11111";
+signal i_center        : std_logic_vector(1 downto 0);
 
 component CLKDIV
     generic (
@@ -540,6 +541,7 @@ port map(
       clk          => clk32,
       clk_pixel_x5 => clk_pixel_x5,
       audio_div    => audio_div,
+      
       v20_en       => v20_en,
 
       ntscmode  => ntscMode,
@@ -610,7 +612,7 @@ dram_inst: entity work.sdram8
     sd_ras    => O_sdram_ras_n, -- row address select
     sd_cas    => O_sdram_cas_n, -- columns address select
     -- cpu/chipset interface
-    clk       => clk64,         -- sdram is accessed at 64MHz
+    clk       => clk32,         -- sdram is accessed at 32MHz
     reset_n   => pll_locked,    -- init signal after FPGA config to initialize RAM
     ready     => ram_ready,     -- ram is ready and has been initialized
     refresh   => idle,          -- chipset requests a refresh cycle
@@ -925,6 +927,7 @@ module_inst: entity work.sysctrl
   system_i_ram_ext2   => i_ram_ext(2),
   system_i_ram_ext3   => i_ram_ext(3),
   system_i_ram_ext4   => i_ram_ext(4),
+  system_i_center     => i_center,
 
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
@@ -974,26 +977,26 @@ port map(
 vic_inst: entity work.VIC20
 	port map(
 		--
-		i_sysclk     => clk32,
-		i_sysclk_en  => v20_en,
-		i_reset      => system_reset(0) or not pll_locked,
-		o_p2h        => open,
+		i_sysclk      => clk32,
+		i_sysclk_en   => v20_en,
+		i_reset       => system_reset(0) or not pll_locked,
+		o_p2h         => open,
 
 		-- serial bus pins
-		atn_o        => iec_atn_o,
-		clk_o        => iec_clk_o,
-		clk_i        => iec_clk_i,
-		data_o       => iec_data_o,
-		data_i       => iec_data_i,
+		atn_o         => iec_atn_o,
+		clk_o         => iec_clk_o,
+		clk_i         => iec_clk_i,
+		data_o        => iec_data_o,
+		data_i        => iec_data_i,
 		--
-		i_joy        => joyA(3 downto 0), -- 0 up, 1 down, 2 left,  3 right
-		i_fire       => joyA(4),          -- all low active
-		i_potx       => pot1,
-		i_poty       => pot2,
+		i_joy         => not joyA(3 downto 0), -- 0 up, 1 down, 2 left,  3 right
+		i_fire        => not joyA(4),          -- all low active
+		i_potx        => pot1,
+		i_poty        => pot2,
 
 		--
-		i_ram_ext_ro => (others => '0'), -- read-only region if set
-		i_ram_ext    => i_ram_ext,       -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
+		i_ram_ext_ro  => (others => '0'), -- read-only region if set
+		i_ram_ext     => i_ram_ext,       -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
 		--
 		i_extmem_en   => '0',
 		o_extmem_sel  => open,
@@ -1007,37 +1010,37 @@ vic_inst: entity work.VIC20
 		o_blk5_sel    => open,
 		o_ram123_sel  => open,
 		--
-		o_ce_pix     => open,
-		o_video_r    => video_r,
-		o_video_g    => video_g,
-		o_video_b    => video_b,
-		o_hsync      => hsync,
-		o_vsync      => vsync,
-		o_hblank     => hblank,
-		o_vblank     => vblank,
-		i_center     => "00",
-		i_pal        => not ntscMode,
-		i_wide       => '0',
+		o_ce_pix      => open,
+		o_video_r     => video_r,
+		o_video_g     => video_g,
+		o_video_b     => video_b,
+		o_hsync       => hsync,
+		o_vsync       => vsync,
+		o_hblank      => hblank,
+		o_vblank      => vblank,
+		i_center      => i_center,
+		i_pal         => not ntscMode,
+		i_wide        => '0',
 		--
-		ps2_key      => (others => '0'),
+		ps2_key       => (others => '0'),
   -- keyboard interface
     keyboard_matrix_out => keyboard_matrix_out,
     keyboard_matrix_in  => keyboard_matrix_in,
-		tape_play    => open,
+		tape_play     => open,
 		--
-		o_audio      => vic_audio,
+		o_audio       => vic_audio,
 
-		cass_write   => open,
-		cass_read    => '0',
-		cass_motor   => open,
-		cass_sw      => '0',
+		cass_write    => open,
+		cass_read     => '1',
+		cass_motor    => open,
+		cass_sw       => '1',
 
 		--configures "embedded" core memory
-		rom_std      => '1',
-		conf_clk     => clk32,
-		conf_wr      => '0',
-		conf_ai      => (others => '0'),
-		conf_di      => (others => '0')
+		rom_std       => '1',
+		conf_clk      => clk32,
+		conf_wr       => '0',
+		conf_ai       => (others => '0'),
+		conf_di       => (others => '0')
 	);
 
 end Behavioral_top;
