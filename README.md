@@ -1,10 +1,10 @@
 # VIC20Nano
-The VIC20Nano is a port of some
+The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
 [ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) to the 
 [Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br><br>
 Original VIC-20 core by MikeJ (Mike Johnson) and T65 WoS (Wolfgang Scherr)<br>
-All HID and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
+All HID, SDcard and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
 c1541 by https://github.com/darfpga<br>
 
 Features:
@@ -12,11 +12,11 @@ Features:
 * USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)
 * USB Joystick via µC
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type) [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
-* Joystick emulation on Keyboard Numpad<br>
+* Joystick emulation on Keyboard [Numpad](https://en.wikipedia.org/wiki/Numeric_keypad)<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card<br>
-* c1541 DOS ROM selection (CBM DOS)
+* c1541 DOS ROM selection
 * On Screen Display (OSD) for configuration and D64 image selection<br>
 * 3K, 8K, 16K, 24K RAM Expansion<br>
 * 8K RAM at $A000 as loadable Cartridge Slot<br>
@@ -44,17 +44,30 @@ LIST<br>
 Load first program from Disk:<br> 
 LOAD"*",8<br>
 RUN<br>
+JiffyDOS can be used as well known Speedloader. You have to convert the Jiffy Kernal JiffyDOS_VIC-20.bin into a MI file, update the gowin_prom_kernal.ipc with the IP Generator and synthesize the Project + update the TN. Change in OSD the c1541 DOS to Jiffy too.<br>
+
+## RAM Expansion
+Size and Region can be activated in several steps.
+|Expansion| $0400 3k | $2000 8k |$4000 8k |$6000 8k |
+| - | - | - |- |- |
+| Block | 0 | 1 |2 |3 |
+| 3k | x | - |- |- |
+| 8k | -  | x  |- |- |
+| 16k | -  | x |x |- |
+| 24k | -  | x  |x |x |
+| 32k | x  | x  |x |x |
 
 ## loadable Cartridge RAM Slot
 Some Cartridge based games can be be simply loaded from a [VIC20](https://vic20reloaded.com) D64 Disk Image.<br>
 Example: 16 k Cartridge Game<br>
 Enable RAM Expansion at $2000 (or $6000) and $A000<br>
+Leave OSD setting CRT writeable setting as enabled.
 Save setting and do a Cold Boot Reset.<br>
 ``` LOAD "xyz.200",8,1```   (Block 1)<br>
 ``` or LOAD "xyz.600",8,1```   (Block 3)<br>
 ``` LOAD "xyz.A00",8,1```   (Block 5)<br>
-Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br>
-There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart.<br> At the moment a loaded Cartridge can only be exited by a Power Cycle of the TN20k to clean the memory.<br>
+Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br> or better perform a Reset via OSD.<br>
+There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart.<br> A loaded Cartridge can be exited by disabling memory region $A000 + Reset via OSD.<br>
 
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>
@@ -67,6 +80,8 @@ invoke by F12 keypress<br>
 * Audio Volume + / -<br>
 * Scanlines effect %<br>
 * Widescreen activation<br>
+* Screen centering<br>
+* PAL / NTSC Video mode<br>
 * HID device selection for Joystick Port<br>
 * RAM Expansion $A000(8k), $6000(8k), $4000(8k), $2000(8k), $0400(3k)<br>
 * Cartridge Write protection<br>
@@ -74,7 +89,6 @@ invoke by F12 keypress<br>
 * c1541 Disk write protetcion<br>
 * c1541 Reset<br>
 * c1541 DOS ROM selection<br>
-* PAL / NTSC Video mode<br>
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: Retro D9<br>
@@ -125,6 +139,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
+Alternatively use the command line build script gw_sh.exe build_tn20k.tcl<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## HW circuit considerations
