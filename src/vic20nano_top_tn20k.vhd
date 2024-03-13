@@ -262,7 +262,9 @@ signal vic_audio       : std_logic_vector(5 downto 0);
 signal IDSEL           : std_logic_vector(5 downto 0);
 signal FBDSEL          : std_logic_vector(5 downto 0);
 signal i_ram_ext       : std_logic_vector(4 downto 0) := "11111";
+signal i_ram_ext_ro    : std_logic_vector(4 downto 0);
 signal i_center        : std_logic_vector(1 downto 0);
+signal crt_writeable   : std_logic; 
 
 component CLKDIV
     generic (
@@ -928,7 +930,7 @@ module_inst: entity work.sysctrl
   system_i_ram_ext3   => i_ram_ext(3),
   system_i_ram_ext4   => i_ram_ext(4),
   system_i_center     => i_center,
-  system_crt_write    => open,
+  system_crt_write    => crt_writeable,
 
   int_out_n           => m0s(4),
   int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
@@ -975,6 +977,8 @@ port map(
     mspi_do   => mspi_do
 );
 
+i_ram_ext_ro <= "00000" when crt_writeable = '1' else "11111";
+
 vic_inst: entity work.VIC20
 	port map(
 		--
@@ -996,8 +1000,8 @@ vic_inst: entity work.VIC20
 		i_poty        => pot2,
 
 		--
-		i_ram_ext_ro  => (others => '0'), -- read-only region if set
-		i_ram_ext     => i_ram_ext,       -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
+		i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set
+		i_ram_ext     => i_ram_ext,    -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
 		--
 		i_extmem_en   => '0',
 		o_extmem_sel  => open,

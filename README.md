@@ -51,8 +51,9 @@ Example: 16 k Cartridge Game<br>
 Enable RAM Expansion at $2000 (or $6000) and $A000<br>
 Save setting and do a Cold Boot Reset.<br>
 ``` LOAD "xyz.200",8,1```   (Block 1)<br>
+``` or LOAD "xyz.600",8,1```   (Block 3)<br>
 ``` LOAD "xyz.A00",8,1```   (Block 5)<br>
-Start Game by command: SYS40960 (general start Address for Cartridge)<br>
+Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br>
 There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart.<br> At the moment a loaded Cartridge can only be exited by a Power Cycle of the TN20k to clean the memory.<br>
 
 ## Push Button utilization
@@ -67,7 +68,8 @@ invoke by F12 keypress<br>
 * Scanlines effect %<br>
 * Widescreen activation<br>
 * HID device selection for Joystick Port<br>
-* RAM Expansion $6000(8k), $4000(8k), $2000(8k), $0400(3k)<br>
+* RAM Expansion $A000(8k), $6000(8k), $4000(8k), $2000(8k), $0400(3k)<br>
+* Cartridge Write protection<br>
 * c1541 Drive disk image selection<br>
 * c1541 Disk write protetcion<br>
 * c1541 Reset<br>
