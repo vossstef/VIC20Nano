@@ -37,7 +37,6 @@ The installation of VIC20 Nano on the Tang Nano 20k board can be done using a Li
 Emulated 1541 on a regular FAT/exFAT formatted microSD card.<br>
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
 Add further D64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
-c1541 **CBM DOS** ROM to be selected from OSD and saved !<br>
 Disk directory listing:<br> 
 LOAD"$",8<br>
 LIST<br> 
