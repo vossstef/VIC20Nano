@@ -2,10 +2,12 @@
 The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
 [ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) to the 
-[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br><br>
-Original VIC-20 core by MikeJ (Mike Johnson) and T65 WoS (Wolfgang Scherr)<br>
-All HID, SDcard and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by Till Harbaum<br>
-c1541 by https://github.com/darfpga<br>
+[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br>
+It has also been ported to the [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) too (no Dualshock 2, no Paddles and no Retro DB9 Joystick support).<br>
+
+Original VIC-20 core by [MikeJ (Mike Johnson)](https://www.fpgaarcade.com/author/mikej/) and [WoS (Wolfgang Scherr)](https://www.researchgate.net/profile/Wolfgang_Scherr2)<br>
+All HID, SDcard and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by [Till Harbaum](http://www.harbaum.org/till/mist)<br>
+c1541 by [darfpga](https://github.com/darfpga)<br>
 
 Features:
 * PAL 832x576p@50Hz or NTSC 800x480p@60Hz HDMI Video and Audio Output
@@ -24,7 +26,7 @@ Features:
 <img src="./.assets/vic20nano.png" alt="image" width="80%" height="auto">
 <br>
 
-HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw).<br> Basically BL616 µC acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
+HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw).<br> Basically BL616 µC on the Sipeed M0S Dock acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
 
 **Note** PROJECT IS STILL WORK IN PROGRESS
 <br>
@@ -32,6 +34,9 @@ HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl6
 
 The installation of VIC20 Nano on the Tang Nano 20k board can be done using a Linux PC or a Windows PC
 [Instruction](INSTALLATION_WINDOWS.md).<br>
+
+## VIC20Nano on Tang Primer 25K
+See [Tang Primer 25K](TANG_PRIMER_25K.md)
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card.<br>
@@ -46,7 +51,7 @@ RUN<br>
 JiffyDOS can be used as well known Speedloader. You have to convert the Jiffy Kernal JiffyDOS_VIC-20.bin into a MI file, update the gowin_prom_kernal.ipc with the IP Generator and synthesize the Project + update the TN. Change in OSD the c1541 DOS to Jiffy too.<br>
 
 ## RAM Expansion
-Size and Region can be activated in several steps.
+Size and Region can be activated in several steps. A change takes effect immediately.
 |Expansion| $0400 3k | $2000 8k |$4000 8k |$6000 8k |
 | - | - | - |- |- |
 | Block | 0 | 1 |2 |3 |
@@ -66,7 +71,7 @@ Save setting and do a Cold Boot Reset.<br>
 ``` or LOAD "xyz.600",8,1```   (Block 3)<br>
 ``` LOAD "xyz.A00",8,1```   (Block 5)<br>
 Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br> or better perform a Reset via OSD.<br>
-There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart.<br> A loaded Cartridge can be exited by disabling memory region $A000 + Reset via OSD.<br>
+There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart.<br> A loaded Cartridge can be exited by disabling memory region $A000 + Reset via OSD. In order to trial another game just activate again (after reset !) the $A000 memory and load another game.
 
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>
@@ -138,7 +143,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-Alternatively use the command line build script gw_sh.exe build_tn20k.tcl<br>
+Alternatively use the command line build script gw_sh.exe build_tn20k.tcl or build_tp25k.tcl<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## HW circuit considerations
@@ -182,6 +187,12 @@ see pin configuration in .cst configuration file
 In order to use this Design the following things are needed:
 
 [Sipeed Tang Nano 20k](https://wiki.sipeed.com/nano20k) <br>
+or [Sipeed Tang Primer 25k](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)<br>
+and [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI)<br>
+and [PMOD TF-CARD](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD)<br>
+and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
+and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)
+or ad hoc wiring + soldering.<br>
 [Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
 microSD or microSDHC card FAT/exFAT formatted<br>
 TFT Monitor with HDMI Input and Speaker<br>
