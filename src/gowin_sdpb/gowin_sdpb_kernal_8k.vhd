@@ -1,47 +1,71 @@
 --Copyright (C)2014-2024 Gowin Semiconductor Corporation.
 --All rights reserved.
 --File Title: IP file
---Tool Version: V1.9.9.01 (64-bit)
+--Tool Version: V1.9.9.02
 --Part Number: GW2AR-LV18QN88C8/I7
 --Device: GW2AR-18
 --Device Version: C
---Created Time: Wed Feb 28 23:51:28 2024
+--Created Time: Mon May  6 12:13:18 2024
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-entity Gowin_pROM_kernal is
+entity Gowin_SDPB_kernal_8k is
     port (
         dout: out std_logic_vector(7 downto 0);
-        clk: in std_logic;
+        clka: in std_logic;
+        cea: in std_logic;
+        reseta: in std_logic;
+        clkb: in std_logic;
+        ceb: in std_logic;
+        resetb: in std_logic;
         oce: in std_logic;
-        ce: in std_logic;
-        reset: in std_logic;
-        ad: in std_logic_vector(12 downto 0)
+        ada: in std_logic_vector(12 downto 0);
+        din: in std_logic_vector(7 downto 0);
+        adb: in std_logic_vector(12 downto 0)
     );
-end Gowin_pROM_kernal;
+end Gowin_SDPB_kernal_8k;
 
-architecture Behavioral of Gowin_pROM_kernal is
+architecture Behavioral of Gowin_SDPB_kernal_8k is
 
-    signal prom_inst_0_dout_w: std_logic_vector(29 downto 0);
-    signal prom_inst_1_dout_w: std_logic_vector(29 downto 0);
-    signal prom_inst_2_dout_w: std_logic_vector(29 downto 0);
-    signal prom_inst_3_dout_w: std_logic_vector(29 downto 0);
+    signal sdpb_inst_0_dout_w: std_logic_vector(29 downto 0);
+    signal sdpb_inst_1_dout_w: std_logic_vector(29 downto 0);
+    signal sdpb_inst_2_dout_w: std_logic_vector(29 downto 0);
+    signal sdpb_inst_3_dout_w: std_logic_vector(29 downto 0);
     signal gw_gnd: std_logic;
-    signal prom_inst_0_AD_i: std_logic_vector(13 downto 0);
-    signal prom_inst_0_DO_o: std_logic_vector(31 downto 0);
-    signal prom_inst_1_AD_i: std_logic_vector(13 downto 0);
-    signal prom_inst_1_DO_o: std_logic_vector(31 downto 0);
-    signal prom_inst_2_AD_i: std_logic_vector(13 downto 0);
-    signal prom_inst_2_DO_o: std_logic_vector(31 downto 0);
-    signal prom_inst_3_AD_i: std_logic_vector(13 downto 0);
-    signal prom_inst_3_DO_o: std_logic_vector(31 downto 0);
+    signal sdpb_inst_0_BLKSELA_i: std_logic_vector(2 downto 0);
+    signal sdpb_inst_0_BLKSELB_i: std_logic_vector(2 downto 0);
+    signal sdpb_inst_0_ADA_i: std_logic_vector(13 downto 0);
+    signal sdpb_inst_0_DI_i: std_logic_vector(31 downto 0);
+    signal sdpb_inst_0_ADB_i: std_logic_vector(13 downto 0);
+    signal sdpb_inst_0_DO_o: std_logic_vector(31 downto 0);
+    signal sdpb_inst_1_BLKSELA_i: std_logic_vector(2 downto 0);
+    signal sdpb_inst_1_BLKSELB_i: std_logic_vector(2 downto 0);
+    signal sdpb_inst_1_ADA_i: std_logic_vector(13 downto 0);
+    signal sdpb_inst_1_DI_i: std_logic_vector(31 downto 0);
+    signal sdpb_inst_1_ADB_i: std_logic_vector(13 downto 0);
+    signal sdpb_inst_1_DO_o: std_logic_vector(31 downto 0);
+    signal sdpb_inst_2_BLKSELA_i: std_logic_vector(2 downto 0);
+    signal sdpb_inst_2_BLKSELB_i: std_logic_vector(2 downto 0);
+    signal sdpb_inst_2_ADA_i: std_logic_vector(13 downto 0);
+    signal sdpb_inst_2_DI_i: std_logic_vector(31 downto 0);
+    signal sdpb_inst_2_ADB_i: std_logic_vector(13 downto 0);
+    signal sdpb_inst_2_DO_o: std_logic_vector(31 downto 0);
+    signal sdpb_inst_3_BLKSELA_i: std_logic_vector(2 downto 0);
+    signal sdpb_inst_3_BLKSELB_i: std_logic_vector(2 downto 0);
+    signal sdpb_inst_3_ADA_i: std_logic_vector(13 downto 0);
+    signal sdpb_inst_3_DI_i: std_logic_vector(31 downto 0);
+    signal sdpb_inst_3_ADB_i: std_logic_vector(13 downto 0);
+    signal sdpb_inst_3_DO_o: std_logic_vector(31 downto 0);
 
     --component declaration
-    component pROM
+    component SDPB
         generic (
-            READ_MODE: in bit :='0';
-            BIT_WIDTH: in integer := 1;
+            READ_MODE: in bit := '0';
+            BIT_WIDTH_0: in integer :=16;
+            BIT_WIDTH_1: in integer :=16;
+            BLK_SEL_0: in bit_vector := "000";
+            BLK_SEL_1: in bit_vector := "000";
             RESET_MODE: in string := "SYNC";
             INIT_RAM_00: in bit_vector := X"0000000000000000000000000000000000000000000000000000000000000000";
             INIT_RAM_01: in bit_vector := X"0000000000000000000000000000000000000000000000000000000000000000";
@@ -110,35 +134,61 @@ architecture Behavioral of Gowin_pROM_kernal is
         );
         port (
             DO: out std_logic_vector(31 downto 0);
-            CLK: in std_logic;
+            CLKA: in std_logic;
+            CEA: in std_logic;
+            RESETA: in std_logic;
+            CLKB: in std_logic;
+            CEB: in std_logic;
+            RESETB: in std_logic;
             OCE: in std_logic;
-            CE: in std_logic;
-            RESET: in std_logic;
-            AD: in std_logic_vector(13 downto 0)
+            BLKSELA: in std_logic_vector(2 downto 0);
+            BLKSELB: in std_logic_vector(2 downto 0);
+            ADA: in std_logic_vector(13 downto 0);
+            DI: in std_logic_vector(31 downto 0);
+            ADB: in std_logic_vector(13 downto 0)
         );
     end component;
 
 begin
     gw_gnd <= '0';
 
-    prom_inst_0_AD_i <= ad(12 downto 0) & gw_gnd;
-    dout(1 downto 0) <= prom_inst_0_DO_o(1 downto 0) ;
-    prom_inst_0_dout_w(29 downto 0) <= prom_inst_0_DO_o(31 downto 2) ;
-    prom_inst_1_AD_i <= ad(12 downto 0) & gw_gnd;
-    dout(3 downto 2) <= prom_inst_1_DO_o(1 downto 0) ;
-    prom_inst_1_dout_w(29 downto 0) <= prom_inst_1_DO_o(31 downto 2) ;
-    prom_inst_2_AD_i <= ad(12 downto 0) & gw_gnd;
-    dout(5 downto 4) <= prom_inst_2_DO_o(1 downto 0) ;
-    prom_inst_2_dout_w(29 downto 0) <= prom_inst_2_DO_o(31 downto 2) ;
-    prom_inst_3_AD_i <= ad(12 downto 0) & gw_gnd;
-    dout(7 downto 6) <= prom_inst_3_DO_o(1 downto 0) ;
-    prom_inst_3_dout_w(29 downto 0) <= prom_inst_3_DO_o(31 downto 2) ;
+    sdpb_inst_0_BLKSELA_i <= gw_gnd & gw_gnd & gw_gnd;
+    sdpb_inst_0_BLKSELB_i <= gw_gnd & gw_gnd & gw_gnd;
+    sdpb_inst_0_ADA_i <= ada(12 downto 0) & gw_gnd;
+    sdpb_inst_0_DI_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & din(1 downto 0);
+    sdpb_inst_0_ADB_i <= adb(12 downto 0) & gw_gnd;
+    dout(1 downto 0) <= sdpb_inst_0_DO_o(1 downto 0) ;
+    sdpb_inst_0_dout_w(29 downto 0) <= sdpb_inst_0_DO_o(31 downto 2) ;
+    sdpb_inst_1_BLKSELA_i <= gw_gnd & gw_gnd & gw_gnd;
+    sdpb_inst_1_BLKSELB_i <= gw_gnd & gw_gnd & gw_gnd;
+    sdpb_inst_1_ADA_i <= ada(12 downto 0) & gw_gnd;
+    sdpb_inst_1_DI_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & din(3 downto 2);
+    sdpb_inst_1_ADB_i <= adb(12 downto 0) & gw_gnd;
+    dout(3 downto 2) <= sdpb_inst_1_DO_o(1 downto 0) ;
+    sdpb_inst_1_dout_w(29 downto 0) <= sdpb_inst_1_DO_o(31 downto 2) ;
+    sdpb_inst_2_BLKSELA_i <= gw_gnd & gw_gnd & gw_gnd;
+    sdpb_inst_2_BLKSELB_i <= gw_gnd & gw_gnd & gw_gnd;
+    sdpb_inst_2_ADA_i <= ada(12 downto 0) & gw_gnd;
+    sdpb_inst_2_DI_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & din(5 downto 4);
+    sdpb_inst_2_ADB_i <= adb(12 downto 0) & gw_gnd;
+    dout(5 downto 4) <= sdpb_inst_2_DO_o(1 downto 0) ;
+    sdpb_inst_2_dout_w(29 downto 0) <= sdpb_inst_2_DO_o(31 downto 2) ;
+    sdpb_inst_3_BLKSELA_i <= gw_gnd & gw_gnd & gw_gnd;
+    sdpb_inst_3_BLKSELB_i <= gw_gnd & gw_gnd & gw_gnd;
+    sdpb_inst_3_ADA_i <= ada(12 downto 0) & gw_gnd;
+    sdpb_inst_3_DI_i <= gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & gw_gnd & din(7 downto 6);
+    sdpb_inst_3_ADB_i <= adb(12 downto 0) & gw_gnd;
+    dout(7 downto 6) <= sdpb_inst_3_DO_o(1 downto 0) ;
+    sdpb_inst_3_dout_w(29 downto 0) <= sdpb_inst_3_DO_o(31 downto 2) ;
 
-    prom_inst_0: pROM
+    sdpb_inst_0: SDPB
         generic map (
             READ_MODE => '0',
-            BIT_WIDTH => 2,
+            BIT_WIDTH_0 => 2,
+            BIT_WIDTH_1 => 2,
             RESET_MODE => "SYNC",
+            BLK_SEL_0 => "000",
+            BLK_SEL_1 => "000",
             INIT_RAM_00 => X"C85114858216A01357C8580348837885243448C1C0C1949151585314D020C153",
             INIT_RAM_01 => X"CE0C1C038C5115912D1EA5963036009E034059364064990CAF030C2408403804",
             INIT_RAM_02 => X"F0A27340E952445130D8650F4E36C400E36C4F4D17C600C08E00D08F00E0CA8A",
@@ -205,19 +255,29 @@ begin
             INIT_RAM_3F => X"E69FF418530C38C30F24638C38C38C38920B20B30A20D2CE28B28828718FFF0E"
         )
         port map (
-            DO => prom_inst_0_DO_o,
-            CLK => clk,
+            DO => sdpb_inst_0_DO_o,
+            CLKA => clka,
+            CEA => cea,
+            RESETA => reseta,
+            CLKB => clkb,
+            CEB => ceb,
+            RESETB => resetb,
             OCE => oce,
-            CE => ce,
-            RESET => reset,
-            AD => prom_inst_0_AD_i
+            BLKSELA => sdpb_inst_0_BLKSELA_i,
+            BLKSELB => sdpb_inst_0_BLKSELB_i,
+            ADA => sdpb_inst_0_ADA_i,
+            DI => sdpb_inst_0_DI_i,
+            ADB => sdpb_inst_0_ADB_i
         );
 
-    prom_inst_1: pROM
+    sdpb_inst_1: SDPB
         generic map (
             READ_MODE => '0',
-            BIT_WIDTH => 2,
+            BIT_WIDTH_0 => 2,
+            BIT_WIDTH_1 => 2,
             RESET_MODE => "SYNC",
+            BLK_SEL_0 => "000",
+            BLK_SEL_1 => "000",
             INIT_RAM_00 => X"41181A11A044428542411AC188A1A81128B484C6D20154A44652280A5F240A1F",
             INIT_RAM_01 => X"359429C22412115251511515903A80A802835084214210411C0138128961143A",
             INIT_RAM_02 => X"D322534D99024B2138ADD003E3CF3E1E3CF3E3E2894E00D04D0CE00F08C17C09",
@@ -284,19 +344,29 @@ begin
             INIT_RAM_3F => X"CCEFF4DB5D73CB2D35D74C71C30CF3CBEF3DF7DF7DF7EFFBF3CFFCF7DF3FFC71"
         )
         port map (
-            DO => prom_inst_1_DO_o,
-            CLK => clk,
+            DO => sdpb_inst_1_DO_o,
+            CLKA => clka,
+            CEA => cea,
+            RESETA => reseta,
+            CLKB => clkb,
+            CEB => ceb,
+            RESETB => resetb,
             OCE => oce,
-            CE => ce,
-            RESET => reset,
-            AD => prom_inst_1_AD_i
+            BLKSELA => sdpb_inst_1_BLKSELA_i,
+            BLKSELB => sdpb_inst_1_BLKSELB_i,
+            ADA => sdpb_inst_1_ADA_i,
+            DI => sdpb_inst_1_DI_i,
+            ADB => sdpb_inst_1_ADB_i
         );
 
-    prom_inst_2: pROM
+    sdpb_inst_2: SDPB
         generic map (
             READ_MODE => '0',
-            BIT_WIDTH => 2,
+            BIT_WIDTH_0 => 2,
+            BIT_WIDTH_1 => 2,
             RESET_MODE => "SYNC",
+            BLK_SEL_0 => "000",
+            BLK_SEL_1 => "000",
             INIT_RAM_00 => X"ACC049EE6BB3853A3D2CC609A66992CC9EA0A662796C6D266EC82FC9249610A4",
             INIT_RAM_01 => X"8CC1C5089682CA8288AA88AA6A89AA2688A88B22CA2C8B288FA7DA0E8CDA6099",
             INIT_RAM_02 => X"F99C9F6AA2980A29F6AAA9A02000001A0820808229E0A7EA7CA7CABCABD8C618",
@@ -363,19 +433,29 @@ begin
             INIT_RAM_3F => X"FEEFF82083C28A2B8E3CC0A28A286186C34D24920B28938930F20838D34FFC61"
         )
         port map (
-            DO => prom_inst_2_DO_o,
-            CLK => clk,
+            DO => sdpb_inst_2_DO_o,
+            CLKA => clka,
+            CEA => cea,
+            RESETA => reseta,
+            CLKB => clkb,
+            CEB => ceb,
+            RESETB => resetb,
             OCE => oce,
-            CE => ce,
-            RESET => reset,
-            AD => prom_inst_2_AD_i
+            BLKSELA => sdpb_inst_2_BLKSELA_i,
+            BLKSELB => sdpb_inst_2_BLKSELB_i,
+            ADA => sdpb_inst_2_ADA_i,
+            DI => sdpb_inst_2_DI_i,
+            ADB => sdpb_inst_2_ADB_i
         );
 
-    prom_inst_3: pROM
+    sdpb_inst_3: SDPB
         generic map (
             READ_MODE => '0',
-            BIT_WIDTH => 2,
+            BIT_WIDTH_0 => 2,
+            BIT_WIDTH_1 => 2,
             RESET_MODE => "SYNC",
+            BLK_SEL_0 => "000",
+            BLK_SEL_1 => "000",
             INIT_RAM_00 => X"466C8466C199CED99BC66C49B4C1BC667858B4EEE3466CD9998933E42F3C2B6C",
             INIT_RAM_01 => X"5223FF4ABC6A666266666666D3AB0EAE0ABD62D8898B62222F0C30184527DC9B",
             INIT_RAM_02 => X"E08C9BC222F08826BC222F1090820804082090967BCE1EF1EF1EF1EF1EF3123B",
@@ -442,12 +522,19 @@ begin
             INIT_RAM_3F => X"DCEFFC71C71041075D75D41041041041D75D71C71F7DC75C79D7DF75D75FFC10"
         )
         port map (
-            DO => prom_inst_3_DO_o,
-            CLK => clk,
+            DO => sdpb_inst_3_DO_o,
+            CLKA => clka,
+            CEA => cea,
+            RESETA => reseta,
+            CLKB => clkb,
+            CEB => ceb,
+            RESETB => resetb,
             OCE => oce,
-            CE => ce,
-            RESET => reset,
-            AD => prom_inst_3_AD_i
+            BLKSELA => sdpb_inst_3_BLKSELA_i,
+            BLKSELB => sdpb_inst_3_BLKSELB_i,
+            ADA => sdpb_inst_3_ADA_i,
+            DI => sdpb_inst_3_DI_i,
+            ADB => sdpb_inst_3_ADB_i
         );
 
-end Behavioral; --Gowin_pROM_kernal
+end Behavioral; --Gowin_SDPB_kernal_8k
