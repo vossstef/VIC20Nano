@@ -39,7 +39,7 @@ add_file src/gowin_dpb/gowin_dpb_2k.vhd
 add_file src/gowin_dpb/gowin_dpb_8k.vhd
 add_file src/gowin_prom/gowin_prom_basic.vhd
 add_file src/gowin_prom/gowin_prom_char.vhd
-add_file src/gowin_prom/gowin_prom_kernal.vhd
+add_file src/gowin_sdpb/gowin_sdpb_kernal_8k.vhd
 add_file src/gowin_sp/gowin_sp_2k.vhd
 add_file src/gowin_sp/gowin_sp_8k.vhd
 add_file src/m6522.vhd
@@ -58,6 +58,7 @@ add_file src/vic20_keyboard.vhd
 add_file src/vic20nano_top_tn20k.vhd
 add_file src/vic20nano_top_tn20k.cst
 add_file src/vic20nano_top_tn20k.sdc
+add_file src/loader_sd_card.sv
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name vic20nano_tn20k
@@ -66,7 +67,6 @@ set_option -vhdl_std vhd2008
 set_option -top_module VIC20_TOP
 set_option -use_mspi_as_gpio 1
 set_option -use_sspi_as_gpio 1
-set_option -loading_rate 10000000
 set_option -print_all_synthesis_warning 1
 set_option -rw_check_on_ram 0
 set_option -gen_text_timing_rpt 1

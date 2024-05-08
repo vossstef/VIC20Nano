@@ -898,36 +898,35 @@ port map (
   pal_rom_dout_dl <= "11111111";
   ntsc_rom_dout_o <= pal_rom_dout_o;
 
---	kernal_loadable_rom_gw5a: entity work.Gowin_SDPB_kernal_8k_gw5a
---    port map (
---        dout => pal_rom_dout_o,
---        clka => conf_clk,
---        cea => conf_en_s,
---        clkb => i_sysclk,
---        ceb => '1',
---        reset => '0',
---        oce => '1',
---        ada => conf_ai(12 downto 0),
---        din => conf_di
---        adb => c_addr(12 downto 0),
---		);
-
-	conf_en_s <= '1' when conf_wr = '1' and CONF_AI(15 DOWNTO 13) = "111" else '0';
-
-	kernal_loadable_rom: entity work.Gowin_SDPB_kernal_8k
+	kernal_loadable_rom_gw5a: entity work.Gowin_SDPB_kernal_8k_gw5a
     port map (
-        clkb => i_sysclk,
-        ceb => '1',
-        resetb => '0',
         dout => pal_rom_dout_o,
-        adb => c_addr(12 downto 0),
-        oce => '1',
-        reseta => '0',
         clka => conf_clk,
         cea => conf_en_s,
+        clkb => i_sysclk,
+        ceb => '1',
+        reset => '0',
+        oce => '1',
         ada => conf_ai(12 downto 0),
-        din => conf_di
-    );
+        din => conf_di,
+        adb => c_addr(12 downto 0)
+		);
+
+	conf_en_s <= '1' when conf_wr = '1' and CONF_AI(15 DOWNTO 13) = "111" else '0';
+--	kernal_loadable_rom: entity work.Gowin_SDPB_kernal_8k
+--    port map (
+--        clkb => i_sysclk,
+--        ceb => '1',
+--        resetb => '0',
+--        dout => pal_rom_dout_o,
+--        adb => c_addr(12 downto 0),
+--        oce => '1',
+--        reseta => '0',
+--        clka => conf_clk,
+--        cea => conf_en_s,
+--        ada => conf_ai(12 downto 0),
+--        din => conf_di
+--    );
 
 --  kernal_rom_pal_o : entity work.gen_rom
 --    generic map ("rtl/roms/kernal.901486-07.mif", 13)

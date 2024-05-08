@@ -18,9 +18,12 @@ Features:
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Sticks as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation (analog mode)<br>
 * emulated [1541 Diskdrive](https://en.wikipedia.org/wiki/Commodore_1541) on FAT/extFAT microSD card<br>
-* c1541 DOS ROM selection
+* C1541 DOS ROM selection
+* Cartridge ROM (*.PRG) loader
+* Direct BASIC program file (*.PRG) injection loader
+* Loadable 8K Kernal ROM (*.BIN)
 * On Screen Display (OSD) for configuration and D64 image selection<br>
-* 3K, 8K, 16K, 24K RAM Expansion<br>
+* 3K, 8K, 16K, 24K, 32K RAM Expansion<br>
 * 8K RAM at $A000 as loadable Cartridge Slot<br>
 <br>
 <img src="./.assets/vic20nano.png" alt="image" width="80%" height="auto">
@@ -48,7 +51,7 @@ LIST<br>
 Load first program from Disk:<br> 
 LOAD"*",8<br>
 RUN<br>
-JiffyDOS can be used as well known Speedloader. You have to convert the Jiffy Kernal JiffyDOS_VIC-20.bin into a MI file, update the gowin_prom_kernal.ipc with the IP Generator and synthesize the Project + update the TN. Change in OSD the c1541 DOS to Jiffy too.<br>
+JiffyDOS can be used as well known Speedloader. Change in OSD the c1541 DOS to Jiffy too.<br>
 
 ## RAM Expansion
 Size and Region can be activated in several steps. A change takes effect immediately.
@@ -60,6 +63,25 @@ Size and Region can be activated in several steps. A change takes effect immedia
 | 16k | -  | x |x |- |
 | 24k | -  | x  |x |x |
 | 32k | x  | x  |x |x |
+
+## Cartridge ROM Loader (.PRG/.CRT)
+Cartrige ROM can be loaded via OSD file selection.<br>
+Be aware that the core doesn't support the VICE CRT file format (cartconv.exe).<br>
+VIC20 Cartrige ROMS with ending .PRG have a two byte header indicating the loading location.<br>
+8k Cartridges to be loadeded directly. 16k or larger Cartridges have to be loaded in several steps and the file with ending xyz-a000.prg have to be loaded last. First load xyz-2000.prg, xyz-4000.prg or xyz-6000.prg and then xyz-a000.prg at last. The Cartridge will start after that last step automatically.<br>
+Copy a 8K *.PRG ROM to your sdcard and rename it to **vic20crt.crt** as default boot cartridge.<br>
+Detach Cartrige by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+
+## BASIC Program Loader (.PRG)
+A Program *.PRG file can be loaded via OSD file selection.<br>
+Copy a *.PRG to your sdcard and rename it to **vic20prg.prg** as default boot basic program.<br>
+Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
+
+## Kernal Loader (.BIN)
+The CBM factory type is the power-up default Kernal.<br>
+Kernal ROM files *.BIN can be loaded via OSD selection (e.g. JiffyDOS VIC20).<br>
+Copy a 8K VIC20 Kernal ROM *.BIN to your sdcard and rename it to **vic20kernal.bin** as default boot Kernal.<br>
+Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board.<br>
 
 ## loadable Cartridge RAM Slot
 Some Cartridge based games can be be simply loaded from a [VIC20](https://vic20reloaded.com) D64 Disk Image.<br>
@@ -80,7 +102,7 @@ There are also some cartridge games on D64 Image with a loader that themselves f
 ## OSD
 invoke by F12 keypress<br>
 * Reset<br>
-* Cold Reset + memory scrubbing<br>
+* Cold Reset<br>
 * Audio Volume + / -<br>
 * Scanlines effect %<br>
 * Widescreen activation<br>
@@ -93,6 +115,7 @@ invoke by F12 keypress<br>
 * c1541 Disk write protetcion<br>
 * c1541 Reset<br>
 * c1541 DOS ROM selection<br>
+* Loader (CRT/PRG/BIN) file selection<br>
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: Retro D9<br>
@@ -127,12 +150,17 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
  Tape Play not implemented.
 
 ## LED UI
-0 c1541 Drive activity. Solid 'red' after power-up indicates a missing DOS in Flash<br>
-1 unused<br>
-2 unused<br>
-3 M0S Dock detect<br>
-4 System LED 0<br>
-5 System LED 1<br>
+
+| LED | function | TN20K | TP25K | TM138K |
+| --- |        - | -     | -     | -      |
+| 0 | c1541 activity  | x | x | x |
+| 1 | D64 selected | x | - | x |
+| 2 | CRT seleced | x | - | x |
+| 3 | PRG selected | x | - | x |
+| 4 | Kernal selected  | x | - | x |
+| 5 | (reserved TAP) | x | - | x |
+
+Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
 **Multicolor RGB LED**
 * **<font color="green">green</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;all fine and ready to go<br>
@@ -186,14 +214,14 @@ see pin configuration in .cst configuration file
 
 In order to use this Design the following things are needed:
 
+[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
 [Sipeed Tang Nano 20k](https://wiki.sipeed.com/nano20k) <br>
 or [Sipeed Tang Primer 25k](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)<br>
 and [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI)<br>
 and [PMOD TF-CARD](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD)<br>
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)
-or ad hoc wiring + soldering.<br>
-[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
+ or ad hoc wiring + soldering.<br>
 microSD or microSDHC card FAT/exFAT formatted<br>
 TFT Monitor with HDMI Input and Speaker<br>
 <br>

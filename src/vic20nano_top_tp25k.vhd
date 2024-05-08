@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------
---  VIC20 Top level for Tang Nano
+--  VIC20 Top level for Tang Primer 25k
 --  2024 Stefan Voss
 --  based on the work of many others
 --
@@ -81,11 +81,9 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal dout         : std_logic_vector(7 downto 0);
   signal idle         : std_logic;
   signal dram_addr    : std_logic_vector(22 downto 0);
-  signal dram_addr_s  : std_logic_vector(22 downto 0);
-  signal ram_scramble : std_logic_vector(1 downto 0);
   signal ram_ready    : std_logic;
   signal cb_D         : std_logic;
-  signal addr         : std_logic_vector(22 downto 0);
+--signal addr         : std_logic_vector(22 downto 0);
   signal cs           : std_logic;
   signal we           : std_logic;
   signal din          : std_logic_vector(7 downto 0);
@@ -262,10 +260,61 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal IDSEL           : std_logic_vector(5 downto 0);
   signal FBDSEL          : std_logic_vector(5 downto 0);
   signal i_ram_ext       : std_logic_vector(4 downto 0) := "11111";
+  signal extram          : std_logic_vector(4 downto 0);
   signal i_ram_ext_ro    : std_logic_vector(4 downto 0);
+  signal ext_ro          : std_logic_vector(4 downto 0);
   signal i_center        : std_logic_vector(1 downto 0);
   signal crt_writeable   : std_logic; 
-  
+  -- loader
+signal load_crt        : std_logic := '0';
+signal load_prg        : std_logic := '0';
+signal load_rom        : std_logic := '0';
+signal load_tap        : std_logic := '0';
+signal disk_lba        : std_logic_vector(31 downto 0);
+signal loader_lba      : std_logic_vector(31 downto 0);
+signal loader_busy     : std_logic;
+signal img_select      : std_logic_vector(1 downto 0);
+signal ioctl_download  : std_logic := '0';
+signal old_download    : std_logic;
+signal ioctl_load_addr : std_logic_vector(22 downto 0);
+signal ioctl_wr        : std_logic;
+signal ioctl_data      : std_logic_vector(7 downto 0);
+signal ioctl_addr      : std_logic_vector(22 downto 0);
+signal ioctl_wait      : std_logic := '0';
+
+-- vic20 new
+signal dl_addr         : std_logic_vector(15 downto 0);
+signal dl_data         : std_logic_vector(7 downto 0);
+signal dl_wr           : std_logic;
+signal addr            : std_logic_vector(15 downto 0);
+signal cart_reset      : std_logic := '0';
+signal cart_blk        : std_logic_vector(4 downto 0)  := "00000";
+signal state           : std_logic_vector(3 downto 0)  := "0000";
+signal ioctl_file_ext  : std_logic_vector(31 downto 0);
+signal load_mc         : std_logic := '0';
+signal mc_reset        : std_logic;
+signal mc_addr         : std_logic_vector(22 downto 0);
+signal mc_wr_n         : std_logic;
+signal mc_nvram_sel    : std_logic;
+signal mc_rom_sel      : std_logic;
+signal vic_wr_n        : std_logic;
+signal vic_io2_sel     : std_logic;
+signal vic_io3_sel     : std_logic;
+signal vic_blk123_sel  : std_logic;
+signal vic_blk5_sel    : std_logic;
+signal vic_ram123_sel  : std_logic;
+signal vic_data        : std_logic_vector(7 downto 0);
+signal vic_addr        : std_logic_vector(15 downto 0);
+signal mc_loaded       : std_logic := '1';
+signal mc_data         : std_logic_vector(7 downto 0);
+signal sdram_out       : std_logic_vector(7 downto 0);
+signal mc_nvram_out    : std_logic_vector(7 downto 0);
+signal ioctl_wr_d      : std_logic;
+signal extmem_sel      : std_logic;
+signal p2_h            : std_logic;
+signal resetvic20      : std_logic;
+signal old_reset       : std_logic;
+
   component DCS
   generic (
       DCS_MODE : STRING := "RISING"
@@ -318,19 +367,19 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
       sd_change <= '0';
       disk_g64 <= '0';
       disk_g64_d <= '0';
-      sd_img_size_d <= (others => '0');
-      sd_img_mounted_d <= '0';
-      disk_chg_trg_d <= '0';
       elsif rising_edge(clk32) then
-        sd_img_size_d <= sd_img_size;
         sd_img_mounted_d <= sd_img_mounted(0);
         disk_chg_trg_d <= disk_chg_trg;
         disk_g64_d <= disk_g64;
-        if (sd_img_size /= sd_img_size_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
+
+      if sd_img_mounted_d = '0' and sd_img_mounted(0) = '1' then
+      sd_img_size_d <= sd_img_size; else sd_img_size_d <= (others => '0'); end if;
+
+      if (sd_img_mounted(0) /= sd_img_mounted_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
             sd_change  <= '1';
             else
             sd_change  <= '0';
-        if sd_img_size >= 333744 then  -- g64 disk selected
+      if sd_img_size_d >= 333744 then  -- g64 disk selected
           disk_g64 <= '1';
         else
           disk_g64 <= '0';
@@ -349,7 +398,7 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
    (
       clk32         => clk32,
       reset         => (not flash_ready) or disk_reset,
-      pause         => '0',
+      pause         => loader_busy,
       ce            => '0',
   
       disk_num      => (others =>'0'),
@@ -372,7 +421,7 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
       par_data_o    => open,
       par_stb_o     => open,
   
-      sd_lba        => sd_lba,
+      sd_lba        => disk_lba,
       sd_rd         => sd_rd(0),
       sd_wr         => sd_wr(0),
       sd_ack        => sd_busy,
@@ -388,9 +437,9 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
       c1541rom_addr => c1541rom_addr,
       c1541rom_data => c1541rom_data
   );
+
+  sd_lba <= loader_lba when loader_busy = '1' else disk_lba;
   ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
-  sd_rd(3 downto 1) <= "000";
-  sd_wr(3 downto 1) <= "000";
   sdc_iack <= int_ack(3);
   
   sd_card_inst: entity work.sd_card
@@ -485,32 +534,13 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
         tmds_d_p   => tmds_d_p
         );
   
-  -- system_reset[1] indicates whether a reset is requested. This
-  -- can either be triggered implicitely by the user changing hardware
-  -- specs or explicitely via an OSD menu entry.
-  -- A cold boot means that the ram contents becomes invalid. We achieve this
-  -- by scrambling the RAM address space a little bit on every rising edge
-  -- of system_reset[1] 
-  process(clk32)
-  begin
-    if rising_edge(clk32) then
-      cb_D <= system_reset(1);
-        if system_reset(1) = '1' and cb_D = '0' then  --rising edge of reset trigger
-          ram_scramble <= ram_scramble + 1;
-        end if;
-      end if;
-  end process;
-  
-  -- RAM is scrambled by xor'ing adress lines 2 and 3 with the scramble bits
-  dram_addr_s <= cart_addr(22 downto 4) & (cart_addr(3 downto 2) xor ram_scramble) & cart_addr(1 downto 0);
-  
-  addr <= dram_addr_s;
-  cs <= cart_ce;
-  we <= cart_we;
-  din <= std_logic_vector(c64_data_out);
-  sdram_data <= unsigned(dout);
-  
-  dram_inst: entity work.sdram
+cs <= '0' when (ioctl_download and load_mc) else not mc_nvram_sel and extmem_sel and mc_wr_n;
+we <= ioctl_wr_d when (ioctl_download and load_mc) else not mc_nvram_sel and extmem_sel and not mc_wr_n;
+din <= ioctl_data when (ioctl_download and load_mc) else vic_data;
+dram_addr <= ioctl_addr when (ioctl_download and load_mc) else mc_addr;
+idle <= ioctl_wr when ioctl_download else p2_h;
+
+dram_inst: entity work.sdram
      port map(
       -- SDRAM side interface
       sd_clk    => O_sdram_clk,   -- sd clock
@@ -528,8 +558,8 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
       ready     => ram_ready,     -- ram is ready and has been initialized
       refresh   => idle,          -- chipset requests a refresh cycle
       din       => din,           -- data input from chipset/cpu
-      dout      => dout,
-      addr      => "00" & addr,   -- 25 bit word address
+      dout      => sdram_out,
+      addr      => "00" & dram_addr, -- 25 bit word address
       ds        => "00",
       cs        => cs,            -- cpu/chipset requests read/wrie
       we        => we             -- cpu/chipset requests write
@@ -778,11 +808,11 @@ flashclock: entity work.Gowin_PLL_flash
     system_dos_sel      => dos_sel,
     system_1541_reset   => c1541_osd_reset,
     system_video_std    => ntscMode,
-    system_i_ram_ext0   => i_ram_ext(0),
-    system_i_ram_ext1   => i_ram_ext(1),
-    system_i_ram_ext2   => i_ram_ext(2),
-    system_i_ram_ext3   => i_ram_ext(3),
-    system_i_ram_ext4   => i_ram_ext(4),
+    system_i_ram_ext0   => extram(0),
+    system_i_ram_ext1   => extram(1),
+    system_i_ram_ext2   => extram(2),
+    system_i_ram_ext3   => extram(3),
+    system_i_ram_ext4   => extram(4),
     system_i_center     => i_center,
     system_crt_write    => crt_writeable,
   
@@ -831,15 +861,24 @@ flashclock: entity work.Gowin_PLL_flash
       mspi_do   => mspi_do
   );
   
-  i_ram_ext_ro <= "00000" when crt_writeable = '1' else "11111";
+ext_ro <= (cart_blk(4) and not crt_writeable)
+  & (cart_blk(3) and not crt_writeable)
+  & (cart_blk(2) and not crt_writeable)
+  & (cart_blk(1) and not crt_writeable)
+  & (cart_blk(0) and not crt_writeable);
+
+i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
+i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
+
+resetvic20 <= system_reset(0) or not pll_locked or cart_reset or mc_reset;
   
   vic_inst: entity work.VIC20
     port map(
       --
       i_sysclk      => clk32,
       i_sysclk_en   => v20_en,
-      i_reset       => system_reset(0) or not pll_locked,
-      o_p2h         => open,
+      i_reset       => resetvic20,
+      o_p2h         => p2_h,
   
       -- serial bus pins
       atn_o         => iec_atn_o,
@@ -857,17 +896,17 @@ flashclock: entity work.Gowin_PLL_flash
       i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set
       i_ram_ext     => i_ram_ext,    -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
       --
-      i_extmem_en   => '0',
-      o_extmem_sel  => open,
-      o_extmem_r_wn => open,
-      o_extmem_addr => open,
-      i_extmem_data => (others => '0'),
-      o_extmem_data => open,
-      o_io2_sel     => open,
-      o_io3_sel     => open,
-      o_blk123_sel  => open,
-      o_blk5_sel    => open,
-      o_ram123_sel  => open,
+      i_extmem_en   => mc_loaded,
+      o_extmem_sel  => extmem_sel,
+      o_extmem_r_wn => vic_wr_n,
+      o_extmem_addr => vic_addr,
+      i_extmem_data => mc_data,
+      o_extmem_data => vic_data,
+      o_io2_sel     => vic_io2_sel,
+      o_io3_sel     => vic_io3_sel,
+      o_blk123_sel  => vic_blk123_sel,
+      o_blk5_sel    => vic_blk5_sel,
+      o_ram123_sel  => vic_ram123_sel,
       --
       o_ce_pix      => open,
       o_video_r     => video_r,
@@ -897,9 +936,171 @@ flashclock: entity work.Gowin_PLL_flash
       --configures "embedded" core memory
       rom_std       => '1',
       conf_clk      => clk32,
-      conf_wr       => '0',
-      conf_ai       => (others => '0'),
-      conf_di       => (others => '0')
+      conf_wr       => dl_wr,
+      conf_ai       => dl_addr,
+      conf_di       => dl_data
     );
+
+  crt_inst : entity work.loader_sd_card
+  port map (
+    clk               => clk32,
+    system_reset      => system_reset,
   
+    sd_lba            => loader_lba,
+    sd_rd             => sd_rd(3 downto 1),
+    sd_wr             => sd_wr(3 downto 1),
+    sd_busy           => sd_busy,
+    sd_done           => sd_done,
+  
+    sd_byte_index     => sd_byte_index,
+    sd_rd_data        => sd_rd_data,
+    sd_rd_byte_strobe => sd_rd_byte_strobe,
+  
+    sd_img_mounted    => sd_img_mounted,
+    loader_busy       => loader_busy,
+    load_crt          => load_crt,
+    load_prg          => load_prg,
+    load_rom          => load_rom,
+    sd_img_size       => sd_img_size,
+    leds              => open,
+    img_select        => img_select,
+  
+    ioctl_download    => ioctl_download,
+    ioctl_addr        => ioctl_addr,
+    ioctl_data        => ioctl_data,
+    ioctl_wr          => ioctl_wr,
+    ioctl_wait        => ioctl_wait
+  );
+
+process(clk32)
+begin
+  if rising_edge(clk32) then
+
+    dl_wr <= '0';
+    old_download <= ioctl_download;
+    ioctl_wr_d <= ioctl_wr;
+
+    if ioctl_download and load_prg then
+      state <= x"0";
+      if ioctl_wr then
+        if ioctl_addr = 0 then
+                addr(7 downto 0)  <= ioctl_data;
+        elsif ioctl_addr = 1 then
+            addr(15 downto 8) <= ioctl_data;
+        elsif addr < x"A000" then
+              dl_addr <= addr;
+              dl_data <= ioctl_data;
+              dl_wr <= '1';
+              addr <= addr + 1;
+        end if;
+      end if;
+    end if;
+
+    if old_download = '1' and ioctl_download = '0' and load_prg = '1' then
+        state <= x"1"; end if;
+
+    if state /= x"0" then state <= state + 1; end if;
+
+    case(state) is
+       when x"1" => dl_addr <= x"002d"; dl_data <= addr(7 downto 0); dl_wr <= '1';
+       when x"3" => dl_addr <= x"002e"; dl_data <= addr(15 downto 8); dl_wr <= '1';
+       when x"5" => dl_addr <= x"002f"; dl_data <= addr(7 downto 0); dl_wr <= '1';
+       when x"7" => dl_addr <= x"0030"; dl_data <= addr(15 downto 8); dl_wr <= '1';
+       when x"9" => dl_addr <= x"0031"; dl_data <= addr(7 downto 0); dl_wr <= '1';
+       when x"B" => dl_addr <= x"0032"; dl_data <= addr(15 downto 8); dl_wr <= '1';
+       when x"D" => dl_addr <= x"00ae"; dl_data <= addr(7 downto 0); dl_wr <= '1';
+       when x"F" => dl_addr <= x"00af"; dl_data <= addr(15 downto 8); dl_wr <= '1';
+       when others => 
+    end case;
+
+    if ioctl_download and load_rom then
+      state <= x"0";
+      if ioctl_wr = '1' then
+          dl_addr <= ioctl_addr(15 downto 0) or x"E000";
+          dl_data <= ioctl_data;
+          dl_wr <= '1';
+      end if;
+    end if;
+
+    if ioctl_download and load_crt then
+      if ioctl_wr then
+        if ioctl_addr = 0 and load_crt = '1' then
+              addr(7 downto 0) <= ioctl_data;
+        elsif ioctl_addr = 1 and load_crt = '1' then 
+              addr(15 downto 8) <= ioctl_data;
+        elsif addr < x"C000" then
+          if addr(15 downto 13) = "000" then cart_blk(0) <= '1'; end if;
+          if addr(15 downto 13) = "001" then cart_blk(1) <= '1'; end if;
+          if addr(15 downto 13) = "010" then cart_blk(2) <= '1'; end if;
+          if addr(15 downto 13) = "011" then cart_blk(3) <= '1'; end if;
+          if addr(15 downto 13) = "101" then cart_blk(4) <= '1'; end if;
+          dl_addr <= addr(15 downto 0);
+          dl_data <= ioctl_data;
+          dl_wr <= '1';
+          addr <= addr + 1;
+        end if;
+      end if;
+    end if;
+
+    if old_download /= ioctl_download and (load_crt or load_mc) = '1' then
+        cart_reset <= ioctl_download;
+      end if;
+
+    if old_download /= ioctl_download and load_rom = '1' then
+        cart_reset <= ioctl_download;
+      end if;
+
+    if system_reset(1) = '1' then
+          cart_reset <= '0';
+          cart_blk <= (others => '0');
+        end if;
+
+    if ioctl_download = '1' and load_mc = '1' then 
+          cart_blk <= (others => '0'); 
+        end if;
+    
+   end if;
+end process;
+
+process(clk32)
+begin
+  if rising_edge(clk32) then
+   if system_reset(1) = '1' or (ioctl_download and load_crt) = '1' then
+        mc_loaded <= '0'; 
+      end if;
+   if ioctl_download and load_mc then
+      mc_loaded <= '1'; 
+    end if;
+
+   old_reset <= reset;
+    if old_reset = '0' and reset = '1' then 
+      ioctl_wait <= '0'; 
+    end if;
+
+  end if;
+end process;
+
+mc_data <= mc_nvram_out when mc_nvram_sel ='1' else sdram_out;
+
+mc_inst: entity work.megacart
+port map 
+(
+	clk             => clk32,
+	reset_n         => mc_loaded and not system_reset(0) and not cart_reset,
+
+	vic_addr        => vic_addr,
+	vic_wr_n        => vic_wr_n,
+	vic_io2_sel     => vic_io2_sel,
+	vic_io3_sel     => vic_io3_sel,
+	vic_blk123_sel  => vic_blk123_sel,
+	vic_blk5_sel    => vic_blk5_sel,
+	vic_ram123_sel  => vic_ram123_sel,
+	vic_data        => vic_data,
+
+	mc_addr         => mc_addr,
+	mc_wr_n         => mc_wr_n,
+	mc_nvram_sel    => mc_nvram_sel,
+	mc_soft_reset   => mc_reset
+);
+
   end Behavioral_top;
