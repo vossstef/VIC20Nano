@@ -66,19 +66,19 @@ Size and Region can be activated in several steps. A change takes effect immedia
 
 ## Cartridge ROM Loader (.PRG/.CRT)
 Cartrige ROM can be loaded via OSD file selection.<br>
-Be aware that the core doesn't support the VICE CRT file format (cartconv.exe).<br>
-VIC20 Cartrige ROMS with ending .PRG have a two byte header indicating the loading location.<br>
-8k Cartridges to be loadeded directly. 16k or larger Cartridges have to be loaded in several steps and the file with ending xyz-a000.prg have to be loaded last. First load xyz-2000.prg, xyz-4000.prg or xyz-6000.prg and then xyz-a000.prg at last. The Cartridge will start after that last step automatically.<br>
-Copy a 8K *.PRG ROM to your sdcard and rename it to **vic20crt.crt** as default boot cartridge.<br>
+Be aware that the core doesn't support the [VICE EMU](https://vice-emu.sourceforge.io/vice_16.html) file format.<br>
+Typical VIC20 Cartridge ROMS with ending .PRG have a two byte header indicating the loading location.<br>
+8k Cartridges to be loadeded directly as such. 16k or larger Cartridges have to be loaded in several steps and the file with ending xyz-a000.prg have to be loaded last. First load xyz-2000.prg, xyz-4000.prg or xyz-6000.prg and then xyz-a000.prg at last. The Cartridge will start after that last step automatically.<br>
+Copy a 8K xyz-a000.prg ROM to your sdcard and rename it to **vic20crt.crt** as default boot cartridge.<br>
 Detach Cartrige by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 
 ## BASIC Program Loader (.PRG)
-A Program *.PRG file can be loaded via OSD file selection.<br>
+A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **vic20prg.prg** as default boot basic program.<br>
 Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
 
 ## Kernal Loader (.BIN)
-The CBM factory type is the power-up default Kernal.<br>
+The CBM factory PAL type is the power-up default Kernal.<br>
 Kernal ROM files *.BIN can be loaded via OSD selection (e.g. JiffyDOS VIC20).<br>
 Copy a 8K VIC20 Kernal ROM *.BIN to your sdcard and rename it to **vic20kernal.bin** as default boot Kernal.<br>
 Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board.<br>
@@ -86,14 +86,14 @@ Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings*
 ## loadable Cartridge RAM Slot
 Some Cartridge based games can be be simply loaded from a [VIC20](https://vic20reloaded.com) D64 Disk Image.<br>
 Example: 16 k Cartridge Game<br>
-Enable RAM Expansion at $2000 (or $6000) and $A000<br>
-Leave OSD setting CRT writeable setting as enabled.
+Enable RAM Expansion at $2000 (or $6000) and Cartridge region $A000<br>
+Leave OSD setting CRT writeable setting as enabled as first approach.
 Save setting and do a Cold Boot Reset.<br>
 ``` LOAD "xyz.200",8,1```   (Block 1)<br>
 ``` or LOAD "xyz.600",8,1```   (Block 3)<br>
 ``` LOAD "xyz.A00",8,1```   (Block 5)<br>
 Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br> or better perform a Reset via OSD.<br>
-There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart.<br> A loaded Cartridge can be exited by disabling memory region $A000 + Reset via OSD. In order to trial another game just activate again (after reset !) the $A000 memory and load another game.
+There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart (you have to activate RAM regions beforhand).<br> A loaded Cartridge can be exited by disabling memory region $A000 + Cold Reset via OSD. In order to trial another game just activate again (after reset !) the $A000 memory and load another game.
 
 ## Push Button utilization
 * S2 Reset (for Flasher)<br>
