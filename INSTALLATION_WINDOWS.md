@@ -163,7 +163,7 @@ it. You can organize your files in subdirectories. These files can later
 be selected using the on-screen-display (OSD).
 Default Mountpoints:  
 Copy a *.D64 Disk image to your sdcard and rename it to disk8.d64 as default c1541 boot image.  
-Copy a *.CRT ROM image to your sdcard and rename it to vic20crt.crt as default Cartridge boot image.  
+Copy a 8K xyz-a000.prg Cartridge ROM to your sdcard and rename it to vic20crt.crt as default Cartridge boot image.  
 Copy a *.PRG BASIC file to your sdcard and rename it to vic20prg.prg as default Program boot image.  
 Copy a 8k Byte VIC20 Kernal ROM file *.BIN to your sdcard and rename it to vic20kernal.bin as default Kernal boot image.
 
