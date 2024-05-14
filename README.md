@@ -21,6 +21,7 @@ Features:
 * C1541 DOS ROM selection
 * Cartridge ROM (*.PRG) loader
 * Direct BASIC program file (*.PRG) injection loader
+* Tape (*.TAP) image loader [C1530 Datasette](https://en.wikipedia.org/wiki/Commodore_Datasette)
 * Loadable 8K Kernal ROM (*.BIN)
 * On Screen Display (OSD) for configuration and D64 image selection<br>
 * 3K, 8K, 16K, 24K, 32K RAM Expansion<br>
@@ -54,7 +55,8 @@ RUN<br>
 JiffyDOS can be used as well known Speedloader. Change in OSD the c1541 DOS to Jiffy too.<br>
 
 ## RAM Expansion
-Size and Region can be activated in several steps. A change takes effect immediately.
+Size and Region can be activated in several steps. A change takes effect immediately.<br>
+Take care to activate the correct size of needed expansion before you load *.PRG and *.TAP !
 |Expansion| $0400 3k | $2000 8k |$4000 8k |$6000 8k |
 | - | - | - |- |- |
 | Block | 0 | 1 |2 |3 |
@@ -77,6 +79,14 @@ A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **vic20prg.prg** as default boot basic program.<br>
 Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
 
+## Tape Image Loader (*.TAP)
+A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.<br>
+In order to start a tape download select normal VIC20 Kernal (mandatory) and type: LOAD<br>
+The file is loaded automatically as soon as file selected via OSD (no need to press PLAY TAPE button).<br>
+After some seconds the filename of the to be loaded file will be shown and it will take time...<br>
+Copy a *.TAP to your sdcard and rename it to **vic20tap.tap** as default boot tape.<br>
+Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset**.<br>
+
 ## Kernal Loader (.BIN)
 The CBM factory PAL type is the power-up default Kernal.<br>
 Kernal ROM files *.BIN can be loaded via OSD selection (e.g. JiffyDOS VIC20).<br>
@@ -96,7 +106,7 @@ Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br> o
 There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart (you have to activate RAM regions beforhand).<br> A loaded Cartridge can be exited by disabling memory region $A000 + Cold Reset via OSD. In order to trial another game just activate again (after reset !) the $A000 memory and load another game.
 
 ## Push Button utilization
-* S2 Reset (for Flasher)<br>
+* S2 keep pressed during power-up for programming Flash<br>
 * S1 reserved <br>
 
 ## OSD
@@ -115,7 +125,7 @@ invoke by F12 keypress<br>
 * c1541 Disk write protetcion<br>
 * c1541 Reset<br>
 * c1541 DOS ROM selection<br>
-* Loader (CRT/PRG/BIN) file selection<br>
+* Loader (CRT/PRG/BIN/TAP) file selection<br>
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: Retro D9<br>
@@ -158,7 +168,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 | 2 | CRT seleced | x | - | x |
 | 3 | PRG selected | x | - | x |
 | 4 | Kernal selected  | x | - | x |
-| 5 | (reserved TAP) | x | - | x |
+| 5 | TAP selected | x | - | x |
 
 Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
 

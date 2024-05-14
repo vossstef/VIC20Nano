@@ -18,6 +18,7 @@ In order to use the SD card for disks:
   - VIC20 disk images in .D64 or .G64 format
   - Cartridge images in .PRG format
   - BASIC Program files in .PRG format
+  - Tape images in .TAP format
   - VIC20 Kernal files (8K) in .BIN format
 
 # Flashing the Tang Nano 20k
@@ -106,6 +107,7 @@ Linux shell and [openFPGAloader](https://github.com/trabucayre/openFPGALoader).<
 ```openFPGALoader -b tangmega138k --external-flash -o 0xA00000  2dosa_c.bin```<br>
 
 **c1541 DOS ROM binaries** <br>
+VIC20 Core mandatorily need the CBM DOS Kernal or Jiffy DOS !<br>
 The needed DOS files you will find on the Internet.<br>
 ```Dolphin DOS 2```<br>
 You will [find](https://e4aws.silverdr.com/projects/dolphindos2/) 2dosa_c.bin<br>
@@ -166,5 +168,5 @@ Copy a *.D64 Disk image to your sdcard and rename it to disk8.d64 as default c15
 Copy a 8K xyz-a000.prg Cartridge ROM to your sdcard and rename it to vic20crt.crt as default Cartridge boot image.  
 Copy a *.PRG BASIC file to your sdcard and rename it to vic20prg.prg as default Program boot image.  
 Copy a 8k Byte VIC20 Kernal ROM file *.BIN to your sdcard and rename it to vic20kernal.bin as default Kernal boot image.
-
+Copy a *.TAP Type image to your sdcard and rename it to vic20tap.tap as default tape boot image. 
 That´s it for now. Have fun using the VIC20Nano

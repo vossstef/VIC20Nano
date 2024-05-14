@@ -209,17 +209,18 @@ architecture SYN of c1541_logic is
   rom_do <= c1541rom_data;
   
 -- 8k extra sram extension for dolphin dos
-ram_8kinst :  entity work.Gowin_SP_8k
-port map (
-    dout => extram_do,
-    clk => clk_32M,
-    oce => '1',
-    ce => ext_en,
-    reset => reset,
-    wre => extram_wr,
-    ad => cpu_a(12 downto 0),
-    din => cpu_do
-);
+--ram_8kinst :  entity work.Gowin_SP_8k
+--port map (
+--    dout => extram_do,
+--    clk => clk_32M,
+--    oce => '1',
+--    ce => ext_en,
+--    reset => reset,
+--    wre => extram_wr,
+--    ad => cpu_a(12 downto 0),
+--    din => cpu_do
+--);
+extram_do <= x"00";
 
   --
   -- hook up UC1 ports
