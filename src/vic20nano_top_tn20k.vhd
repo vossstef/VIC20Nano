@@ -840,7 +840,8 @@ leds(0) <= led1541;
 
 -- 4 3 2 1 0 digital c64
 joyDS2     <=    ("00" & (key_l1 or key_r1) & key_circle & key_square & key_cross & key_triangle);
-joyDigital <= not("11" & io(0) & io(4) & io(3) & io(2) & io(1));
+--                       TR RI LE DN UP
+joyDigital <= not("11" & io(0) & io(3) & io(4) & io(1) & io(2));
 joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
 joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
