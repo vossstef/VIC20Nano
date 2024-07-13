@@ -80,12 +80,29 @@ Copy a *.PRG to your sdcard and rename it to **vic20prg.prg** as default boot ba
 Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
 
 ## Tape Image Loader (*.TAP)
-A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.<br>
-In order to start a tape download select normal VIC20 Kernal (mandatory) and type: LOAD<br>
-The file is loaded automatically as soon as file selected via OSD (no need to press PLAY TAPE button).<br>
+A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection<br>
+In order to start a tape download select normal CBM VIC20 Kernal (mandatory as JiffyDOS DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.<br>
+> [!IMPORTANT]
+Type command: **LOAD**<br>
+
+The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.<br>
 After some seconds the filename of the to be loaded file will be shown and it will take time...<br>
-Copy a *.TAP to your sdcard and rename it to **vic20tap.tap** as default boot tape.<br>
-Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset**.<br>
+Copy a *.TAP to your sdcard and rename it to **vic20tap.tap** as default tape mountpoint.<br>
+
+For **Tape unload** use OSD TAP selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
+
+> [!WARNING]
+After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or vic20tap.tap mountpoint available !<br>
+Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD** + Keyboard Return.<br>
+
+> [!TIP]
+Check loaded file by command: **LIST**
+
+> [!IMPORTANT]
+command: **RUN**
+
+> [!NOTE]
+The available (muffled) Tape Sound audio can be disabled from OSD.<br>
 
 ## Kernal Loader (.BIN)
 The CBM factory PAL type is the power-up default Kernal.<br>
@@ -106,7 +123,9 @@ Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br> o
 There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart (you have to activate RAM regions beforhand).<br> A loaded Cartridge can be exited by disabling memory region $A000 + Cold Reset via OSD. In order to trial another game just activate again (after reset !) the $A000 memory and load another game.
 
 ## Push Button utilization
-* S2 keep pressed during power-up for programming Flash<br>
+* S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
+> [!CAUTION]
+A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
 * S1 reserved <br>
 
 ## OSD

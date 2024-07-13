@@ -59,7 +59,7 @@ reg [3:0] rd_sel;
 reg boot_crt;
 reg boot_bin;
 reg boot_prg;
-reg boot_tap;
+//reg boot_tap;
 reg [1:0] system_resetD;
 
 	for(integer i = 0; i < 5; i = i + 1'd1)
@@ -98,7 +98,7 @@ reg [1:0] system_resetD;
 		boot_crt <= 1'b0;
 		boot_bin <= 1'b0;
 		boot_prg <= 1'b0;
-		boot_tap <= 1'b0;
+//		boot_tap <= 1'b0;
 		io_state <= START;
 	end
 	else
@@ -128,12 +128,12 @@ reg [1:0] system_resetD;
 						rd_sel = 4'b0010;
 						boot_prg <= 1'b1;
 					end
-				else if((img_present[4] && ~img_presentD[4]) || (img_present[4] && ~boot_tap))
+				else if(img_present[4] && ~img_presentD[4])
 					begin 
 						img_select <= 4;
 						io_state <= GO4IT;
 						rd_sel = 4'b1000;
-						boot_tap <= 1'b1;
+//						boot_tap <= 1'b1;
 					end
 				else if(img_present[0] && ~img_presentD[0])
 					begin
