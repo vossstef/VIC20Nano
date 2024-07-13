@@ -45,9 +45,11 @@ See [Tang Primer 25K](TANG_PRIMER_25K.md)
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card.<br>
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
-Add further D64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
+Add further D64 images as you like and insert card in TN slot. LED 0 acts as Drive activity indicator.<br> 
+
+> [!TIP]
 Disk directory listing:<br> 
-LOAD"$",8<br>
+LOAD"$",8 (or JiffyDOS press F1)<br>
 LIST<br> 
 Load first program from Disk:<br> 
 LOAD"*",8<br>
@@ -72,24 +74,31 @@ Be aware that the core doesn't support the [VICE EMU](https://vice-emu.sourcefor
 Typical VIC20 Cartridge ROMS with ending .PRG have a two byte header indicating the loading location.<br>
 8k Cartridges to be loadeded directly as such. 16k or larger Cartridges have to be loaded in several steps and the file with ending xyz-a000.prg have to be loaded last. First load xyz-2000.prg, xyz-4000.prg or xyz-6000.prg and then xyz-a000.prg at last. The Cartridge will start after that last step automatically.<br>
 Copy a 8K xyz-a000.prg ROM to your sdcard and rename it to **vic20crt.crt** as default boot cartridge.<br>
-Detach Cartrige by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+
+> [!TIP]
+**Detach Cartridge** by OSD CRT selection **No Disk** and System **Cold Boot**.<br>
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **vic20prg.prg** as default boot basic program.<br>
 Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
+> [!TIP]
+Check loaded file by command: **LIST**<br>
+
+> [!IMPORTANT]
+command: **RUN**<br>
 
 ## Tape Image Loader (*.TAP)
 A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection<br>
 In order to start a tape download select normal CBM VIC20 Kernal (mandatory as JiffyDOS DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.<br>
 > [!IMPORTANT]
-Type command: **LOAD**<br>
+command: **LOAD**<br>
 
 The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.<br>
 After some seconds the filename of the to be loaded file will be shown and it will take time...<br>
 Copy a *.TAP to your sdcard and rename it to **vic20tap.tap** as default tape mountpoint.<br>
 
-For **Tape unload** use OSD TAP selection **No Disk** , **Save settings** and **Reset** or System **Cold Boot**.<br>
+For **Tape unload** use OSD TAP selection **No Disk** and **Reset** or System **Cold Boot**.<br>
 
 > [!WARNING]
 After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or vic20tap.tap mountpoint available !<br>
