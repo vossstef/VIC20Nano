@@ -1,9 +1,10 @@
 # VIC20Nano
 The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
-[ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) to the 
-[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) with a new VHDL top level and HDMI Video and Audio Output.<br>
-It has also been ported to the [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) too (no Dualshock 2, no Paddles and no Retro DB9 Joystick support).<br>
+[ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) for the 
+[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) [FPGA Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/) with a new VHDL top level and HDMI Video and Audio Output.<br>
+It has also been ported for [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([FPGA Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) too (no Dualshock 2, no Paddles and no Retro DB9 Joystick support).<br>
+Also it has also been ported for [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([FPGA Gowin GW2A](https://www.gowinsemi.com/en/product/detail/38/)).<br>
 
 Original VIC-20 core by [MikeJ (Mike Johnson)](https://www.fpgaarcade.com/author/mikej/) and [WoS (Wolfgang Scherr)](https://www.researchgate.net/profile/Wolfgang_Scherr2)<br>
 All HID, SDcard and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by [Till Harbaum](http://www.harbaum.org/till/mist)<br>
@@ -42,14 +43,16 @@ The installation of VIC20 Nano on the Tang Nano 20k board can be done using a Li
 ## VIC20Nano on Tang Primer 25K
 See [Tang Primer 25K](TANG_PRIMER_25K.md)
 
+## VIC20Nano on Tang Primer 20K (Dock ext board)
+See [Tang Primer 20K](TANG_PRIMER_20K.md)<br>
+The DDR3 memory controller is a slight modified copy of [nestang](https://github.com/nand2mario/nestang) and still in a highly experimental state. It had been tested on a board eqipped with a SKHynix DDR3 memory.
+
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card.<br>
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
-Add further D64 images as you like and insert card in TN slot. LED 0 acts as Drive activity indicator.<br> 
-
-> [!TIP]
+Add further D64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
 Disk directory listing:<br> 
-LOAD"$",8 (or JiffyDOS press F1)<br>
+LOAD"$",8<br>
 LIST<br> 
 Load first program from Disk:<br> 
 LOAD"*",8<br>
@@ -74,44 +77,20 @@ Be aware that the core doesn't support the [VICE EMU](https://vice-emu.sourcefor
 Typical VIC20 Cartridge ROMS with ending .PRG have a two byte header indicating the loading location.<br>
 8k Cartridges to be loadeded directly as such. 16k or larger Cartridges have to be loaded in several steps and the file with ending xyz-a000.prg have to be loaded last. First load xyz-2000.prg, xyz-4000.prg or xyz-6000.prg and then xyz-a000.prg at last. The Cartridge will start after that last step automatically.<br>
 Copy a 8K xyz-a000.prg ROM to your sdcard and rename it to **vic20crt.crt** as default boot cartridge.<br>
-
-> [!TIP]
-**Detach Cartridge** by OSD CRT selection **No Disk** and System **Cold Boot**.<br>
+Detach Cartrige by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **vic20prg.prg** as default boot basic program.<br>
 Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
-> [!TIP]
-Check loaded file by command: **LIST**<br>
-
-> [!IMPORTANT]
-command: **RUN**<br>
 
 ## Tape Image Loader (*.TAP)
-A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection<br>
-In order to start a tape download select normal CBM VIC20 Kernal (mandatory as JiffyDOS DOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.<br>
-> [!IMPORTANT]
-command: **LOAD**<br>
-
-The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.<br>
+A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.<br>
+In order to start a tape download select normal VIC20 Kernal (mandatory) and type: LOAD<br>
+The file is loaded automatically as soon as file selected via OSD (no need to press PLAY TAPE button).<br>
 After some seconds the filename of the to be loaded file will be shown and it will take time...<br>
-Copy a *.TAP to your sdcard and rename it to **vic20tap.tap** as default tape mountpoint.<br>
-
-For **Tape unload** use OSD TAP selection **No Disk** and **Reset** or System **Cold Boot**.<br>
-
-> [!WARNING]
-After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or vic20tap.tap mountpoint available !<br>
-Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD** + Keyboard Return.<br>
-
-> [!TIP]
-Check loaded file by command: **LIST**
-
-> [!IMPORTANT]
-command: **RUN**
-
-> [!NOTE]
-The available (muffled) Tape Sound audio can be disabled from OSD.<br>
+Copy a *.TAP to your sdcard and rename it to **vic20tap.tap** as default boot tape.<br>
+Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset**.<br>
 
 ## Kernal Loader (.BIN)
 The CBM factory PAL type is the power-up default Kernal.<br>
@@ -132,9 +111,7 @@ Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br> o
 There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart (you have to activate RAM regions beforhand).<br> A loaded Cartridge can be exited by disabling memory region $A000 + Cold Reset via OSD. In order to trial another game just activate again (after reset !) the $A000 memory and load another game.
 
 ## Push Button utilization
-* S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
-> [!CAUTION]
-A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
+* S2 keep pressed during power-up for programming Flash<br>
 * S1 reserved <br>
 
 ## OSD
@@ -153,7 +130,7 @@ invoke by F12 keypress<br>
 * c1541 Disk write protetcion<br>
 * c1541 Reset<br>
 * c1541 DOS ROM selection<br>
-* Loader (CRT/PRG/BIN/TAP) file selection<br>
+* Loader (CRT/PRG/BIN) file selection<br>
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: Retro D9<br>
@@ -189,14 +166,14 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 
 ## LED UI
 
-| LED | function | TN20K | TP25K | TM138K |
-| --- |        - | -     | -     | -      |
-| 0 | c1541 activity  | x | x | x |
-| 1 | D64 selected | x | - | x |
-| 2 | CRT seleced | x | - | x |
-| 3 | PRG selected | x | - | x |
-| 4 | Kernal selected  | x | - | x |
-| 5 | TAP selected | x | - | x |
+| LED | function | TN20K  | TP20K | TP25K | TM138K |
+| --- |        - | -     |-     | -     | -      |
+| 0 | c1541 activity  | x |x |  x | x |
+| 1 | D64 selected | x |x | - | x |
+| 2 | CRT seleced | x |x | - | x |
+| 3 | PRG selected | x |x | - | x |
+| 4 | Kernal selected  |x | x | - | x |
+| 5 | TAP selected | x |x | - | x |
 
 Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
@@ -221,17 +198,17 @@ see pin configuration in .cst configuration file
 - Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !<br>
 ![pinmap](\.assets/vic20-Joystick.png)
 
-| Joystick pin |IO| Tang Nano pin | FPGA pin | Joystick Function |
-| ----------- |-----| ---   | --------  | ----- |
-| 1 |2| J6 10  | 25   | UP | 
-| 2 |1| J6 9  | 28 | DOWN |
-| 3 |4| J6 12 | 29 | LEFT |
-| 4 |3| J5 11 | 26 | RIGHT |
-| 5 |-| - | - | POT Y | - |
-| 6 |0| J5 8 | 27 | TRIGGER|
-| 7 |-| n.c | n.c | 5V | - |
-| 8 |-| J5 20 | - | GND | - |
-| 9 |-| - | - | POT X | - |
+| Joystick pin | Tang Nano pin | FPGA pin | Joystick Function |
+| ----------- | ---   | --------  | ----- |
+| 1 | J6 9  | 28   | Joy3 RIGHT | 28 |
+| 2 | J6 11  | 25 | Joy2 LEFT | 25 |
+| 3 | J6 10 | 26 | Joy1 DOWN | 26 |
+| 4 | J5 12 | 29 | Joy0 UP | 29 |
+| 5 | - | - | POT Y | - |
+| 6 | J5 8 | 27 | FIRE B.| 27 |
+| 7 | n.c | n.c | 5V | - |
+| 8 | J5 20 | - | GND | - |
+| 9 | - | - | POT X | - |
 
 **Pinmap Dualshock 2 Controller Interface** <br>
 <img src="./.assets/controller-pinout.jpg" alt="image" width="30%" height="auto">
@@ -260,14 +237,18 @@ and [PMOD TF-CARD](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.
 and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)
  or ad hoc wiring + soldering.<br>
+or [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html)<br>
+and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md).<br>
+and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>
+
 microSD or microSDHC card FAT/exFAT formatted<br>
 TFT Monitor with HDMI Input and Speaker<br>
 <br>
 
-| HID and Gamecontrol Hardware option | needs | alternative option |Primer 25K|Mega 138K|
-| ----------- | --- | ---  | ---| -|
-| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH)  |x|x|
-| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | - |x|x|
-| USB Mouse | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | -  |x|x|
-| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|-|
-| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) | breadboard to wire everything up and some jumper wires |-|x|
+| HID and Gamecontrol Hardware option | needs | alternative option |Primer 25K|Mega 138K|Primer 20K|
+| ----------- | --- |--- | ---  | ---| -|
+| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH)  |x|x|x|
+| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | - |x|x|x|
+| USB Mouse | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | -  |x|x|x|
+| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|-|-|
+| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) | breadboard to wire everything up and some jumper wires |-|x|x|
