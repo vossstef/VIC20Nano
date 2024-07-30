@@ -2,9 +2,9 @@
 The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
 [ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) for the 
-[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) [FPGA Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/) with a new VHDL top level and HDMI Video and Audio Output.<br>
-It has also been ported for [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([FPGA Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) too (no Dualshock 2, no Paddles and no Retro DB9 Joystick support).<br>
-Also it has also been ported for [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([FPGA Gowin GW2A](https://www.gowinsemi.com/en/product/detail/38/)).<br>
+[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) ([Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/)) with a new VHDL top level and HDMI Video and Audio Output.<br>
+It has also been ported for [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) too (no Dualshock 2, no Paddles and no Retro DB9 Joystick support).<br>
+Also it has also been ported for [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([Gowin GW2A](https://www.gowinsemi.com/en/product/detail/38/)).<br>
 
 Original VIC-20 core by [MikeJ (Mike Johnson)](https://www.fpgaarcade.com/author/mikej/) and [WoS (Wolfgang Scherr)](https://www.researchgate.net/profile/Wolfgang_Scherr2)<br>
 All HID, SDcard and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by [Till Harbaum](http://www.harbaum.org/till/mist)<br>
@@ -45,16 +45,18 @@ See [Tang Primer 25K](TANG_PRIMER_25K.md)
 
 ## VIC20Nano on Tang Primer 20K (Dock ext board)
 See [Tang Primer 20K](TANG_PRIMER_20K.md)<br>
-The DDR3 memory controller is a slight modified copy of [nestang](https://github.com/nand2mario/nestang) and still in a highly experimental state. It had been tested on a board eqipped with a SKHynix DDR3 memory.
+The DDR3 memory controller is a slight modified copy of [nestang](https://github.com/nand2mario/nestang) and still in a highly experimental state. It had been tested on a board eqipped with a SKHynix DDR3 memory. It is used as a buffer for the TAP Tape loading.
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card.<br>
 Copy a D64 Disk image to your sdcard and rename it to **disk8.d64** as default boot image.<br>
-Add further D64 images as you like and insert card in TN slot. Power Cycle TN. LED 0 acts as Drive activity indicator.<br> 
-Disk directory listing:<br> 
+Add further D64 images as you like and insert card in TN/TP slot. LED 0 acts as Drive activity indicator.<br> 
+> [!TIP]
+Disk directory listing: [or F1 keypress in JiffyDOS]<br> 
+command: <br>
 LOAD"$",8<br>
 LIST<br> 
-Load first program from Disk:<br> 
+Load first program from Disk: (or just LOAD if Dolphin Kernal active)<br> 
 LOAD"*",8<br>
 RUN<br>
 JiffyDOS can be used as well known Speedloader. Change in OSD the c1541 DOS to Jiffy too.<br>
@@ -139,8 +141,12 @@ The core will after power cycle/ cold-boot start downloading the images on the s
 (1) BIN Kernal, (2) CRT ROM, (3) PRG Basic.<br>
 
 ## Push Button utilization
-* S2 keep pressed during power-up for programming Flash<br>
-* S1 reserved <br>
+* (TN20k/ TP25k): **S2** keep pressed during power-up to prevent FPGA bitstream load from FLASH. Needed for FLASH programming.<br>
+* (TP20k): There is by default unfortunately no Button/Switch to prevent FPGA bitstream load from FLASH (see rework how to add). As workaround following procedure can be tried instead.
+Programmer: SRAM Mode ->SRAM Erase (unload core)<br>
+Programmer: ext FLASH Erase, Program thru GAO bridge the new bitsteam .FS file.<br>
+
+* **S1** reserved <br>
 
 ## OSD
 invoke by F12 keypress<br>
@@ -214,7 +220,7 @@ Solid **<font color="red">red</font>** of the c1541 led after power-up indicates
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-Alternatively use the command line build script **gw_sh.exe** , build_tp20k.tcl or build_tp25k.tcl<br>
+Alternatively use the command line build script **gw_sh.exe** build_tn20k.tcl, build_tp20k.tcl or build_tp25k.tcl<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## HW circuit considerations

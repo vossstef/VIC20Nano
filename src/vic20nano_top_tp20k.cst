@@ -195,7 +195,13 @@ IO_PORT "DDR3_DQ[0]" IO_TYPE=SSTL15 PULL_MODE=NONE DRIVE=8 VREF=INTERNAL BANK_VC
 // PMOD pin 10 DAT3, fpga pin T7
 // PMOD pin  7 DAT1, fpga pin T8
 // PMOD pin  8 DAT0, fpga pin P8
-//
+// PMOD pin  6 T9 WS2812 LED DAT
+// PMOD pin  5 P9 MIC LED CLK
+// PMOD pin  4 GND
+// PMOD pin  3 GND
+// PMOD pin  2 3V3
+// PMOD pin  1 3V3
+
 IO_LOC "m0s[5]" P8; // unused
 IO_PORT "m0s[5]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
 IO_LOC "m0s[4]" T8; // IRQ
