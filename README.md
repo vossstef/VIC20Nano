@@ -77,23 +77,47 @@ Be aware that the core doesn't support the [VICE EMU](https://vice-emu.sourcefor
 Typical VIC20 Cartridge ROMS with ending .PRG have a two byte header indicating the loading location.<br>
 8k Cartridges to be loadeded directly as such. 16k or larger Cartridges have to be loaded in several steps and the file with ending xyz-a000.prg have to be loaded last. First load xyz-2000.prg, xyz-4000.prg or xyz-6000.prg and then xyz-a000.prg at last. The Cartridge will start after that last step automatically.<br>
 Copy a 8K xyz-a000.prg ROM to your sdcard and rename it to **vic20crt.crt** as default boot cartridge.<br>
-Detach Cartrige by OSD CRT selection **No Disk** , **Save settings** and System **Cold Boot**.<br>
+> [!TIP]
+**Detach Cartridge** by OSD CRT selection **No Disk** and System **Cold Boot**.<br>
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
 Copy a *.PRG to your sdcard and rename it to **vic20prg.prg** as default boot basic program.<br>
 Prevent PRG load by OSD PRG selection **No Disk** , **Save settings** and **Reset**.<br>
+> [!TIP]
+Check loaded file by command: **LIST**<br>
+
+> [!IMPORTANT]
+command: **RUN**<br>
 
 ## Tape Image Loader (*.TAP)
-A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection.<br>
-In order to start a tape download select normal VIC20 Kernal (mandatory) and type: LOAD<br>
-The file is loaded automatically as soon as file selected via OSD (no need to press PLAY TAPE button).<br>
+A [Tape](https://en.wikipedia.org/wiki/Commodore_Datasette) *.TAP file can be loaded via OSD file selection<br>
+In order to start a tape download choose VIC20 CBM Kernal (mandatory as JiffyDOS doesn't support Tape). Best to save Kernal OSD selection via **Save settings**.<br>
+> [!IMPORTANT]
+command: **LOAD**<br>
+
+The file is loaded automatically as soon as TAP file selected via OSD (no need to press PLAY TAPE button) in case ***no** TAP had been previously selected*.<br>
 After some seconds the filename of the to be loaded file will be shown and it will take time...<br>
-Copy a *.TAP to your sdcard and rename it to **vic20tap.tap** as default boot tape.<br>
-Prevent TAP load at boot or for **Tape unload** OSD TAP selection **No Disk** , **Save settings** and **Reset**.<br>
+Copy a *.TAP to your sdcard and rename it to **vic20tap.tap** as default tape mountpoint.<br>
+For **Tape unload** use OSD TAP selection **No Disk** and **Reset** or System **Cold Boot**.<br>
+> [!WARNING]
+After board power-up or coldboot a TAP file will **not autoloaded** even if TAP file selection had been saved or c64tap.tap mountpoint available !<br>
+Unblock loader by OSD TAP selection **No Disk** or simply select again the desired TAP file to be loaded after you typed **LOAD**<br>
+
+> [!TIP]
+Check loaded file by command: **LIST**<br>
+
+> [!IMPORTANT]
+command: **RUN**<br>
+
+> [!NOTE]
+The available (muffled) Tape Sound audio can be disabled from OSD.<br>
 
 ## Kernal Loader (.BIN)
 The CBM factory PAL type is the power-up default Kernal.<br>
+> [!TIP]
+If you are fine with that then there is no need to load another Kernal via OSD and just select OSD Kernal BIN selection **No Disk** and **Save settings**!<br>
+
 Kernal ROM files *.BIN can be loaded via OSD selection (e.g. JiffyDOS VIC20).<br>
 Copy a 8K VIC20 Kernal ROM *.BIN to your sdcard and rename it to **vic20kernal.bin** as default boot Kernal.<br>
 Prevent Kernal load by OSD Kernal BIN selection **No Disk** and **Save settings** and do a **power-cyle** of the board.<br>
@@ -109,6 +133,10 @@ Save setting and do a Cold Boot Reset.<br>
 ``` LOAD "xyz.A00",8,1```   (Block 5)<br>
 Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br> or better perform a Reset via OSD.<br>
 There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart (you have to activate RAM regions beforhand).<br> A loaded Cartridge can be exited by disabling memory region $A000 + Cold Reset via OSD. In order to trial another game just activate again (after reset !) the $A000 memory and load another game.
+## Core Loader Sequencing
+The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order:
+> [!NOTE] 
+(1) BIN Kernal, (2) CRT ROM, (3) PRG Basic.<br>
 
 ## Push Button utilization
 * S2 keep pressed during power-up for programming Flash<br>
@@ -133,11 +161,11 @@ invoke by F12 keypress<br>
 * Loader (CRT/PRG/BIN) file selection<br>
 
 ## Gamecontrol support
-legacy single D9 Digital Joystick. OSD: Retro D9<br>
+legacy single D9 Digital Joystick. OSD: **Retro D9**<br>
 or<br>
-USB Joystick(s). OSD: USB #1 or USB #2 <br>
+USB Joystick(s). OSD: **USB #1** or **USB #2** <br>
 or<br>
-Gamepad. OSD: DualShock
+Gamepad. OSD: **DualShock**
 <br>**stick digital** for Move and Left **L1** or Right **R1** shoulder Button for Trigger or following **Pad** controls:<br>
 | Buttons | - | - |
 | - | - | -  |
@@ -145,20 +173,20 @@ Gamepad. OSD: DualShock
 | square button<br>Left | - | circle button<br>Right |
 | - | cross button<br>Down | - |<br>
 
-or Keyboard **Numpad**. OSD: Numpad<br>
+or Keyboard Numpad. OSD: **Numpad**<br>
 | | | |
 |-|-|-|
 |0<br>Trigger|8<br>Up|-|
 |4<br>Left|-|6<br>Right|
 |-|2<br>Down|-|
 
-or Mouse. OSD: Mouse<br>
+or Mouse. OSD: **Mouse**<br>
 USB Mouse as c1351 Mouse emulation.
 
-or Paddle. OSD: Paddle<br>
+or Paddle. OSD: **Paddle**<br>
 Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
 Left **L1 / L2**  and Right **R1 / R2** shoulder Button as Trigger<br>
-You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the Joystick mode agin. OSD: DS2<br>
+You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DualShock**<br>
 
 ## Keyboard 
  ![Layout](\.assets/keymap.gif)
@@ -175,7 +203,7 @@ You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG
 | 4 | Kernal selected  |x | x | - | x |
 | 5 | TAP selected | x |x | - | x |
 
-Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
+Solid **<font color="red">red</font>** of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
 **Multicolor RGB LED**
 * **<font color="green">green</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;all fine and ready to go<br>
@@ -186,7 +214,7 @@ Solid 'red' of the c1541 led after power-up indicates a missing DOS in Flash<br>
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
 Source code can be synthesized, fitted and programmed with GOWIN IDE Windows or Linux.<br>
-Alternatively use the command line build script gw_sh.exe build_tn20k.tcl or build_tp25k.tcl<br>
+Alternatively use the command line build script **gw_sh.exe** , build_tp20k.tcl or build_tp25k.tcl<br>
 ## Pin mapping 
 see pin configuration in .cst configuration file
 ## HW circuit considerations
@@ -198,17 +226,17 @@ see pin configuration in .cst configuration file
 - Joystick interface is 3.3V tolerant. Joystick 5V supply pin has to be left floating !<br>
 ![pinmap](\.assets/vic20-Joystick.png)
 
-| Joystick pin | Tang Nano pin | FPGA pin | Joystick Function |
-| ----------- | ---   | --------  | ----- |
-| 1 | J6 9  | 28   | Joy3 RIGHT | 28 |
-| 2 | J6 11  | 25 | Joy2 LEFT | 25 |
-| 3 | J6 10 | 26 | Joy1 DOWN | 26 |
-| 4 | J5 12 | 29 | Joy0 UP | 29 |
-| 5 | - | - | POT Y | - |
-| 6 | J5 8 | 27 | FIRE B.| 27 |
-| 7 | n.c | n.c | 5V | - |
-| 8 | J5 20 | - | GND | - |
-| 9 | - | - | POT X | - |
+| Joystick pin |IO| Tang Nano pin | FPGA pin | Joystick Function |
+| ----------- |-----| ---   | --------  | ----- |
+| 1 |2| J6 10  | 25   | UP | 
+| 2 |1| J6 9  | 28 | DOWN |
+| 3 |4| J6 12 | 29 | LEFT |
+| 4 |3| J5 11 | 26 | RIGHT |
+| 5 |-| - | - | POT Y | - |
+| 6 |0| J5 8 | 27 | TRIGGER|
+| 7 |-| n.c | n.c | 5V | - |
+| 8 |-| J5 20 | - | GND | - |
+| 9 |-| - | - | POT X | - |
 
 **Pinmap Dualshock 2 Controller Interface** <br>
 <img src="./.assets/controller-pinout.jpg" alt="image" width="30%" height="auto">

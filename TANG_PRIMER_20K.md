@@ -2,10 +2,23 @@
 
 VIC20Nano can be used in the [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html).
 
-The M0S required to control the VIC20Nano is to be mounted in the PMOD 0 slot (MIC ARRAY) with the help of the [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md). 
+The M0S required to control the VIC20Nano is to be mounted in the **PMOD 0** slot (MIC ARRAY) with the help of the [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md). 
 
-Plug the optional Dualshock DS2x2 Interface into PMOD 2 slot (RGB LCD).
+Plug the optional Dualshock DS2x2 Interface into **PMOD 2** slot (RGB LCD 1).
 [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>
+
+The **PMOD 3** (RGB LCD 2) slot is allocated for a digital retro Joystick interface.
+There is no D9 digital Joystick interface PMOD Adapter known and adhoc wiring needed.
+
+
+|Bus|Signal| D9  |Primer PMOD| FPGA Signal    |
+| - |------|-------------------|-|-------|
+| 0 | Trigger | -    |12|  B11      |
+| 1 | Down    | -    |11|  A11      |
+| 2 | Up      | -    |19|  D11      |
+| 3 | Right   | -    | 9|  N6      |
+| 4 | Left    | -    | 8|  N7      |
+| - | GND     | -    | 3|  GND      |
 
 Mind direction !
 
@@ -13,20 +26,24 @@ The whole setup will look like this:<br>
 ![VIC20Nano on TP20K](./.assets/primer20k.png)
 
 If you don't have a **M0S PMOD adapter** at hand then adhoc wiring is feasible needing a soldering iron.<br>
-The needed +5V for the M0S Dock can be taken from C1+ Pad by a short soldered wire.<br> 8 single pins are needed to plug into the PMOD apart from the cable that comes along with the M0S Dock package.<br>
+The needed +5V for the M0S Dock can be taken from C3+ Pad by a short soldered wire.<br> 8 single pins are needed to plug into the PMOD apart from the cable that comes along with the M0S Dock package.<br>
 
-|M0S Pin |Signal| M0S Dock   |Primer PMOD| FPGA                  |                                      |
-|  - |------|-------------------|-|-------------------|--------------------------------------|
-|J3-1| GND  | GND        |3| GND       | GND               |
-|J2-1| GND  | GND        |4| GND        | GND               |
-|J3-2| +5V  | +5V        |-| n.c        | C1+ Pad !!! +5V Supply for M0S              |
-|J2-2| +3V3 | +3V3       |-| n.c            | don't connect !              |
-|J3-4| CSN  | GPIO12     |9| R8       | SPI select, active low               |
-|J2-4| SCK  | GPIO13     |10| T7      | SPI clock, idle low                  |
-|J2-3| MOSI | GPIO11     |12| P6      | SPI data from MCU to FPGA            |
-|J3-3| MISO | GPIO10     |11| T6      | SPI data from FPGA to MCU    |
-|J3-5| IRQ  | GPIO14     |7| T8       | Interrupt from FPGA to MCU, active low |
-|-| -  | -     |5,6,7,8| n.c.       | don't connect |
+|Bus|M0S Signal| M0S Dock   |Primer PMOD| FPGA Signal                  |                                      |
+| - |------|-------------------|-|-------------------|--------------------------------------|
+| - | +5V  | +5V    |-|  n.c      | C3+ Pad !!! +5V Supply for M0S              |
+| - | +3V3 | +3V3   |-|  n.c      | don't connect |
+| - | -    | -      |1|  +3V3     | don't connect |
+| - | -    | -      |2|  +3V3     | don't connect |
+| - | GND  | GND    |3|  GND      | GND           |
+| - | GND  | GND    |4|  GND      | GND           |
+| - |  -   | -      |5|  T9       | don't connect |
+| - |  -   | -      |6|  P9       | don't connect |
+| 5 |  -   | -      |7|  P8       | don't connect |
+| 4 | IRQn | GPIO14 |8|  T8       | Interrupt from FPGA to MCU   |
+| 3 | CSn  | GPIO12 |9|  R8       | SPI select, active low       |
+| 2 | SCK  | GPIO13 |10| T7       | SPI clock, idle low          |
+| 0 | MOSI | GPIO10 |11| T6 MISO  | SPI data from FPGA to MCU    |
+| 1 | MISO | GPIO11 |12| P6 MOSI  | SPI data from MCU to FPGA    |
 
 For 20K Dock kits, it's necessary to enable the FPGA configuration mode before using the Programmer, just put the 1 switch on the dip switch down.  
 ![DIP Switch SW1 TP20K](./.assets/switch_1_on.png)

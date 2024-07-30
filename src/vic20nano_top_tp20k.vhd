@@ -365,6 +365,7 @@ signal fail_low        : std_logic;
 signal mem_resetn      : std_logic; 
 signal memerr          : std_logic; 
 signal meminit_check   : std_logic; 
+signal ddr_busy        : std_logic; 
 
 signal uart_rx_d : std_logic := '0';
 signal sd_det_a_d : std_logic := '0';
@@ -778,7 +779,7 @@ port map(
   din        => io_cycle_data,
   dout       => sdram_out,
 
-  busy       => open, 
+  busy       => ddr_busy,
   fail       => open,  
   debug      => open,  
   write_level_done => write_level_done, 
@@ -914,11 +915,8 @@ port map(
     CALIB  => '0'
 );
 
--- c1541 ROM's SPI Flash
--- TN20k  Winbond 25Q64JVIQ
--- TP25k  XTX XT25F64FWOIG
--- TM138k Winbond 25Q128BVEA
--- phase shift 135° TN, TP and 270° TM
+-- phase shift 135° TN20k, TP20k, TP25k
+--             270° TM 138k
 
 -- 64.125Mhz for flash controller c1541 ROM
 flashclock: rPLL
@@ -1153,7 +1151,15 @@ begin
   end if;
 end process;
 
--- c1541 ROM's SPI Flash, offset in spi flash $200000
+-- c1541 ROM's SPI Flash
+-- TN20k  Winbond 25Q64JVIQ
+-- TP20k  XTX XT25F32B-S, 4MB
+-- TP25k  XTX XT25F64FWOIG
+-- TM138k Winbond 25Q128BVEA, 16GB
+-- phase shift 135° TN20k, TP20k, TP25k
+--             270° TM 138k
+-- offset in spi flash TN20K, TP20k, TP25K $200000, 
+--                     TM138K $A00000
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
@@ -1279,7 +1285,7 @@ vic_inst: entity work.VIC20
     ioctl_addr        => ioctl_addr,
     ioctl_data        => ioctl_data,
     ioctl_wr          => ioctl_wr,
-    ioctl_wait        => ioctl_wait
+    ioctl_wait        => ioctl_req_wr
   );
 
 process(clk32)
@@ -1289,11 +1295,11 @@ begin
     old_download <= ioctl_download;
     io_cycleD <= io_cycle;
 
-    if io_cycle = '0' and io_cycleD = '1' then
+    if io_cycle = '0' and io_cycleD = '1' and ddr_busy = '0' then
       io_cycle_ce <= '1';
       io_cycle_we <= '0';
       io_cycle_addr <= tap_play_addr + TAP_ADDR;
-      if ioctl_req_wr = '1' then
+      if ioctl_req_wr = '1' and ddr_busy = '0' then
          ioctl_req_wr <= '0';
          io_cycle_ce <= '0'; -- DDR3 memory controller needed
          io_cycle_we <= '1';
@@ -1448,24 +1454,27 @@ tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
-if rising_edge(clk32) then
+  if rising_edge(clk32) then
       io_cycle_rD <= io_cycle;
-      tap_wrreq(1 downto 0) <= tap_wrreq(1 downto 0) sll 1;
-      tap_start <= '0';
+       tap_wrreq(1 downto 0) <= tap_wrreq(1 downto 0) sll 1;
       if tap_reset = '1' then
         -- C1530 module requires one more byte at the end due to fifo early check.
         read_cyc <= '0';
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
         tap_start <= tap_download;
-        elsif io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
-          read_cyc <= '1'; 
-        elsif io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
-          tap_play_addr <= tap_play_addr + 1;
-          read_cyc <= '0';
-          tap_wrreq(0) <= '1';
-        end if;
-    end if;
+      else
+        tap_start <= '0';
+        if io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
+            read_cyc <= '1';
+          end if;
+        if io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
+            tap_play_addr <= tap_play_addr + 1;
+            read_cyc <= '0';
+            tap_wrreq(0) <= '1';
+          end if;
+      end if;
+  end if;
 end process;
 
 c1530_inst: entity work.c1530
