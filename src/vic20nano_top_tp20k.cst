@@ -189,14 +189,14 @@ IO_PORT "DDR3_DQ[0]" IO_TYPE=SSTL15 PULL_MODE=NONE DRIVE=8 VREF=INTERNAL BANK_VC
 // 4 T8 = IO14 = IRQ  =  7
 // 5 P8 = IO15 = n.c. =  8
 // 
-// PMOD pin 11  BCK, fpga pin T6, M0S 11 (1)
-// PMOD pin 12   WS, fpga pin P6
-// PMOD pin  9 DAT2, fpga pin R8
-// PMOD pin 10 DAT3, fpga pin T7
-// PMOD pin  7 DAT1, fpga pin T8
-// PMOD pin  8 DAT0, fpga pin P8
-// PMOD pin  6 T9 WS2812 LED DAT
-// PMOD pin  5 P9 MIC LED CLK
+// PMOD pin 12   WS, P6
+// PMOD pin 11  BCK, T6
+// PMOD pin 10 DAT3, T7
+// PMOD pin  9 DAT2, R8
+// PMOD pin  7 DAT1, T8
+// PMOD pin  8 DAT0, P8
+// PMOD pin  6  DAT, T9 WS2812
+// PMOD pin  5  CLK, P9 MIC LED CLK
 // PMOD pin  4 GND
 // PMOD pin  3 GND
 // PMOD pin  2 3V3
@@ -347,3 +347,18 @@ IO_PORT "user" IO_TYPE=LVCMOS15 PULL_MODE=UP BANK_VCCIO=1.5;
 //IO_PORT "lcd_cs" PULL_MODE=UP DRIVE=8;
 //IO_PORT "lcd_clk" PULL_MODE=UP DRIVE=8;
 //IO_PORT "lcd_resetn" PULL_MODE=UP DRIVE=8;
+
+// PMOD 
+// DVP Camera
+// PMOD pin 12 D2 P11
+// PMOD pin 11 D1 T11
+// PMOD pin 10 D3 R11
+// PMOD pin  9 D0 T12
+// PMOD pin  8 D4 M15
+// PMOD pin  7 D5 M14
+// PMOD pin  6 D6 J16
+// PMOD pin  5 D7 J14
+// PMOD pin  4 GND
+// PMOD pin  3 GND
+// PMOD pin  2 3V3
+// PMOD pin  1 3V3
