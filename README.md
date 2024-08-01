@@ -45,7 +45,7 @@ See [Tang Primer 25K](TANG_PRIMER_25K.md)
 
 ## VIC20Nano on Tang Primer 20K (Dock ext board)
 See [Tang Primer 20K](TANG_PRIMER_20K.md)<br>
-The DDR3 memory controller is a slight modified copy of [nestang](https://github.com/nand2mario/nestang) and still in a highly experimental state. It had been tested on a board eqipped with a SKHynix DDR3 memory. It is used as a buffer for the TAP Tape loading.
+The DDR3 memory controller is a slight modified copy of [nestang](https://github.com/nand2mario/nestang). It had been tested on a board eqipped with a SKHynix DDR3 memory. It is used as a buffer for the TAP Tape loading.
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card.<br>
@@ -142,9 +142,7 @@ The core will after power cycle/ cold-boot start downloading the images on the s
 
 ## Push Button utilization
 * (TN20k/ TP25k): **S2** keep pressed during power-up to prevent FPGA bitstream load from FLASH. Needed for FLASH programming.<br>
-* (TP20k): There is by default unfortunately no Button/Switch to prevent FPGA bitstream load from FLASH (see rework how to add). As workaround following procedure can be tried instead.
-Programmer: SRAM Mode ->SRAM Erase (unload core)<br>
-Programmer: ext FLASH Erase, Program thru GAO bridge the new bitsteam .FS file.<br>
+* (TP20k): There is by default unfortunately no Button/Switch to prevent FPGA bitstream load from FLASH (see rework how to add).
 
 * **S1** reserved <br>
 

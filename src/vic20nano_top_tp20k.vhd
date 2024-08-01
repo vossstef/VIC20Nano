@@ -1456,9 +1456,8 @@ process(clk32)
 begin
   if rising_edge(clk32) then
       io_cycle_rD <= io_cycle;
-       tap_wrreq(1 downto 0) <= tap_wrreq(1 downto 0) sll 1;
+      tap_wrreq(0) <= '0';
       if tap_reset = '1' then
-        -- C1530 module requires one more byte at the end due to fifo early check.
         read_cyc <= '0';
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
@@ -1484,7 +1483,7 @@ port map (
   wav_mode        => '0',
   tap_version     => tap_version,
   host_tap_in     => sdram_out,
-  host_tap_wrreq  => tap_wrreq(1),
+  host_tap_wrreq  => tap_wrreq(0),
   tap_fifo_wrfull => tap_wrfull,
   tap_fifo_error  => cass_finish,
   cass_read       => cass_read,

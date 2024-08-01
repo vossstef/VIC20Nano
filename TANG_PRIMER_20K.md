@@ -32,18 +32,21 @@ The needed +5V for the M0S Dock can be taken from C3+ Pad by a short soldered wi
 | - |------|-------------------|-|-------------------|--------------------------------------|
 | - | +5V  | +5V    |-|  n.c      | C3+ Pad !!! +5V Supply for M0S              |
 | - | +3V3 | +3V3   |-|  n.c      | don't connect |
-| - | -    | -      |1|  +3V3     | don't connect |
-| - | -    | -      |2|  +3V3     | don't connect |
-| - | GND  | GND    |3|  GND      | GND           |
-| - | GND  | GND    |4|  GND      | GND           |
-| - |  -   | -      |5|  T9       | don't connect |
-| - |  -   | -      |6|  P9       | don't connect |
-| 5 |  -   | -      |7|  P8       | don't connect |
-| 4 | IRQn | GPIO14 |8|  T8       | Interrupt from FPGA to MCU   |
-| 3 | CSn  | GPIO12 |9|  R8       | SPI select, active low       |
-| 2 | SCK  | GPIO13 |10| T7       | SPI clock, idle low          |
-| 0 | MOSI | GPIO10 |11| T6 MISO  | SPI data from FPGA to MCU    |
-| 1 | MISO | GPIO11 |12| P6 MOSI  | SPI data from MCU to FPGA    |
+| - | -    | -      |-|  +3V3     | don't connect |
+| - | -    | -      |-|  +3V3     | don't connect |
+| - | GND  | GND    |-|  GND      | GND           |
+| - | GND  | GND    |-|  GND      | GND           |
+| - |  -   | -      |-|  T9       | don't connect |
+| - |  -   | -      |-|  P9       | don't connect |
+| 5 |  -   | -      |-|  P8       | don't connect |
+| 4 | IRQn | GPIO14 |-|  T8       | Interrupt from FPGA to MCU|
+| 3 | SCK  | GPIO13 |-|  R8       | SPI clock, idle low       |
+| 2 | CSn  | GPIO12 |-|  T7       | SPI select, active low    |
+| 1 | MOSI | GPIO11 |-|  P6       | SPI data from MCU to FPGA |
+| 0 | MISO | GPIO10 |-|  T6       | SPI data from FPGA to MCU |
+
+![M0S TP20K top](./.assets/vic20_tp20k_top.png)<br>
+![M0S TP20K bot](./.assets/vic20_tp20k_bot.png)
 
 For 20K Dock kits, it's necessary to enable the FPGA configuration mode before using the Programmer, just put the 1 switch on the dip switch down.  
 ![DIP Switch SW1 TP20K](./.assets/switch_1_on.png)
