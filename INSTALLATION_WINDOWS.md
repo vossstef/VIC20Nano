@@ -8,7 +8,7 @@ This has been tested on Windows 11. It should work on older versions too.
 
 Software needed:
 
-  - [Gowin V1.9.9.02](https://www.gowinsemi.com/en/support/home/) **to synthesize the core**
+  - [Gowin V1.9.10](https://www.gowinsemi.com/en/support/home/) **to synthesize the core**
   - [BouffaloLabDevCube](https://dev.bouffalolab.com/download) **to flash the BL616**
   - [Latest release](https://github.com/vossstef/vic20nano/releases/latest) of VIC20Nano **FPGA** bitstream
   - [Latest release](https://github.com/harbaum/MiSTeryNano/releases/latest) of MiSTeryNano **BL616 µC firmware** (if not otherwise stated in the release note.)
