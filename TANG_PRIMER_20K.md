@@ -58,10 +58,12 @@ the Tang Nano 20K](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/mis
 
 
 <br><br>
-**Optional !!!** HW modifications Primer 20K SO-DIMM Module that had been used during design debug. Not needed for normal operation. Rework place with Microscope needed.<br>
+**Optional !!!<br>** HW modifications Primer 20K SO-DIMM Module that had been used during design debug.<br> Not needed for normal operation. Rework place with Microscope needed.<br>
 - optional: *Access FLASH WP*<br>Wire FLASH pin 3 WP to Q1 Gate / R25 (FPGA pin P12). SPI LCD interface will be sacrificed.<br>
 - optional: *Access FLASH HOLD*<br> Wire FLASH pin 7 HOLD to R26-1&2 (FPGA pin F12). SPI LCD interface will be sacrificed.<br>
 - optional: *Prevent FPGA booting bitstream from FLASH* <br>
 Trace cut of pin 96 signal RECFGn from SO-DIMM connector finger pad. (be very very careful) <br>
 Wire FPGA signal MODE1 available at pad of R29 (signal side) to SO-DIMM pin 96 Pad.<br>
 By that Dock SW1 position ON (logic high) will prevent booting bitstream from FLASH. For normal boot from Flash SW1 has to be in OFF (logic low) position. FPGA load from SRAM (Programmer) is in any position possible. Solves issue [see also](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html#Successfully-burned-once%2C-but-can%27t-burn-after-that) 
+
+![M0S TP20K rework](./.assets/vic20_tp20k_rework.png)
