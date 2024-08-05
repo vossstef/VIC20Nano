@@ -366,6 +366,7 @@ signal mem_resetn      : std_logic;
 signal memerr          : std_logic; 
 signal meminit_check   : std_logic; 
 signal ddr_busy        : std_logic; 
+signal testing         : std_logic; 
 
 signal uart_rx_d : std_logic := '0';
 signal sd_det_a_d : std_logic := '0';
@@ -787,7 +788,7 @@ port map(
   read_calib_done =>read_calib_done,
   rclkpos    => open, 
   rclksel    => open, 
-  testing    => open,  
+  testing    => testing,
   fail_high  => fail_high, 
   fail_low   => fail_low,  
   test_state => open, 
@@ -962,7 +963,24 @@ flashclock: rPLL
             FDLY     => (others => '1')
         );
 
-leds_n <=  not leds;
+-- ensure FPGA READY and DONE and indicate ddr3 memory via LEDs 
+process(clk32, pll_locked)
+begin
+  if pll_locked = '0' then
+      leds_n <= (others => '1');
+    elsif rising_edge(clk32) then
+      if testing = '0' then
+          leds_n <= not leds;
+        else
+          leds_n(0) <= not led1541;
+          leds_n(1) <= not fail_low;
+          leds_n(2) <= not fail_high; 
+          leds_n(3) <= not read_calib_done;
+          leds_n(4) <= not write_level_done;
+          leds_n(5) <= not memerr;
+      end if;
+  end if;
+end process;
 leds(0) <= led1541;
 
 -- 4 3 2 1 0 digital c64
