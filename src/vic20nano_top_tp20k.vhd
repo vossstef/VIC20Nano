@@ -15,7 +15,7 @@ entity VIC20_TOP_tp20k is
     clk_27mhz   : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
-    leds_n      : out std_logic_vector(5 downto 0);
+    leds_n      : inout std_logic_vector(5 downto 0);
     io          : in std_logic_vector(4 downto 0);
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
@@ -613,7 +613,7 @@ port map
     ce            => '0',
 
     disk_num      => (others =>'0'),
-    disk_change   => sd_change, 
+    disk_change   => sd_change,
     disk_mount    => img_present,
     disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
@@ -967,7 +967,7 @@ flashclock: rPLL
 process(clk32, pll_locked)
 begin
   if pll_locked = '0' then
-      leds_n <= (others => '1');
+      leds_n <= "ZZZZZZ";
     elsif rising_edge(clk32) then
       if testing = '0' then
           leds_n <= not leds;
@@ -1203,7 +1203,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= meminit_check or system_reset(0) or not pll_locked or cart_reset; --  or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or cart_reset; --  or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1277,7 +1277,7 @@ vic_inst: entity work.VIC20
   crt_inst : entity work.loader_sd_card
   port map (
     clk               => clk32,
-    system_reset      => system_reset or meminit_check,
+    system_reset      => system_reset,
   
     sd_lba            => loader_lba,
     sd_rd             => sd_rd(4 downto 1),
