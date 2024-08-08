@@ -553,7 +553,8 @@ always @(posedge pclk) begin
         {READ_CALIB, FIVEB'(RCD/4)}: begin
             // issue read
             $display("rclkpos=%d, rclksel=%d", rclkpos, rclksel);
-            {nRAS[2], nCAS[2], nWE[2]} <= CMD_Read;
+   //       {nRAS[2], nCAS[2], nWE[2]} <= CMD_Read;
+            {nRAS[0], nCAS[0], nWE[0]} <= CMD_Read;
             A[2][12] <= 1'b1;                   // BL8 burst length
             A[2][10] <= 1'b0;                   // NO auto precharge
             A[2][9:0] <= 0;                     // row address=0

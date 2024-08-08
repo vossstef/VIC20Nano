@@ -1,10 +1,10 @@
 # VIC20Nano
 The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
-[ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) for the 
-[Tang Nano 20k FPGA board](https://wiki.sipeed.com/nano20k) ([Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/)) with a new VHDL top level and HDMI Video and Audio Output.<br>
-It has also been ported for [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) too (no Dualshock 2, no Paddles and no Retro DB9 Joystick support).<br>
-Also it has also been ported for [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([Gowin GW2A](https://www.gowinsemi.com/en/product/detail/38/)).<br>
+[ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) for the :<br>
+[Tang Nano 20k board](https://wiki.sipeed.com/nano20k) ([Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/)).<br>
+[Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) (no Dualshock 2, no Paddles and no Retro DB9 Joystick support).<br>
+[Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([Gowin GW2A](https://www.gowinsemi.com/en/product/detail/38/)).<br>
 
 Original VIC-20 core by [MikeJ (Mike Johnson)](https://www.fpgaarcade.com/author/mikej/) and [WoS (Wolfgang Scherr)](https://www.researchgate.net/profile/Wolfgang_Scherr2)<br>
 All HID, SDcard and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by [Till Harbaum](http://www.harbaum.org/till/mist)<br>
@@ -31,10 +31,9 @@ Features:
 <img src="./.assets/vic20nano.png" alt="image" width="80%" height="auto">
 <br>
 
-HID interfaces aligned in pinmap and control to match [MiSTeryNano project's bl616 misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw).<br> Basically BL616 µC on the Sipeed M0S Dock acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).<br>
-
-**Note** PROJECT IS STILL WORK IN PROGRESS
+HID interfaces aligned in pinmap and control to match [MiSTeryNano project's misterynano_fw](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw) respectively [FPGA-Companion](https://github.com/harbaum/FPGA-Companion).<br> Basically a µC M0S/BL616 / Raspberry Pi Pico RP2040 / ESP32-S2/S3 acts as USB host for USB devices and as an OSD controller using a [SPI communication protocol](https://github.com/harbaum/MiSTeryNano/blob/main/SPI.md).
 <br>
+
 ## Installation
 
 The installation of VIC20 Nano on the Tang Nano 20k board can be done using a Linux PC or a Windows PC
@@ -45,7 +44,7 @@ See [Tang Primer 25K](TANG_PRIMER_25K.md)
 
 ## VIC20Nano on Tang Primer 20K (Dock ext board)
 See [Tang Primer 20K](TANG_PRIMER_20K.md)<br>
-The DDR3 memory controller is a slight modified copy of [nestang](https://github.com/nand2mario/nestang). It had been tested on a board eqipped with a SKHynix DDR3 memory. It is used as a buffer for the TAP Tape loading.
+The DDR3 memory controller is a slight modified copy of [nestang](https://github.com/nand2mario/nestang). It had been tested on a board eqipped with a SKHynix DDR3 memory and is used as a buffer for the TAP Tape loading.
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card.<br>
@@ -261,7 +260,7 @@ see pin configuration in .cst configuration file
 
 In order to use this Design the following things are needed:
 
-[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)<br>
+[Sipeed M0S Dock](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html) or Raspberry Pi Pico RP2040 or ESP32-S2/S3<br>
 [Sipeed Tang Nano 20k](https://wiki.sipeed.com/nano20k) <br>
 or [Sipeed Tang Primer 25k](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)<br>
 and [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI)<br>

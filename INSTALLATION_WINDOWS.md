@@ -78,24 +78,26 @@ These DOS for the c1541 emulation can later be selected from the on-screen-displ
 
 ![](https://github.com/vossstef/vic20nano/blob/main/.assets/c64_flash.png)
 **At a glance the memory layout of the SPI Flash:**
-| | | | ||
-|-|-|-|-|-|
-| Type | TN20k | TP25k | TM138k |
-| FPGA bitstream            | 0x000000 | 0x000000 | 0x000000 |ROM size |
-| reserved for Atari ST ROM | 0x100000 | 0x100000 | 0x900000 | - |
-| c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0xA00000 |32k|
-| c1541 CBM DOS 2.6         | 0x20C000 | 0x20C000 | 0xA0C000 |16k|
-| c1541 Speed DOS Plus      | 0x214000 | 0x214000 | 0xA14000 |16k|
-| c1541 Jiffy DOS           | 0x21C000 | 0x21C000 | 0xA1C000 |16k|
+|                           | |          |          |         | |
+|-                          |-         |-         |-         |-        |-|
+| Type                      | TN20k    | TP20k    |TP25k     | TM138k  | |
+| FPGA bitstream            | 0x000000 | 0x000000 | 0x000000 | 0x000000 |ROM size |
+| reserved for Atari ST ROM | 0x100000 | 0x100000 | 0x100000 | 0x900000 | - |
+| c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0x200000 | 0xA00000 |32k|
+| c1541 CBM DOS 2.6         | 0x20C000 | 0x20C000 | 0x20C000 | 0xA0C000 |16k|
+| c1541 Speed DOS Plus      | 0x214000 | 0x214000 | 0x214000 | 0xA14000 |16k|
+| c1541 Jiffy DOS           | 0x21C000 | 0x21C000 | 0x21C000 | 0xA1C000 |16k|
 
 **shell / command line Programming alternative**
 
 Windows shell and Gowin Programmer<br>
 ```programmer_cli  -r 36 --fsFile vic20nano.fs --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
+```programmer_cli  -r 36 --fsFile vic20nano_tp20k.fs --spiaddr 0x000000 --cable-index 1 --d GW2A-18C```<br>
 ```programmer_cli  -r 36 --fsFile vic20nano_25k.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
 ```programmer_cli  -r 36 --fsFile vic20nano_138k.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
 
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2ANR-18C```<br>
+```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2A-18C```<br>
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5A-25A```<br>
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br><br>
 Linux shell and [openFPGAloader](https://github.com/trabucayre/openFPGALoader).<br>
@@ -103,6 +105,7 @@ Linux shell and [openFPGAloader](https://github.com/trabucayre/openFPGALoader).<
 ```openFPGALoader -b tangnano20k --external-flash -o 0x200000  2dosa_c.bin```<br>
 ```openFPGALoader -b tangnano20k -f vic20nano.fs```<br>
 <br>
+```openFPGALoader -b tangprimer20k --external-flash -o 0x200000  2dosa_c.bin```<br>
 ```openFPGALoader -b tangprimer25k --external-flash -o 0x200000  2dosa_c.bin```<br>
 ```openFPGALoader -b tangmega138k --external-flash -o 0xA00000  2dosa_c.bin```<br>
 

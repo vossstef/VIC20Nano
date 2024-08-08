@@ -15,7 +15,7 @@ entity VIC20_TOP_tp20k is
     clk_27mhz   : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
-    leds_n      : out std_logic_vector(5 downto 0);
+    leds_n      : inout std_logic_vector(5 downto 0);
     io          : in std_logic_vector(4 downto 0);
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
@@ -366,6 +366,7 @@ signal mem_resetn      : std_logic;
 signal memerr          : std_logic; 
 signal meminit_check   : std_logic; 
 signal ddr_busy        : std_logic; 
+signal testing         : std_logic; 
 
 signal uart_rx_d : std_logic := '0';
 signal sd_det_a_d : std_logic := '0';
@@ -537,39 +538,34 @@ led_ws2812: entity work.ws2812
    data   => ws2812
   );
 
-	process(clk32, disk_reset)
+	process(clk32, flash_lock)
     variable reset_cnt : integer range 0 to 2147483647;
     begin
-		if disk_reset = '1' then
+		if flash_lock = '0' then
       disk_chg_trg <= '0';
 			reset_cnt := 64000000;
       elsif rising_edge(clk32) then
-
-
         uart_rx_d  <= uart_rx;
         sd_det_a_d <= sd_det;
 
         if reset_cnt /= 0 then
-				reset_cnt := reset_cnt - 1;
-			end if;
-		end if;
-
-  if reset_cnt = 0 then
-    disk_chg_trg <= '1';
-  else 
-    disk_chg_trg <= '0';
+				  reset_cnt := reset_cnt - 1;
+          disk_chg_trg <= '0';
+        else
+          disk_chg_trg <= '1';
+        end if;
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset or not flash_lock;
+disk_reset <= resetvic20 or c1541_reset or not disk_chg_trg;
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
-  begin
+begin
   if pll_locked = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
-    disk_g64_d <= '0';
+    c1541_reset <= '0';
     elsif rising_edge(clk32) then
       sd_img_mounted_d <= sd_img_mounted(0);
       disk_chg_trg_d <= disk_chg_trg;
@@ -612,7 +608,7 @@ port map
     ce            => '0',
 
     disk_num      => (others =>'0'),
-    disk_change   => sd_change, 
+    disk_change   => sd_change,
     disk_mount    => img_present,
     disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
@@ -787,7 +783,7 @@ port map(
   read_calib_done =>read_calib_done,
   rclkpos    => open, 
   rclksel    => open, 
-  testing    => open,  
+  testing    => testing,
   fail_high  => fail_high, 
   fail_low   => fail_low,  
   test_state => open, 
@@ -950,7 +946,7 @@ flashclock: rPLL
             CLKOUTP  => mspi_clk, -- phase shifted clock SPI Flash
             CLKOUTD  => open,
             CLKOUTD3 => open,
-            RESET    => '0',
+            RESET    => '0', -- c1541_osd_reset,
             RESET_P  => '0',
             CLKIN    => clk_27mhz,
             CLKFB    => '0',
@@ -962,7 +958,24 @@ flashclock: rPLL
             FDLY     => (others => '1')
         );
 
-leds_n <=  not leds;
+-- ensure FPGA READY and DONE and indicate ddr3 memory via LEDs 
+process(clk32, pll_locked)
+begin
+  if pll_locked = '0' then
+      leds_n <= "ZZZZZZ";
+    elsif rising_edge(clk32) then
+      if testing = '0' then
+          leds_n <= not leds;
+        else
+          leds_n(0) <= not led1541;
+          leds_n(1) <= not fail_low;
+          leds_n(2) <= not fail_high; 
+          leds_n(3) <= not read_calib_done;
+          leds_n(4) <= not write_level_done;
+          leds_n(5) <= not memerr;
+      end if;
+  end if;
+end process;
 leds(0) <= led1541;
 
 -- 4 3 2 1 0 digital c64
@@ -1185,7 +1198,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= meminit_check or system_reset(0) or not pll_locked or cart_reset; --  or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or cart_reset; --  or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1259,7 +1272,7 @@ vic_inst: entity work.VIC20
   crt_inst : entity work.loader_sd_card
   port map (
     clk               => clk32,
-    system_reset      => system_reset or meminit_check,
+    system_reset      => system_reset,
   
     sd_lba            => loader_lba,
     sd_rd             => sd_rd(4 downto 1),
