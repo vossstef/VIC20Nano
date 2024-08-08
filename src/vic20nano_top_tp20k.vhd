@@ -538,39 +538,34 @@ led_ws2812: entity work.ws2812
    data   => ws2812
   );
 
-	process(clk32, disk_reset)
+	process(clk32, flash_lock)
     variable reset_cnt : integer range 0 to 2147483647;
     begin
-		if disk_reset = '1' then
+		if flash_lock = '0' then
       disk_chg_trg <= '0';
 			reset_cnt := 64000000;
       elsif rising_edge(clk32) then
-
-
         uart_rx_d  <= uart_rx;
         sd_det_a_d <= sd_det;
 
         if reset_cnt /= 0 then
-				reset_cnt := reset_cnt - 1;
-			end if;
-		end if;
-
-  if reset_cnt = 0 then
-    disk_chg_trg <= '1';
-  else 
-    disk_chg_trg <= '0';
+				  reset_cnt := reset_cnt - 1;
+          disk_chg_trg <= '0';
+        else
+          disk_chg_trg <= '1';
+        end if;
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset or not flash_lock;
+disk_reset <= resetvic20 or c1541_reset or not disk_chg_trg;
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
-  begin
+begin
   if pll_locked = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
-    disk_g64_d <= '0';
+    c1541_reset <= '0';
     elsif rising_edge(clk32) then
       sd_img_mounted_d <= sd_img_mounted(0);
       disk_chg_trg_d <= disk_chg_trg;
@@ -951,7 +946,7 @@ flashclock: rPLL
             CLKOUTP  => mspi_clk, -- phase shifted clock SPI Flash
             CLKOUTD  => open,
             CLKOUTD3 => open,
-            RESET    => '0',
+            RESET    => '0', -- c1541_osd_reset,
             RESET_P  => '0',
             CLKIN    => clk_27mhz,
             CLKFB    => '0',
