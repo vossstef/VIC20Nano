@@ -14,7 +14,6 @@ add_file src/hdmi/packet_picker.sv
 add_file src/hdmi/serializer.sv
 add_file src/hdmi/source_product_description_info_frame.sv
 add_file src/hdmi/tmds_channel.sv
-add_file src/megacart.v
 add_file src/misc/flash_dspi.v
 add_file src/misc/hid.v
 add_file src/misc/mcu_spi.v
@@ -45,7 +44,7 @@ add_file src/t65/T65.vhd
 add_file src/t65/T65_ALU.vhd
 add_file src/t65/T65_MCode.vhd
 add_file src/t65/T65_Pack.vhd
-add_file src/vic20.vhd
+add_file src/vic20_tn9k.vhd
 add_file src/vic20_clocks.vhd
 add_file src/vic20_keyboard.vhd
 add_file src/vic20nano_top_tn9k.vhd
