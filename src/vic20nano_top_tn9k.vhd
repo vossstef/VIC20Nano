@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------
---  VIC20 Top level for Tang Nano
+--  VIC20 Top level for Tang Nano 9k
 --  2024 Stefan Voss
 --  based on the work of many others
 --
@@ -912,7 +912,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= system_reset(0) or not pll_locked or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or cart_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1166,13 +1166,13 @@ mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
 --);
 
 -------------- TAP -------------------
-timer_inst: entity work.core_timer
-port map (
-  clk32       => clk32,
+--timer_inst: entity work.core_timer
+--port map (
+--  clk32       => clk32,
 
-	io_cycle    => io_cycle,
-	refresh     => idle
-);
+--	io_cycle    => io_cycle,
+--	refresh     => idle
+--);
 
 tap_download <= ioctl_download and load_tap;
 tap_reset <= '1' when resetvic20 = '1' or tap_download = '1'or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';

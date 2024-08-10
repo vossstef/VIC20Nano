@@ -2,9 +2,10 @@
 The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
 [ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) for the :<br>
-[Tang Nano 20k board](https://wiki.sipeed.com/nano20k) ([Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/)).<br>
+[Tang Nano 20k](https://wiki.sipeed.com/nano20k) ([Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/)).<br>
 [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) (no Dualshock 2, no Paddles and no Retro DB9 Joystick support).<br>
-[Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([Gowin GW2A](https://www.gowinsemi.com/en/product/detail/38/)).<br>
+[Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([Gowin GW2A](https://www.gowinsemi.com/en/product/detail/46/)).<br>[Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html) ([Gowin GW1NR](https://www.gowinsemi.com/en/product/detail/38/)) (no C1541, no Tape, micro SD card HW modification needed).<br>
+<br>
 
 Original VIC-20 core by [MikeJ (Mike Johnson)](https://www.fpgaarcade.com/author/mikej/) and [WoS (Wolfgang Scherr)](https://www.researchgate.net/profile/Wolfgang_Scherr2)<br>
 All HID, SDcard and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by [Till Harbaum](http://www.harbaum.org/till/mist)<br>
@@ -45,6 +46,9 @@ See [Tang Primer 25K](TANG_PRIMER_25K.md)
 ## VIC20Nano on Tang Primer 20K (Dock ext board)
 See [Tang Primer 20K](TANG_PRIMER_20K.md)<br>
 The DDR3 memory controller is a slight modified copy of [nestang](https://github.com/nand2mario/nestang). It had been tested on a board eqipped with a SKHynix DDR3 memory and is used as a buffer for the TAP Tape loading.
+
+## VIC20Nano on Tang Nano 9K
+See [Tang Primer 9K](TANG_NANO_9K.md)
 
 ## emulated Diskdrive c1541
 Emulated 1541 on a regular FAT/exFAT formatted microSD card.<br>
