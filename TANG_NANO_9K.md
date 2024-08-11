@@ -6,29 +6,45 @@ The whole setup will look like this:<br>
 ![VIC20Nano on TN9K](./.assets/tn9k.png)
 
 
-|Bus|Signal| D9  |TN9k| FPGA Signal    |
+**D9 retro Joystick Interface**
+
+|Bus|Signal| D9  |TN9k pin| FPGA Signal    |
 | - |------|-------------------|-|-------|
-| 0 | Trigger | -    |x|  x      |
-| 1 | Down    | -    |y|  y      |
-| 2 | Up      | -    |z|  z      |
-| 3 | Right   | -    | |        |
-| 4 | Left    | -    | |        |
-| - | GND     | -    | |  GND      |
+| 0 | Trigger | -    |27|  Trigger      |
+| 1 | Down    | -    |28|  Down      |
+| 2 | Up      | -    |25|  Up      |
+| 3 | Right   | -    |26 | Right       |
+| 4 | Left    | -    |29 | Left       |
+| - | GND     | -    |GND |  GND      |
 
+**Pinmap Dualshock 2 Controller Interface** <br>
+<img src="./.assets/controller-pinout.jpg" alt="image" width="30%" height="auto">
+| DS pin | TN9 pin | Signal | DS Function |
+| ----------- | ---   | --------  | ----- |
+| 1 | 54 | MISO | JOYDAT  |
+| 2 | 53 | MOSI  | JOYCMD |
+| 3 | n.c.  | - | 7V5 |
+| 4 |  | GND | GND |
+| 5 |  | 3V3 | 3V3 |
+| 6 | 55 | CS | JOYATN|
+| 7 | 51 | MCLK | JOYCLK |
+| 8 | n.c.  | - | JOYIRQ |
+| 9 | n.c.  | - | JOYACK |
 
+**M0S Dock BL616 µC**
 
-|Bus|M0S Signal| M0S Dock   |PN9k| FPGA Signal                  |                                      |
-| - |------|-------------------|-|-------------------|--------------------------------------|
-| - | +5V  | +5V    |-|  5V       |               |
-| - | +3V3 | +3V3   |-|  n.c      | don't connect |
-| - | GND  | GND    |-|  GND      | GND           |
-| - | GND  | GND    |-|  GND      | GND           |
-| 5 |  -   | -      |-|  x       | don't connect |
-| 4 | IRQn | GPIO14 |-|  y       | Interrupt from FPGA to MCU|
-| 3 | SCK  | GPIO13 |-|  z       | SPI clock, idle low       |
-| 2 | CSn  | GPIO12 |-|         | SPI select, active low    |
-| 1 | MOSI | GPIO11 |-|         | SPI data from MCU to FPGA |
-| 0 | MISO | GPIO10 |-|         | SPI data from FPGA to MCU |
+|Bus|M0S Signal|M0S Pin|TN9k pin | Signal  |
+| - |------     |-------------------|-------------------|--------------------------------------|
+| - | +5V       | +5V    |  5V       | 5V              |
+| - | +3V3      | +3V3   |  n.c      | don't connect ! |
+| - | GND       | GND    |  GND      | GND           |
+| - | GND       | GND    |  GND      | GND           |
+| 5 |  -        | -      |  41       | don't connect |
+| 4 | IRQn      | GPIO14 |  35       | Interrupt from FPGA to MCU|
+| 3 | SCK       | GPIO13 |  40       | SPI clock, idle low       |
+| 2 | CSn       | GPIO12 |  34       | SPI select, active low    |
+| 1 | MOSI      | GPIO11 |  33       | SPI data from MCU to FPGA |
+| 0 | MISO      | GPIO10 |  30       | SPI data from FPGA to MCU |
 
 
 On the software side the setup is very simuilar to the original Tang Nano 20K based solution. The core needs to be built specifically
@@ -37,9 +53,9 @@ for the different FPGA of the Tang Primer using either the [TCL script with the 
 the Tang Nano 20K](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw/). 
 
 <br><br>
-**Mandatory !!!<br>** HW modifications TN9K to fully support the micro SD Card.<br>
-Rework place with Microscope needed.<br>
-- **SD Card Data 1**<br>Wire tbd. SPI LCD interface will be sacrificed.<br>
-- **SD Card Data 2**<br>Wire tbd. SPI LCD interface will be sacrificed.<br>
+**Mandatory !!!<br>** HW modification TN9K needed to fully support micro SD Card in 4bit data transfer mode.<br>
+Rework place with Soldering Iron and a Microscope or magnifying glass needed.<br>
+- **SD Card Data 1**<br>Wire SD card holder SD_dat1 pin 8 to TN9k FPGA pin 48. SPI LCD interface will be blocked by that.<br>
+- **SD Card Data 2**<br>Wire SD card holder SD_dat2 pin 1 to TN9k FPGA pin 49. SPI LCD interface will be blocked by that.<br>
 
 ![TN9K rework](./.assets/vic20_tn9k_rework.png)

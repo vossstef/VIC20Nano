@@ -109,6 +109,9 @@ Linux shell and [openFPGAloader](https://github.com/trabucayre/openFPGALoader).<
 ```openFPGALoader -b tangprimer25k --external-flash -o 0x200000  2dosa_c.bin```<br>
 ```openFPGALoader -b tangmega138k --external-flash -o 0xA00000  2dosa_c.bin```<br>
 
+```openFPGALoader -b tangnano9k --external-flash -o 0x000000  basic.bin```<br>
+
+
 **c1541 DOS ROM binaries** <br>
 VIC20 Core mandatorily need the CBM DOS Kernal or Jiffy DOS !<br>
 The needed DOS files you will find on the Internet.<br>

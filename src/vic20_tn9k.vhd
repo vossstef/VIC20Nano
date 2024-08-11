@@ -116,7 +116,14 @@ entity VIC20 is
 		conf_clk     : in  std_logic;
 		conf_wr      : in  std_logic;
 		conf_ai      : in  std_logic_vector(15 downto 0);
-		conf_di      : in  std_logic_vector(7 downto 0)
+		conf_di      : in  std_logic_vector(7 downto 0);
+
+    -- external flash memory
+    flash_clk    : in  std_logic;
+    flash_lock   : in  std_logic;
+    mspi_cs      : out  std_logic;
+    mspi_di      : inout std_logic;
+    mspi_do      : inout std_logic
 	);
 end;
 
@@ -775,6 +782,25 @@ port map (
 
 --  ramex0 : entity work.ram_conf_8192x8
 --    generic map (
+--      START_AI => "100101"   -- 0x9400
+--   )
+--    port map (
+--      CLK     => i_sysclk,
+--      CLK_EN  => ena_4,
+--      ENn     => col_ram_sel_l,
+--      WRn     => v_rw_l,
+--      ADDR    => v_addr(9 downto 0),
+--      DIN     => v_data(3 downto 0),
+--      DOUT    => col_ram_dout,
+
+--      CONF_CLK=> conf_clk,
+--      CONF_WR => conf_wr,
+--      CONF_AI => conf_ai,
+--      CONF_DI => conf_di
+--    );
+
+--  ramex0 : entity work.ram_conf_8192x8
+--    generic map (
 --      START_AI  => "000"  -- 0x0000 (0x400-0xFFF)
 --    )
 --    port map (
@@ -804,7 +830,6 @@ port map (
 --      ADDR    => c_addr(12 downto 0),
 --      DIN     => c_dout,
 --      DOUT    => ramex1_dout,
-
 --      CONF_CLK=> conf_clk,
 --      CONF_WR => conf_wr,
 --      CONF_AI => conf_ai,
@@ -882,6 +907,23 @@ port map (
           reset => '0',
           ad    => v_addr(11 downto 0)
       );
+
+-- future (Kernal) Basic and Character ROM's SPI Flash, offset in spi flash $000000
+flash_inst: entity work.flash 
+port map(
+    clk       => flash_clk,
+    resetn    => flash_lock,
+    ready     => open,
+    busy      => open,
+    address   => 8x"00" & "000" & c_addr(12 downto 0),
+    cs        => ((not blk_sel_l(6)) and p2_h),
+    dout      => open, -- basic_rom_dout,
+    mspi_cs   => mspi_cs,
+    mspi_di   => mspi_di,
+    mspi_hold => open,
+    mspi_wp   => open,
+    mspi_do   => mspi_do
+);
 
   -- VIC20's basic ROM
   basic_rom : entity work.Gowin_pROM_basic

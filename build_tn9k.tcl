@@ -25,6 +25,10 @@ add_file src/misc/sdcmd_ctrl.v
 add_file src/misc/sysctrl.v
 add_file src/misc/video.v
 add_file src/misc/video_analyzer.v
+add_file src/psram_controller.v
+add_file src/c1530.vhd
+add_file src/c1541/via6522.vhd
+add_file src/fifo_sc_hs/fifo_sc_hs.vhd
 add_file src/gowin_dpb/gowin_dpb_1k.vhd
 add_file src/gowin_dpb/gowin_dpb_1k_x4.vhd
 add_file src/gowin_dpb/gowin_dpb_2k.vhd
@@ -34,7 +38,6 @@ add_file src/gowin_prom/gowin_prom_char.vhd
 add_file src/gowin_sdpb/gowin_sdpb_kernal_8k.vhd
 add_file src/gowin_sp/gowin_sp_2k.vhd
 add_file src/gowin_sp/gowin_sp_8k.vhd
-add_file src/m6522.vhd
 add_file src/m6561.vhd
 add_file src/ram_conf_1024x4.vhd
 add_file src/ram_conf_1024x8.vhd
@@ -51,8 +54,6 @@ add_file src/vic20nano_top_tn9k.vhd
 add_file src/vic20nano_top_tn9k.cst
 add_file src/vic20nano_top_tn9k.sdc
 add_file src/loader_sd_card.sv
-add_file src/c1530.vhd
-add_file src/fifo_sc_hs/fifo_sc_hs.vhd
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name vic20nano_tn9k

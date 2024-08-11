@@ -31,6 +31,7 @@
         <File path="src/misc/sysctrl.v" type="file.verilog" enable="1"/>
         <File path="src/misc/video.v" type="file.verilog" enable="1"/>
         <File path="src/misc/video_analyzer.v" type="file.verilog" enable="1"/>
+        <File path="src/psram_controller.v" type="file.verilog" enable="1"/>
         <File path="src/c1530.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/via6522.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fifo_sc_hs/fifo_sc_hs.vhd" type="file.vhdl" enable="1"/>
