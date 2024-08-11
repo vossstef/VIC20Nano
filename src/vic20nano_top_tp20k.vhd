@@ -313,7 +313,7 @@ signal vic_blk5_sel    : std_logic;
 signal vic_ram123_sel  : std_logic;
 signal vic_data        : std_logic_vector(7 downto 0);
 signal vic_addr        : std_logic_vector(15 downto 0);
-signal mc_loaded       : std_logic := '1';
+signal mc_loaded       : std_logic := '0';
 signal mc_data         : std_logic_vector(7 downto 0);
 signal sdram_out       : std_logic_vector(7 downto 0);
 signal mc_nvram_out    : std_logic_vector(7 downto 0);
@@ -1416,20 +1416,20 @@ begin
    end if;
 end process;
 
-process(clk32)
-begin
-  if rising_edge(clk32) then
-   if system_reset(1) = '1' or (ioctl_download and load_crt) = '1' then
-        mc_loaded <= '0'; 
-      end if;
-   if ioctl_download and load_mc then
-      mc_loaded <= '1'; 
-    end if;
+--process(clk32)
+--begin
+--  if rising_edge(clk32) then
+--   if system_reset(1) = '1' or (ioctl_download and load_crt) = '1' then
+--        mc_loaded <= '0'; 
+--      end if;
+--   if ioctl_download and load_mc then
+--      mc_loaded <= '1'; 
+--    end if;
 
-  end if;
-end process;
+--  end if;
+--end process;
 
-mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
+--mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
 
 mc_inst: entity work.megacart
 port map 
