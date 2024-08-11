@@ -971,11 +971,11 @@ vic_inst: entity work.VIC20
 		i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set
 		i_ram_ext     => i_ram_ext,    -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
 		--
-		i_extmem_en   => mc_loaded,
+		i_extmem_en   => '0',
 		o_extmem_sel  => extmem_sel,
 		o_extmem_r_wn => vic_wr_n,
 		o_extmem_addr => vic_addr,
-		i_extmem_data => mc_data,
+		i_extmem_data => (others => '0'),
 		o_extmem_data => vic_data,
 		o_io2_sel     => vic_io2_sel,
 		o_io3_sel     => vic_io3_sel,
