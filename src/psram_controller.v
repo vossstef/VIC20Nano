@@ -28,6 +28,7 @@ module PsramController #(
     // HyperRAM physical interface. Gowin interface is for 2 dies. 
     // We currently only use the first die (4MB).
     output [1:0] O_psram_ck,
+    output [1:0] O_psram_ck_n,
     inout [1:0] IO_psram_rwds,
     inout [15:0] IO_psram_dq,
     output [1:0] O_psram_cs_n
@@ -239,11 +240,19 @@ ODDR oddr_ck(
     .D0(ck_e_p), 
     .D1(1'b0),
     .TX(1'b0),
-    .Q0(ck_tbuf),
+    .Q0(), // (ck_tbuf),
     .Q1()
 );
-assign O_psram_ck[0] = ck_tbuf;
 
+ELVDS_OBUF u_clk_gen
+(  
+.O (O_psram_ck[0]),
+.OB(O_psram_ck_n[0]),
+.I (clk_p)
+);
+
+
+//assign O_psram_ck[0] =  ck_tbuf;
 
 // Tristate DDR input
 IDDR iddr_rwds(

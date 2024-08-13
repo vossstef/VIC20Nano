@@ -351,6 +351,7 @@ signal mspi_hold     : std_logic;
 signal mspi_wp       : std_logic;
 signal c1541_osd_reset_d  : std_logic;
 signal PSDA : std_logic_vector(3 downto 0);
+signal drambusy       : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -560,30 +561,55 @@ port map(
       tmds_d_p   => tmds_d_p
       );
 
-      O_psram_reset_n <= pll_locked & pll_locked;
-   
-      sdram_out <= dout16(7 downto 0);
-dram_inst: entity work.PsramController
-        generic map (
-          LATENCY => 4,
-          FREQ    =>  64000000 )
-        port map
-        (
-          clk           => clk64, 
-          clk_p         => clk64_90,
-          resetn        => pll_locked,
-          read          => io_cycle_ce,
-          write         => io_cycle_we,
-          byte_write    => '0',
-          addr          => io_cycle_addr(21 downto 0),
-          din           => io_cycle_data & io_cycle_data,
-          dout          => dout16,
-          busy          => open,
-          O_psram_ck    => O_psram_ck,
-          IO_psram_rwds => IO_psram_rwds,
-          IO_psram_dq   => IO_psram_dq,
-          O_psram_cs_n  => O_psram_cs_n
-    );
+--      O_psram_reset_n <= pll_locked & pll_locked;
+--      sdram_out <= dout16(15 downto 8) when io_cycle_addr(0) = '1' else dout16(7 downto 0);
+
+--      dram_inst: entity work.PsramController
+--        generic map (
+--          LATENCY => 3,
+--          FREQ    =>  71550000 )
+--        port map
+--        (
+--          clk           => clk64, 
+--          clk_p         => clk64_90,
+--          resetn        => pll_locked,
+--          read          => io_cycle_ce,
+--          write         => io_cycle_we,
+--          byte_write    => '1',
+--          addr          => io_cycle_addr(21 downto 0),
+--          din           => io_cycle_data & io_cycle_data,
+--          dout          => dout16,
+--          busy          => drambusy,
+--          O_psram_ck    => O_psram_ck,
+--          O_psram_ck_n  => O_psram_ck_n,
+--          IO_psram_rwds => IO_psram_rwds,
+--          IO_psram_dq   => IO_psram_dq,
+--          O_psram_cs_n  => O_psram_cs_n
+--    );
+
+dram_inst: entity work.PSRAM_Memory_Interface_HS_Top
+port map (
+  clk => clk32,
+  memory_clk => clk64,
+  pll_lock => pll_locked,
+  rst_n => pll_locked,
+  O_psram_ck => O_psram_ck,
+  O_psram_ck_n => O_psram_ck_n,
+  IO_psram_dq => IO_psram_dq,
+  IO_psram_rwds => IO_psram_rwds,
+  O_psram_cs_n => O_psram_cs_n,
+  O_psram_reset_n => O_psram_reset_n,
+
+  wr_data => io_cycle_data,
+  rd_data => sdram_out,
+  rd_data_valid => open,
+  addr => io_cycle_addr(17 downto 0) & "0000",
+  cmd => cmd,  -- 1 write 0 = read
+  cmd_en => cmd_en,
+  init_calib => open,
+  clk_out => open,
+  data_mask => data_mask
+);
 
 -- Clock tree and all frequencies in Hz
 -- TN20k VIC20
@@ -912,7 +938,7 @@ module_inst: entity work.sysctrl
   int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
   int_ack             => int_ack,
 
-  buttons             => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
+  buttons             => std_logic_vector(unsigned'(not reset & not user)), -- S0 and S1 buttons on Tang Nano 20k
   leds                => system_leds,         -- two leds can be controlled from the MCU
   color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
@@ -1051,7 +1077,7 @@ vic_inst: entity work.VIC20
     ioctl_addr        => ioctl_addr,
     ioctl_data        => ioctl_data,
     ioctl_wr          => ioctl_wr,
-    ioctl_wait        => ioctl_wait
+    ioctl_wait        => ioctl_req_wr
   );
 
 process(clk32)
@@ -1061,13 +1087,13 @@ begin
     old_download <= ioctl_download;
     io_cycleD <= io_cycle;
 
-    if io_cycle = '0' and io_cycleD = '1' then
+    if io_cycle = '0' and io_cycleD = '1' then -- and drambusy = '0' then
       io_cycle_ce <= '1';
       io_cycle_we <= '0';
       io_cycle_addr <= tap_play_addr + TAP_ADDR;
       if ioctl_req_wr = '1' then
-         io_cycle_ce <= '0';  -- needed for RAM controller
          ioctl_req_wr <= '0';
+         io_cycle_ce <= '0'; -- DDR3 memory controller needed
          io_cycle_we <= '1';
          io_cycle_addr <= ioctl_load_addr;
          ioctl_load_addr <= ioctl_load_addr + 1;
@@ -1168,6 +1194,14 @@ begin
     
    end if;
 end process;
+-------------- TAP -------------------
+timer_inst: entity work.core_timer
+port map (
+  clk32       => clk32,
+
+	io_cycle    => io_cycle,
+	refresh     => open
+);
 
 tap_download <= ioctl_download and load_tap;
 tap_reset <= '1' when resetvic20 = '1' or tap_download = '1'or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
@@ -1175,24 +1209,26 @@ tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
-if rising_edge(clk32) then
+  if rising_edge(clk32) then
       io_cycle_rD <= io_cycle;
-      tap_wrreq(1 downto 0) <= tap_wrreq(1 downto 0) sll 1;
-      tap_start <= '0';
+      tap_wrreq(0) <= '0';
       if tap_reset = '1' then
-        -- C1530 module requires one more byte at the end due to fifo early check.
         read_cyc <= '0';
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
         tap_start <= tap_download;
-        elsif io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
-          read_cyc <= '1'; 
-        elsif io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
-          tap_play_addr <= tap_play_addr + 1;
-          read_cyc <= '0';
-          tap_wrreq(0) <= '1';
-        end if;
-    end if;
+      else
+        tap_start <= '0';
+        if io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
+            read_cyc <= '1';
+          end if;
+        if io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
+            tap_play_addr <= tap_play_addr + 1;
+            read_cyc <= '0';
+            tap_wrreq(0) <= '1';
+          end if;
+      end if;
+  end if;
 end process;
 
 c1530_inst: entity work.c1530
@@ -1202,7 +1238,7 @@ port map (
   wav_mode        => '0',
   tap_version     => tap_version,
   host_tap_in     => sdram_out,
-  host_tap_wrreq  => tap_wrreq(1),
+  host_tap_wrreq  => tap_wrreq(0),
   tap_fifo_wrfull => tap_wrfull,
   tap_fifo_error  => cass_finish,
   cass_read       => cass_read,
