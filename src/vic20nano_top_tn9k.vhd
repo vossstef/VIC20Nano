@@ -347,11 +347,16 @@ signal img_present     : std_logic := '0';
 signal c1541_sd_rd     : std_logic;
 signal c1541_sd_wr     : std_logic;
 
-signal mspi_hold     : std_logic;
-signal mspi_wp       : std_logic;
+signal mspi_hold       : std_logic;
+signal mspi_wp         : std_logic;
 signal c1541_osd_reset_d  : std_logic;
 signal PSDA : std_logic_vector(3 downto 0);
-signal drambusy       : std_logic;
+signal drambusy        : std_logic;
+signal rd_data_valid   : std_logic;
+signal rd_data         : std_logic_vector(63 downto 0) ;
+attribute syn_keep of rd_data : signal is 1;
+attribute syn_keep of rd_data_valid : signal is 1;
+
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -589,27 +594,29 @@ port map(
 
 dram_inst: entity work.PSRAM_Memory_Interface_HS_Top
 port map (
-  clk => clk32,
-  memory_clk => clk64,
-  pll_lock => pll_locked,
-  rst_n => pll_locked,
-  O_psram_ck => O_psram_ck,
-  O_psram_ck_n => O_psram_ck_n,
-  IO_psram_dq => IO_psram_dq,
-  IO_psram_rwds => IO_psram_rwds,
-  O_psram_cs_n => O_psram_cs_n,
+  clk             => clk32,
+  memory_clk      => clk64,
+  pll_lock        => pll_locked,
+  rst_n           => pll_locked,
+  O_psram_ck      => O_psram_ck,
+  O_psram_ck_n    => O_psram_ck_n,
+  IO_psram_dq     => IO_psram_dq,
+  IO_psram_rwds   => IO_psram_rwds,
+  O_psram_cs_n    => O_psram_cs_n,
   O_psram_reset_n => O_psram_reset_n,
 
-  wr_data => io_cycle_data,
-  rd_data => sdram_out,
-  rd_data_valid => open,
-  addr => io_cycle_addr(17 downto 0) & "0000",
-  cmd => cmd,  -- 1 write 0 = read
-  cmd_en => cmd_en,
-  init_calib => open,
-  clk_out => open,
-  data_mask => data_mask
+  wr_data       => io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data,
+  rd_data       => rd_data,
+  rd_data_valid => rd_data_valid,
+  addr          => io_cycle_addr(17 downto 0) & "000", -- burst of 16 bytes
+  cmd           => io_cycle_we,  -- 1 = write 0 = read
+  cmd_en        => io_cycle_ce,
+  init_calib    => ram_ready,
+  clk_out       => open, -- x1 clock
+  data_mask     => (others => '0')
 );
+
+  sdram_out <= rd_data(7 downto 0);
 
 -- Clock tree and all frequencies in Hz
 -- TN20k VIC20
@@ -1087,13 +1094,12 @@ begin
     old_download <= ioctl_download;
     io_cycleD <= io_cycle;
 
-    if io_cycle = '0' and io_cycleD = '1' then -- and drambusy = '0' then
+    if io_cycle = '0' and io_cycleD = '1' then
       io_cycle_ce <= '1';
       io_cycle_we <= '0';
       io_cycle_addr <= tap_play_addr + TAP_ADDR;
       if ioctl_req_wr = '1' then
          ioctl_req_wr <= '0';
-         io_cycle_ce <= '0'; -- DDR3 memory controller needed
          io_cycle_we <= '1';
          io_cycle_addr <= ioctl_load_addr;
          ioctl_load_addr <= ioctl_load_addr + 1;
@@ -1175,7 +1181,7 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and (load_crt or load_mc) = '1' then
+    if old_download /= ioctl_download and load_crt  = '1' then
         cart_reset <= ioctl_download;
       end if;
 
@@ -1186,10 +1192,6 @@ begin
     if system_reset(1) = '1' then
           cart_reset <= '0';
           cart_blk <= (others => '0');
-        end if;
-
-    if ioctl_download = '1' and load_mc = '1' then 
-          cart_blk <= (others => '0'); 
         end if;
     
    end if;
@@ -1222,7 +1224,7 @@ begin
         if io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
             read_cyc <= '1';
           end if;
-        if io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
+        if io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' and rd_data_valid = '1' then -- wait for psram
             tap_play_addr <= tap_play_addr + 1;
             read_cyc <= '0';
             tap_wrreq(0) <= '1';
