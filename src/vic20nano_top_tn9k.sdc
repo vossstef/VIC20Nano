@@ -1,4 +1,4 @@
-create_clock -name flash_clk -period 15.625 -waveform {0 5} [get_nets {flash_clk}]
+#create_clock -name flash_clk -period 15.625 -waveform {0 5} [get_nets {flash_clk}]
 create_clock -name clk32 -period 27.955 -waveform {0 5} [get_nets {clk32}]
 create_clock -name joymiso -period 8000 -waveform {0 20} [get_ports {joystick_miso}]
 create_clock -name clk64 -period 13.976 -waveform {0 5} [get_nets {clk64}]

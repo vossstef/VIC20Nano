@@ -357,6 +357,10 @@ signal rd_data         : std_logic_vector(63 downto 0) ;
 attribute syn_keep of rd_data : signal is 1;
 attribute syn_keep of rd_data_valid : signal is 1;
 
+signal clk_pixel_x10_d3 : std_logic;
+signal tap_cycle : std_logic;
+signal tap_autoplay  : std_logic;
+signal psaddr : std_logic_vector(20 downto 0);
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -608,15 +612,16 @@ port map (
   wr_data       => io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data & io_cycle_data,
   rd_data       => rd_data,
   rd_data_valid => rd_data_valid,
-  addr          => io_cycle_addr(17 downto 0) & "000", -- burst of 16 bytes
-  cmd           => io_cycle_we,  -- 1 = write 0 = read
-  cmd_en        => io_cycle_ce,
+  addr          => psaddr, -- burst of 16 bytes (8 clocks)
+  cmd           => tap_wr,  -- 1 = write 0 = read
+  cmd_en        => tap_rd or tap_wr,
   init_calib    => ram_ready,
   clk_out       => open, -- x1 clock
   data_mask     => (others => '0')
 );
 
   sdram_out <= rd_data(7 downto 0);
+  psaddr <= io_cycle_addr(16 downto 0) & "0000" when tap_download = '1' else tap_play_addr(16 downto 0) & "0000";
 
 -- Clock tree and all frequencies in Hz
 -- TN20k VIC20
@@ -672,7 +677,7 @@ mainclock: rPLL
             LOCK     => pll_locked,
             CLKOUTP  => clk_pixel_x10_90,
             CLKOUTD  => open,
-            CLKOUTD3 => open,
+            CLKOUTD3 => clk_pixel_x10_d3,
             RESET    => '0',
             RESET_P  => '0',
             CLKIN    => clk_27mhz,
@@ -737,48 +742,49 @@ port map(
 -- TP25k  XTX XT25F64FWOIG
 -- TM138k Winbond 25Q128BVEA
 -- phase shift 135° TN, TP and 270° TM
-flashclock: rPLL
-        generic map (
-          FCLKIN => "27",
-          DEVICE => "GW1NR-9C",
-          DYN_IDIV_SEL => "false",
-          IDIV_SEL => 7,
-          DYN_FBDIV_SEL => "false",
-          FBDIV_SEL => 18,
-          DYN_ODIV_SEL => "false",
-          ODIV_SEL => 8,
-          PSDA_SEL => "0110", -- phase shift 135°
-          DYN_DA_EN =>  "false", -- "true",
-          DUTYDA_SEL => "1000",
-          CLKOUT_FT_DIR => '1',
-          CLKOUTP_FT_DIR => '1',
-          CLKOUT_DLY_STEP => 0,
-          CLKOUTP_DLY_STEP => 0,
-          CLKFB_SEL => "internal",
-          CLKOUT_BYPASS => "false",
-          CLKOUTP_BYPASS => "false",
-          CLKOUTD_BYPASS => "false",
-          DYN_SDIV_SEL => 2,
-          CLKOUTD_SRC => "CLKOUT",
-          CLKOUTD3_SRC => "CLKOUT"
-        )
-        port map (
-            CLKOUT   => flash_clk, -- clock Flash controller
-            LOCK     => flash_lock,
-            CLKOUTP  => mspi_clk, -- phase shifted clock SPI Flash
-            CLKOUTD  => open,
-            CLKOUTD3 => open,
-            RESET    => '0',
-            RESET_P  => '0',
-            CLKIN    => clk_27mhz,
-            CLKFB    => '0',
-            FBDSEL   => (others => '0'),
-            IDSEL    => (others => '0'),
-            ODSEL    => (others => '0'),
-            PSDA     => (others => '0'), -- PSDA, -- (others => '0'),
-            DUTYDA   => (others => '0'),
-            FDLY     => (others => '1')
-        );
+
+--flashclock: rPLL
+--        generic map (
+--          FCLKIN => "27",
+--          DEVICE => "GW1NR-9C",
+--          DYN_IDIV_SEL => "false",
+--          IDIV_SEL => 7,
+--          DYN_FBDIV_SEL => "false",
+--          FBDIV_SEL => 18,
+--          DYN_ODIV_SEL => "false",
+--          ODIV_SEL => 8,
+--          PSDA_SEL => "0110", -- phase shift 135°
+--          DYN_DA_EN =>  "false", -- "true",
+--          DUTYDA_SEL => "1000",
+--          CLKOUT_FT_DIR => '1',
+--          CLKOUTP_FT_DIR => '1',
+--          CLKOUT_DLY_STEP => 0,
+--          CLKOUTP_DLY_STEP => 0,
+--          CLKFB_SEL => "internal",
+--          CLKOUT_BYPASS => "false",
+--          CLKOUTP_BYPASS => "false",
+--          CLKOUTD_BYPASS => "false",
+--          DYN_SDIV_SEL => 2,
+--          CLKOUTD_SRC => "CLKOUT",
+--          CLKOUTD3_SRC => "CLKOUT"
+--        )
+--        port map (
+--            CLKOUT   => flash_clk, -- clock Flash controller
+--            LOCK     => flash_lock,
+ --           CLKOUTP  => mspi_clk, -- phase shifted clock SPI Flash
+--            CLKOUTD  => open,
+--            CLKOUTD3 => open,
+--            RESET    => '0',
+--            RESET_P  => '0',
+--            CLKIN    => clk_27mhz,
+--            CLKFB    => '0',
+--            FBDSEL   => (others => '0'),
+--            IDSEL    => (others => '0'),
+--            ODSEL    => (others => '0'),
+--            PSDA     => (others => '0'), -- PSDA, -- (others => '0'),
+--            DUTYDA   => (others => '0'),
+--            FDLY     => (others => '1')
+--        );
 
 leds_n <=  not leds;
 leds(0) <= led1541;
@@ -1084,7 +1090,7 @@ vic_inst: entity work.VIC20
     ioctl_addr        => ioctl_addr,
     ioctl_data        => ioctl_data,
     ioctl_wr          => ioctl_wr,
-    ioctl_wait        => ioctl_req_wr
+    ioctl_wait        => ioctl_wait
   );
 
 process(clk32)
@@ -1097,7 +1103,6 @@ begin
     if io_cycle = '0' and io_cycleD = '1' then
       io_cycle_ce <= '1';
       io_cycle_we <= '0';
-      io_cycle_addr <= tap_play_addr + TAP_ADDR;
       if ioctl_req_wr = '1' then
          ioctl_req_wr <= '0';
          io_cycle_we <= '1';
@@ -1110,13 +1115,6 @@ begin
     if io_cycle = '1' and io_cycleD = '1' then
       io_cycle_ce <= '0';
       io_cycle_we <= '0';
-    end if;
-
-    if ioctl_wr = '1' and load_tap = '1' then
-      state <= x"0";
-      if ioctl_addr = 0  then ioctl_load_addr <= TAP_ADDR; end if;
-      if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
-      ioctl_req_wr <= '1';
     end if;
 
     if ioctl_download and load_prg then
@@ -1205,32 +1203,55 @@ port map (
 	refresh     => open
 );
 
+process(all)
+begin
+  if rising_edge(clk32) then
+    old_reset <= resetvic20;
+    if old_reset = '0' and resetvic20 = '1' then ioctl_wait <= '0'; end if;
+    tap_wr <= '0';
+    if ioctl_wr = '1' and load_tap = '1' then
+      ioctl_wait <= '1';
+      tap_wr <= '1';
+      if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if; 
+    if tap_wr = '0' and ioctl_wait = '1' then -- and rd_data_valid = '1' then  -- tap_data_ready
+        ioctl_wait <= '0';
+ end if;
+        end if;
+        end if;
+end process;
+
 tap_download <= ioctl_download and load_tap;
 tap_reset <= '1' when resetvic20 = '1' or tap_download = '1'or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
 tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
-process(clk32)
+process(all)
 begin
   if rising_edge(clk32) then
-      io_cycle_rD <= io_cycle;
-      tap_wrreq(0) <= '0';
       if tap_reset = '1' then
-        read_cyc <= '0';
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
-        tap_start <= tap_download;
+        tap_rd <= '0';
+        tap_cycle <= '0';
+        tap_autoplay <= tap_download;
       else
-        tap_start <= '0';
-        if io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
-            read_cyc <= '1';
+        tap_rd <= '0';
+        tap_wrreq(0) <= '0';
+        tap_autoplay <= '0';
+
+        if tap_rd = '0' and tap_wrreq(0) = '0' then
+          if tap_cycle = '1' then
+            if rd_data_valid = '1' then
+              tap_play_addr <= tap_play_addr + 1;
+              tap_cycle <= '0';
+              tap_wrreq(0) <= '1';
+            end if;  -- rd_data_valid
+          elsif tap_wrfull = '0' and tap_loaded = '1' then
+            tap_rd <= '1';
+            tap_cycle <= '1';
           end if;
-        if io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' and rd_data_valid = '1' then -- wait for psram
-            tap_play_addr <= tap_play_addr + 1;
-            read_cyc <= '0';
-            tap_wrreq(0) <= '1';
-          end if;
-      end if;
-  end if;
+        end if; --tap_rd = '0' and tap_wrreq(0)
+      end if; --tap_reset
+  end if; -- rising_edge
 end process;
 
 c1530_inst: entity work.c1530
@@ -1248,7 +1269,7 @@ port map (
   cass_motor      => cass_motor,
   cass_sense      => cass_sense,
   cass_run        => cass_run,
-  osd_play_stop_toggle => tap_start,
+  osd_play_stop_toggle => tap_autoplay,
   ear_input       => '0'
 );
 
