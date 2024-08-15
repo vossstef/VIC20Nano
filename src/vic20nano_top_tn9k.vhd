@@ -359,7 +359,7 @@ attribute syn_keep of rd_data_valid : signal is 1;
 
 signal clk_pixel_x10_d3 : std_logic;
 signal tap_cycle : std_logic;
-signal tap_autoplay  : std_logic;
+signal tap_autoplay, wait_psram, tap_wr_d  : std_logic;
 signal psaddr : std_logic_vector(20 downto 0);
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
@@ -596,10 +596,12 @@ port map(
 --          O_psram_cs_n  => O_psram_cs_n
 --    );
 
+
+-- 14 cycles clk32 for write-read / read-write / write-write / read-read 
 dram_inst: entity work.PSRAM_Memory_Interface_HS_Top
 port map (
   clk             => clk32,
-  memory_clk      => clk64,
+  memory_clk      => clk_pixel_x10_d3, -- 119Mhz
   pll_lock        => pll_locked,
   rst_n           => pll_locked,
   O_psram_ck      => O_psram_ck,
@@ -621,7 +623,7 @@ port map (
 );
 
   sdram_out <= rd_data(7 downto 0);
-  psaddr <= io_cycle_addr(16 downto 0) & "0000" when tap_download = '1' else tap_play_addr(16 downto 0) & "0000";
+  psaddr <= ioctl_addr(16 downto 0) & "0000" when tap_download = '1' else tap_play_addr(16 downto 0) & "0000";
 
 -- Clock tree and all frequencies in Hz
 -- TN20k VIC20
@@ -630,6 +632,7 @@ port map (
 -- serdes      178875000  164700000
 -- dram         71550000   65880000
 -- core /pixel  35775000   32940000
+-- psram       119250000
 -- IDIV_SEL     3         4
 -- FBDIV_SEL   52         60
 -- ODIV_SEL     2         2
@@ -1194,7 +1197,7 @@ begin
     
    end if;
 end process;
--------------- TAP -------------------
+
 timer_inst: entity work.core_timer
 port map (
   clk32       => clk32,
@@ -1203,28 +1206,45 @@ port map (
 	refresh     => open
 );
 
-process(all)
+-------------- TAP -------------------
+process(clk32)
+variable t_psram:	integer;
+begin
+  if rising_edge(clk32) then
+    tap_wr_d <= tap_wr;
+
+    if  tap_wr_d = '0' and tap_wr = '1' then
+        wait_psram <= '1';
+        t_psram := 16;
+    elsif (t_psram /= 0) then
+      t_psram := t_psram - 1;
+    else  
+      wait_psram <= '0';
+    end if;
+  end if;
+end process;
+
+process(clk32)
 begin
   if rising_edge(clk32) then
     old_reset <= resetvic20;
     if old_reset = '0' and resetvic20 = '1' then ioctl_wait <= '0'; end if;
     tap_wr <= '0';
-    if ioctl_wr = '1' and load_tap = '1' then
+    if ioctl_wr = '1' and load_tap = '1' and wait_psram = '0' then
       ioctl_wait <= '1';
       tap_wr <= '1';
       if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if; 
-    if tap_wr = '0' and ioctl_wait = '1' then -- and rd_data_valid = '1' then  -- tap_data_ready
-        ioctl_wait <= '0';
- end if;
-        end if;
-        end if;
+    elsif tap_wr = '0' and ioctl_wait = '1' and wait_psram = '0' then
+      ioctl_wait <= '0';
+    end if;
+  end if;
 end process;
 
 tap_download <= ioctl_download and load_tap;
 tap_reset <= '1' when resetvic20 = '1' or tap_download = '1'or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
 tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
-process(all)
+process(clk32)
 begin
   if rising_edge(clk32) then
       if tap_reset = '1' then
