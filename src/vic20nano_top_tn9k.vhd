@@ -1234,7 +1234,7 @@ begin
       ioctl_wait <= '1';
       tap_wr <= '1';
       if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if; 
-    elsif tap_wr = '0' and ioctl_wait = '1' and wait_psram = '0' then
+    elsif tap_wr = '0' and ioctl_wait = '1' then -- and wait_psram = '0' then
       ioctl_wait <= '0';
     end if;
   end if;
