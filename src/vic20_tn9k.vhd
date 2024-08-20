@@ -818,23 +818,23 @@ port map (
 --      CONF_DI => conf_di
 --    );
 
---  ramex1 : entity work.ram_conf_8192x8
---    generic map (
---      START_AI  => "001"  -- 0x2000
---    )
---    port map (
---      CLK     => i_sysclk,
---      CLK_EN  => ena_4,
---      ENn     => blk_sel_l(1) or not I_RAM_EXT(1) or not p2_h,
---      WRn     => c_rw_l or i_ram_ext_ro(1),
---      ADDR    => c_addr(12 downto 0),
---      DIN     => c_dout,
---      DOUT    => ramex1_dout,
---      CONF_CLK=> conf_clk,
---      CONF_WR => conf_wr,
---      CONF_AI => conf_ai,
---      CONF_DI => conf_di
---    );
+  ramex1 : entity work.ram_conf_8192x8
+    generic map (
+      START_AI  => "001"  -- 0x2000
+    )
+    port map (
+      CLK     => i_sysclk,
+      CLK_EN  => ena_4,
+      ENn     => blk_sel_l(1) or not I_RAM_EXT(1) or not p2_h,
+      WRn     => c_rw_l or i_ram_ext_ro(1),
+      ADDR    => c_addr(12 downto 0),
+      DIN     => c_dout,
+      DOUT    => ramex1_dout,
+      CONF_CLK=> conf_clk,
+      CONF_WR => conf_wr,
+      CONF_AI => conf_ai,
+      CONF_DI => conf_di
+    );
 
 --  ramex2 : entity work.ram_conf_8192x8
 --    generic map (
@@ -915,9 +915,10 @@ port map(
     resetn    => flash_lock,
     ready     => open,
     busy      => open,
-    address   => 8x"00" & "000" & c_addr(12 downto 0),
-    cs        => ((not blk_sel_l(6)) and p2_h),
-    dout      => open, -- basic_rom_dout,
+    address   => 8x"00" & "00" & c_addr(13) & c_addr(12 downto 0),
+--    address   => 8x"00" & "000" & c_addr(12 downto 0),
+    cs        => p2_h_fall,
+    dout      => basic_rom_dout,
     mspi_cs   => mspi_cs,
     mspi_di   => mspi_di,
     mspi_hold => open,
@@ -926,15 +927,15 @@ port map(
 );
 
   -- VIC20's basic ROM
-  basic_rom : entity work.Gowin_pROM_basic
-      port map (
-          dout  => basic_rom_dout,
-          clk   => i_sysclk,
-          oce   => '1',
-          ce    => '1',
-          reset => '0',
-          ad    => c_addr(12 downto 0)
-      );
+--  basic_rom : entity work.Gowin_pROM_basic
+--      port map (
+--          dout  => open, -- basic_rom_dout,
+--          clk   => i_sysclk,
+--          oce   => '1',
+--          ce    => '1',
+--          reset => '0',
+--          ad    => c_addr(12 downto 0)
+--      );
 
 
   ntsc_rom_dout_dl <= "11111111";

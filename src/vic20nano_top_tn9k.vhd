@@ -350,16 +350,14 @@ signal c1541_sd_wr     : std_logic;
 signal mspi_hold       : std_logic;
 signal mspi_wp         : std_logic;
 signal c1541_osd_reset_d  : std_logic;
-signal PSDA : std_logic_vector(3 downto 0);
 signal drambusy        : std_logic;
 signal rd_data_valid   : std_logic;
 signal rd_data         : std_logic_vector(63 downto 0) ;
 attribute syn_keep of rd_data : signal is 1;
 attribute syn_keep of rd_data_valid : signal is 1;
 
-signal clk_pixel_x10_d3 : std_logic;
 signal tap_cycle : std_logic;
-signal tap_autoplay, wait_psram, tap_wr_d,tap_rd_d  : std_logic;
+signal tap_autoplay, wait_psram, wait_psram_rd,tap_wr_d,tap_rd_d  : std_logic;
 signal psaddr : std_logic_vector(20 downto 0);
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
@@ -570,64 +568,62 @@ port map(
       tmds_d_p   => tmds_d_p
       );
 
---      O_psram_reset_n <= pll_locked & pll_locked;
---      sdram_out <= dout16(15 downto 8) when psaddr(0) = '1' else dout16(7 downto 0);
-      psaddr <= ioctl_addr(16 downto 0) & "0000" when tap_download = '1' else tap_play_addr(16 downto 0) & "0000";
-      sdram_out <= rd_data(7 downto 0);
+      O_psram_reset_n <= pll_locked & pll_locked;
+      sdram_out <= dout16(15 downto 8) when psaddr(0) = '1' else dout16(7 downto 0);
 
-      --      psaddr <= ioctl_addr(20 downto 0) when tap_download = '1' else tap_play_addr(20 downto 0);
---      rd_data_valid <= not drambusy;
+--      psaddr <= ioctl_addr(16 downto 0) & "0000" when tap_download = '1' else tap_play_addr(16 downto 0) & "0000";
+--      sdram_out <= rd_data(63 downto 56);
 
---      dram_inst: entity work.PsramController
---        generic map (
---          LATENCY => 3,
---          FREQ    =>  71550000 )
---        port map
---        (
---          clk           => clk64, 
---          clk_p         => clk64_90,
---          resetn        => pll_locked and not resetvic20,
---          read          => tap_rd,
---          write         => tap_wr,
---          byte_write    => '1',
---          addr          => '0' & psaddr,
---          din           => ioctl_data & ioctl_data,
---          dout          => dout16,
---          busy          => drambusy,
---          O_psram_ck    => O_psram_ck,
---          O_psram_ck_n  => O_psram_ck_n,
---          IO_psram_rwds => IO_psram_rwds,
---          IO_psram_dq   => IO_psram_dq,
---          O_psram_cs_n  => O_psram_cs_n
---    );
+      psaddr <= ioctl_addr(20 downto 0) when tap_download = '1' else tap_play_addr(20 downto 0);
+      rd_data_valid <= not drambusy;
+
+      dram_inst: entity work.PsramController
+        generic map (
+          LATENCY => 3,
+          FREQ    =>  71550000 )
+        port map
+        (
+          clk           => clk64, 
+          clk_p         => clk64_90,
+          resetn        => pll_locked,
+          read          => tap_rd,
+          write         => tap_wr,
+          byte_write    => '1',
+          addr          => '0' & psaddr,
+          din           => ioctl_data & ioctl_data,
+          dout          => dout16,
+          busy          => drambusy,
+          O_psram_ck    => O_psram_ck,
+          O_psram_ck_n  => O_psram_ck_n,
+          IO_psram_rwds => IO_psram_rwds,
+          IO_psram_dq   => IO_psram_dq,
+          O_psram_cs_n  => O_psram_cs_n
+    );
 
 -- 14 cycles clk32 for write-read / read-write / write-write / read-read 
-dram_inst: entity work.PSRAM_Memory_Interface_HS_Top
-port map (
-  clk             => clk_27mhz, -- clk32,
-  memory_clk      => clk64, -- 119Mhz
-  pll_lock        => pll_locked,
-  rst_n           => not resetvic20,
-  O_psram_ck      => O_psram_ck,
-  O_psram_ck_n    => O_psram_ck_n,
-  IO_psram_dq     => IO_psram_dq,
-  IO_psram_rwds   => IO_psram_rwds,
-  O_psram_cs_n    => O_psram_cs_n,
-  O_psram_reset_n => O_psram_reset_n,
+--dram_inst: entity work.PSRAM_Memory_Interface_HS_Top
+--port map (
+--  clk             => clk32,
+--  memory_clk      => clk64, -- 119Mhz
+--  pll_lock        => pll_locked,
+--  rst_n           => pll_locked,
+--  O_psram_ck      => O_psram_ck,
+--  O_psram_ck_n    => O_psram_ck_n,
+ -- IO_psram_dq     => IO_psram_dq,
+--  IO_psram_rwds   => IO_psram_rwds,
+--  O_psram_cs_n    => O_psram_cs_n,
+--  O_psram_reset_n => O_psram_reset_n,
 
-  wr_data       => ioctl_data & ioctl_data & ioctl_data & ioctl_data & ioctl_data & ioctl_data & ioctl_data & ioctl_data,
-  rd_data       => rd_data,
-  rd_data_valid => rd_data_valid,
-  addr          => psaddr, -- burst of 16 bytes (8 clocks)
-  cmd           => tap_wr,  -- 1 = write 0 = read
-  cmd_en        => tap_rd or tap_wr,
-  init_calib    => ram_ready,
-  clk_out       => open, -- x1 clock
-  data_mask     => (others => '0')
-);
-
-
-
+--  wr_data       => ioctl_data & ioctl_data & ioctl_data & ioctl_data & ioctl_data & ioctl_data & ioctl_data & ioctl_data,
+--  rd_data       => rd_data,
+--  rd_data_valid => rd_data_valid,
+--  addr          => psaddr, -- burst of 16 bytes (8 clocks)
+--  cmd           => ioctl_wr and tap_wr,  -- 1 = write 0 = read
+--  cmd_en        => tap_rd or (tap_wr and ioctl_wr),
+--  init_calib    => ram_ready,
+--  clk_out       => clk_dram_x1,
+--  data_mask     => (others => '0')
+--);
 
 -- Clock tree and all frequencies in Hz
 -- TN20k VIC20
@@ -644,10 +640,6 @@ port map (
 process(clk32)
 begin
   if rising_edge(clk32) then
-    c1541_osd_reset_d <= c1541_osd_reset;
-    if c1541_osd_reset = '1' and c1541_osd_reset_d = '0' then 
-      PSDA <= PSDA + std_logic_vector(to_unsigned(1,4));
-    end if;
     ntscModeD <= ntscMode;
     IDSEL  <= "111100" when ntscModeD = '0' else "111011";
     FBDSEL <= "001011" when ntscModeD = '0' else "000011";
@@ -684,7 +676,7 @@ mainclock: rPLL
             LOCK     => pll_locked,
             CLKOUTP  => clk_pixel_x10_90,
             CLKOUTD  => open,
-            CLKOUTD3 => clk_pixel_x10_d3,
+            CLKOUTD3 => open,
             RESET    => '0',
             RESET_P  => '0',
             CLKIN    => clk_27mhz,
@@ -750,48 +742,48 @@ port map(
 -- TM138k Winbond 25Q128BVEA
 -- phase shift 135° TN, TP and 270° TM
 
---flashclock: rPLL
---        generic map (
---          FCLKIN => "27",
---          DEVICE => "GW1NR-9C",
---          DYN_IDIV_SEL => "false",
---          IDIV_SEL => 7,
---          DYN_FBDIV_SEL => "false",
---          FBDIV_SEL => 18,
---          DYN_ODIV_SEL => "false",
---          ODIV_SEL => 8,
---          PSDA_SEL => "0110", -- phase shift 135°
---          DYN_DA_EN =>  "false", -- "true",
---          DUTYDA_SEL => "1000",
---          CLKOUT_FT_DIR => '1',
---          CLKOUTP_FT_DIR => '1',
---          CLKOUT_DLY_STEP => 0,
---          CLKOUTP_DLY_STEP => 0,
---          CLKFB_SEL => "internal",
---          CLKOUT_BYPASS => "false",
---          CLKOUTP_BYPASS => "false",
---          CLKOUTD_BYPASS => "false",
---          DYN_SDIV_SEL => 2,
---          CLKOUTD_SRC => "CLKOUT",
---          CLKOUTD3_SRC => "CLKOUT"
---        )
---        port map (
---            CLKOUT   => flash_clk, -- clock Flash controller
---            LOCK     => flash_lock,
- --           CLKOUTP  => mspi_clk, -- phase shifted clock SPI Flash
---            CLKOUTD  => open,
---            CLKOUTD3 => open,
---            RESET    => '0',
---            RESET_P  => '0',
---            CLKIN    => clk_27mhz,
---            CLKFB    => '0',
---            FBDSEL   => (others => '0'),
---            IDSEL    => (others => '0'),
---            ODSEL    => (others => '0'),
---            PSDA     => (others => '0'), -- PSDA, -- (others => '0'),
---            DUTYDA   => (others => '0'),
---            FDLY     => (others => '1')
---        );
+flashclock: rPLL
+        generic map (
+          FCLKIN => "27",
+          DEVICE => "GW1NR-9C",
+          DYN_IDIV_SEL => "false",
+          IDIV_SEL => 7,
+          DYN_FBDIV_SEL => "false",
+          FBDIV_SEL => 18,
+          DYN_ODIV_SEL => "false",
+          ODIV_SEL => 8,
+          PSDA_SEL => "0111", -- phase shift 157°
+          DYN_DA_EN => "false",
+          DUTYDA_SEL => "1000",
+          CLKOUT_FT_DIR => '1',
+          CLKOUTP_FT_DIR => '1',
+          CLKOUT_DLY_STEP => 0,
+          CLKOUTP_DLY_STEP => 0,
+          CLKFB_SEL => "internal",
+          CLKOUT_BYPASS => "false",
+          CLKOUTP_BYPASS => "false",
+          CLKOUTD_BYPASS => "false",
+          DYN_SDIV_SEL => 2,
+          CLKOUTD_SRC => "CLKOUT",
+          CLKOUTD3_SRC => "CLKOUT"
+        )
+        port map (
+            CLKOUT   => flash_clk, -- clock Flash controller
+            LOCK     => flash_lock,
+            CLKOUTP  => mspi_clk, -- phase shifted clock SPI Flash
+            CLKOUTD  => open,
+            CLKOUTD3 => open,
+            RESET    => '0',
+            RESET_P  => '0',
+            CLKIN    => clk_27mhz,
+            CLKFB    => '0',
+            FBDSEL   => (others => '0'),
+            IDSEL    => (others => '0'),
+            ODSEL    => (others => '0'),
+            PSDA     => (others => '0'),
+            DUTYDA   => (others => '0'),
+            FDLY     => (others => '1')
+        );
 
 leds_n <=  not leds;
 leds(0) <= led1541;
@@ -1216,16 +1208,31 @@ variable t_psram:	integer;
 begin
   if rising_edge(clk32) then
     tap_wr_d <= tap_wr;
-    tap_rd_d <= tap_rd;
 
-    if (tap_wr_d = '0' and tap_wr = '1') 
-     or (tap_rd_d = '0' and tap_rd = '1') then
+    if tap_wr_d = '0' and tap_wr = '1' then
         wait_psram <= '1';
-        t_psram := 16;
+        t_psram := 14;
     elsif (t_psram /= 0) then
       t_psram := t_psram - 1;
     else  
       wait_psram <= '0';
+    end if;
+  end if;
+end process;
+
+process(clk32)
+variable t_psram:	integer;
+begin
+  if rising_edge(clk32) then
+    tap_rd_d <= tap_rd;
+
+    if tap_rd_d = '0' and tap_rd = '1' then
+        wait_psram_rd <= '1';
+        t_psram := 14;
+    elsif (t_psram /= 0) then
+      t_psram := t_psram - 1;
+    else  
+      wait_psram_rd <= '0';
     end if;
   end if;
 end process;
@@ -1240,11 +1247,11 @@ begin
       ioctl_wait <= '0'; 
     end if;
 
-    if ioctl_wr = '1' and load_tap = '1' and wait_psram = '0' then
+    if ioctl_wr = '1' and load_tap = '1' and drambusy = '0' then
       ioctl_wait <= '1';
       tap_wr <= '1';
-      if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if; 
-    elsif tap_wr = '0' and ioctl_wait = '1' then
+      if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
+    elsif tap_wr = '0' then
       ioctl_wait <= '0';
     end if;
   end if;
@@ -1270,27 +1277,16 @@ begin
 
         if tap_rd = '0' and tap_wrreq(0) = '0' then
           if tap_cycle = '1' then
-            if rd_data_valid = '1' then
+            if drambusy = '0' then
               tap_play_addr <= tap_play_addr + 1;
               tap_cycle <= '0';
               tap_wrreq(0) <= '1';
             end if;  -- rd_data_valid
-          elsif tap_wrfull = '0' and tap_loaded = '1' and wait_psram = '0' then
+          elsif tap_wrfull = '0' and tap_loaded = '1' and drambusy = '0' then
             tap_rd <= '1';
             tap_cycle <= '1';
           end if;
         end if;
-
---        if tap_cycle = '0' and tap_rd = '0' and tap_wrfull = '0' and tap_loaded = '1' and wait_psram = '0'  then
---          tap_cycle <= '1';
---          tap_rd <= '1';
---        end if;
-
---        if tap_cycle = '1' and wait_psram = '0' then
---            tap_play_addr <= tap_play_addr + 1;
---            read_cyc <= '0';
---            tap_wrreq(0) <= '1';
---        end if;
 
         end if; --tap_reset
   end if; -- rising_edge
