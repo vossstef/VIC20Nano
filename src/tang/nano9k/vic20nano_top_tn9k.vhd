@@ -569,7 +569,7 @@ port map(
       );
 
       O_psram_reset_n <= pll_locked & pll_locked;
-      sdram_out <= dout16(15 downto 8) when psaddr(0) = '1' else dout16(7 downto 0);
+      sdram_out <= dout16(7 downto 0);
       psaddr <= ioctl_addr(20 downto 0) when tap_download = '1' else tap_play_addr(20 downto 0);
 
       dram_inst: entity work.PsramController
@@ -584,7 +584,7 @@ port map(
           read          => tap_rd,
           write         => tap_wr,
           byte_write    => '1',
-          addr          => '0' & psaddr,
+          addr          => psaddr & '0',
           din           => ioctl_data & ioctl_data,
           dout          => dout16,
           busy          => drambusy,
@@ -1067,24 +1067,6 @@ begin
   if rising_edge(clk32) then
     dl_wr <= '0';
     old_download <= ioctl_download;
-    io_cycleD <= io_cycle;
-
-    if io_cycle = '0' and io_cycleD = '1' then
-      io_cycle_ce <= '1';
-      io_cycle_we <= '0';
-      if ioctl_req_wr = '1' then
-         ioctl_req_wr <= '0';
-         io_cycle_we <= '1';
-         io_cycle_addr <= ioctl_load_addr;
-         ioctl_load_addr <= ioctl_load_addr + 1;
-         io_cycle_data <= ioctl_data;
-        end if;
-       end if;
-
-    if io_cycle = '1' and io_cycleD = '1' then
-      io_cycle_ce <= '0';
-      io_cycle_we <= '0';
-    end if;
 
     if ioctl_download and load_prg then
       state <= x"0";
@@ -1163,14 +1145,6 @@ begin
     
    end if;
 end process;
-
-timer_inst: entity work.core_timer
-port map (
-  clk32       => clk32,
-
-	io_cycle    => io_cycle,
-	refresh     => open
-);
 
 -------------- TAP -------------------
 process(clk32)
