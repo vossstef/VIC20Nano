@@ -358,7 +358,7 @@ attribute syn_keep of rd_data_valid : signal is 1;
 
 signal tap_cycle : std_logic;
 signal tap_autoplay, wait_psram, wait_psram_rd,tap_wr_d,tap_rd_d  : std_logic;
-signal psaddr : std_logic_vector(20 downto 0);
+signal psaddr : std_logic_vector(21 downto 0);
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -570,12 +570,13 @@ port map(
 
       O_psram_reset_n <= pll_locked & pll_locked;
       sdram_out <= dout16(7 downto 0);
-      psaddr <= ioctl_addr(20 downto 0) when tap_download = '1' else tap_play_addr(20 downto 0);
+      psaddr <= ioctl_addr(21 downto 0) when tap_download = '1' else tap_play_addr(21 downto 0);
 
       dram_inst: entity work.PsramController
         generic map (
-          LATENCY => 3,
-          FREQ    =>  71550000 )
+          LATENCY  => 3,
+          FREQ     => 71550000,
+          CS_DELAY => false )
         port map
         (
           clk           => clk64, 
@@ -583,8 +584,8 @@ port map(
           resetn        => pll_locked,
           read          => tap_rd,
           write         => tap_wr,
-          byte_write    => '1',
-          addr          => psaddr & '0',
+          byte_write    => '0',
+          addr          => psaddr,
           din           => ioctl_data & ioctl_data,
           dout          => dout16,
           busy          => drambusy,
@@ -1147,39 +1148,6 @@ begin
 end process;
 
 -------------- TAP -------------------
-process(clk32)
-variable t_psram:	integer;
-begin
-  if rising_edge(clk32) then
-    tap_wr_d <= tap_wr;
-
-    if tap_wr_d = '0' and tap_wr = '1' then
-        wait_psram <= '1';
-        t_psram := 14;
-    elsif (t_psram /= 0) then
-      t_psram := t_psram - 1;
-    else  
-      wait_psram <= '0';
-    end if;
-  end if;
-end process;
-
-process(clk32)
-variable t_psram:	integer;
-begin
-  if rising_edge(clk32) then
-    tap_rd_d <= tap_rd;
-
-    if tap_rd_d = '0' and tap_rd = '1' then
-        wait_psram_rd <= '1';
-        t_psram := 14;
-    elsif (t_psram /= 0) then
-      t_psram := t_psram - 1;
-    else  
-      wait_psram_rd <= '0';
-    end if;
-  end if;
-end process;
 
 process(clk32)
 begin
