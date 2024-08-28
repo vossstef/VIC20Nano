@@ -254,6 +254,8 @@ signal iec_clk            : std_logic;
 signal motor              : std_logic;
 signal conf_en_s          : std_logic;
 
+signal flash              : std_logic_vector(7 downto 0);
+
 component CLKDIV
     generic (
         DIV_MODE : STRING := "2";
@@ -818,42 +820,42 @@ port map (
 --      CONF_DI => conf_di
 --    );
 
---  ramex1 : entity work.ram_conf_8192x8
---    generic map (
---      START_AI  => "001"  -- 0x2000
---    )
---    port map (
---      CLK     => i_sysclk,
---      CLK_EN  => ena_4,
---      ENn     => blk_sel_l(1) or not I_RAM_EXT(1) or not p2_h,
---      WRn     => c_rw_l or i_ram_ext_ro(1),
---      ADDR    => c_addr(12 downto 0),
---      DIN     => c_dout,
---      DOUT    => ramex1_dout,
---      CONF_CLK=> conf_clk,
---      CONF_WR => conf_wr,
---      CONF_AI => conf_ai,
---      CONF_DI => conf_di
---    );
+  ramex1 : entity work.ram_conf_8192x8
+    generic map (
+      START_AI  => "001"  -- 0x2000
+    )
+    port map (
+      CLK     => i_sysclk,
+      CLK_EN  => ena_4,
+      ENn     => blk_sel_l(1) or not I_RAM_EXT(1) or not p2_h,
+      WRn     => c_rw_l or i_ram_ext_ro(1),
+      ADDR    => c_addr(12 downto 0),
+      DIN     => c_dout,
+      DOUT    => ramex1_dout,
+      CONF_CLK=> conf_clk,
+      CONF_WR => conf_wr,
+      CONF_AI => conf_ai,
+      CONF_DI => conf_di
+    );
 
---  ramex2 : entity work.ram_conf_8192x8
---    generic map (
---      START_AI  => "010"  -- 0x4000
---    )
---    port map (
---      CLK     => i_sysclk,
---      CLK_EN  => ena_4,
---      ENn     => blk_sel_l(2) or not I_RAM_EXT(2) or not p2_h,
---      WRn     => c_rw_l or i_ram_ext_ro(2),
---      ADDR    => c_addr(12 downto 0),
---      DIN     => c_dout,
---      DOUT    => ramex2_dout,
+  ramex2 : entity work.ram_conf_8192x8
+    generic map (
+      START_AI  => "010"  -- 0x4000
+    )
+    port map (
+      CLK     => i_sysclk,
+      CLK_EN  => ena_4,
+      ENn     => blk_sel_l(2) or not I_RAM_EXT(2) or not p2_h,
+      WRn     => c_rw_l or i_ram_ext_ro(2),
+      ADDR    => c_addr(12 downto 0),
+      DIN     => c_dout,
+      DOUT    => ramex2_dout,
 
---      CONF_CLK=> conf_clk,
---      CONF_WR => conf_wr,
---      CONF_AI => conf_ai,
---      CONF_DI => conf_di
---    );
+      CONF_CLK=> conf_clk,
+      CONF_WR => conf_wr,
+      CONF_AI => conf_ai,
+      CONF_DI => conf_di
+    );
 
 --  ramex3 : entity work.ram_conf_8192x8
 --    generic map (
@@ -915,9 +917,9 @@ port map(
     resetn    => flash_lock,
     ready     => open,
     busy      => open,
-    address   => 8x"00" & "000" & c_addr(12 downto 0),
-    cs        => ((not blk_sel_l(6)) and p2_h),
-    dout      => open, -- basic_rom_dout,
+    address   => 8x"00" & "00" & c_addr(13) & c_addr(12 downto 0),
+    cs        => p2_h_fall,
+    dout      => flash, -- basic_rom_dout,
     mspi_cs   => mspi_cs,
     mspi_di   => mspi_di,
     mspi_hold => open,
@@ -925,52 +927,14 @@ port map(
     mspi_do   => mspi_do
 );
 
-  -- VIC20's basic ROM
-  basic_rom : entity work.Gowin_pROM_basic
-      port map (
-          dout  => basic_rom_dout,
-          clk   => i_sysclk,
-          oce   => '1',
-          ce    => '1',
-          reset => '0',
-          ad    => c_addr(12 downto 0)
-      );
+  basic_rom_dout <= flash;
 
-
-  ntsc_rom_dout_dl <= "11111111";
+  pal_rom_dout_o <= flash;
   pal_rom_dout_dl <= "11111111";
-  ntsc_rom_dout_o <= pal_rom_dout_o;
-
---	kernal_loadable_rom_gw5a: entity work.Gowin_SDPB_kernal_8k_gw5a
---    port map (
---        dout => pal_rom_dout_o,
---        clka => conf_clk,
---        cea => conf_en_s,
---        clkb => i_sysclk,
---        ceb => '1',
---        reset => '0',
---        oce => '1',
---        ada => conf_ai(12 downto 0),
---        din => conf_di
---        adb => c_addr(12 downto 0),
---		);
+  ntsc_rom_dout_o <= flash;
+  ntsc_rom_dout_dl <= "11111111";
 
 	conf_en_s <= '1' when conf_wr = '1' and CONF_AI(15 DOWNTO 13) = "111" else '0';
-
-	kernal_loadable_rom: entity work.Gowin_SDPB_kernal_8k
-    port map (
-        clkb => i_sysclk,
-        ceb => '1',
-        resetb => '0',
-        dout => pal_rom_dout_o,
-        adb => c_addr(12 downto 0),
-        oce => '1',
-        reseta => '0',
-        clka => conf_clk,
-        cea => conf_en_s,
-        ada => conf_ai(12 downto 0),
-        din => conf_di
-    );
 
 --  kernal_rom_pal_o : entity work.gen_rom
 --    generic map ("rtl/roms/kernal.901486-07.mif", 13)

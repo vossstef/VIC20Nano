@@ -5,6 +5,7 @@
 // flash uses 2 bit IO for address and data. 
 //
 // modified for 8 bit data read 
+// TN9k Puya Semiconductor P25Q32U
 
 module flash
 (
@@ -117,7 +118,7 @@ always @(posedge clk or negedge resetn) begin
       end
 	 
       // wait for rising edge of cs or end of init phase
-      if((csD && !csD2 && !busy)||(init == 5'd2)) begin
+      if((csD && !csD2 && !busy)||(init == 5'd0)) begin
         mspi_cs <= 1'b0;	  // select flash chip	 
         busy <= 1'b1;
 
@@ -140,7 +141,7 @@ always @(posedge clk or negedge resetn) begin
         if(state == 6'd26) dout[3:2] <= dspi_in;
         if(state == 6'd27) dout[1:0] <= dspi_in;
         // signal that the transfer is done
-        if(state == 6'd27) begin
+        if(state == 6'd28) begin
             state <= 6'd0;	    
             busy <= 1'b0;
             mspi_cs <= 1'b1;	// deselect flash chip	 

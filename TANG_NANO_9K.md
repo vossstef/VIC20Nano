@@ -49,11 +49,28 @@ The whole setup will look like this:<br>
 
 On the software side the setup is very simuilar to the original Tang Nano 20K based solution. The core needs to be built specifically
 for the different FPGA of the Tang Primer using either the [TCL script with the GoWin command line interface](build_tn9k.tcl) or the
-[project file for the graphical GoWin IDE](vic20nano_tn9k.gprj). The resulting bitstream is flashed to the TP20K as usual. So are the c1541 DOS ROMs which are flashed exactly like they are on the Tang Nano 20K. And also the firmware for the M0S Dock is the [same version as for
+[project file for the graphical GoWin IDE](vic20nano_tn9k.gprj). The resulting bitstream is flashed to the TN9K as usual.
+
+> [!IMPORTANT]
+For TN9K VIC20 **KERNAL** ROM and **BASIC** ROM have to be flashed:<br>
+
+You will find VIC20 KERNAL and BASIC ROM's [here:](https://sourceforge.net/p/vice-emu/code/HEAD/tree/trunk/vice/data/VIC20/)<br>
+
+Linux:<br>
+```cat basic-901486-01.bin kernal.901486-07.bin basic-901486-01.bin kernal.901486-06.bin >32k.bin```<br>
+```openFPGALoader --external-flash -o 0x000000 32k.bin```<br>
+Windows:<br>
+```COPY /B basic-901486-01.bin + kernal.901486-07.bin + basic-901486-01.bin + kernal.901486-06.bin > 32k.bin```<br>
+
+You might need to use an older version of the Gowin Programmer [SW](https://dl.sipeed.com/shareURL/TANG/programmer) for the GW1NR device.<br>
+```programmer_cli -r 38 --mcuFile 32k.bin --spiaddr 0x000000 --cable-index 1 --d GW1NR-9C```
+
+And also the firmware for the M0S Dock is the [same version as for
 the Tang Nano 20K](https://github.com/harbaum/MiSTeryNano/tree/main/firmware/misterynano_fw/). 
 
-<br><br>
-**Mandatory !!!<br>** HW modification TN9K needed to fully support micro SD Card in 4bit data transfer mode.<br>
+# HW modification
+
+Mandatory HW modification TN9K needed to fully support micro SD Card in 4bit data transfer mode.<br>
 Rework place with Soldering Iron and a Microscope or magnifying glass needed.<br>
 - **SD Card Data 1**<br>Wire SD card holder SD_dat1 pin 8 to TN9k FPGA pin 48. SPI LCD interface will be blocked by that.<br>
 - **SD Card Data 2**<br>Wire SD card holder SD_dat2 pin 1 to TN9k FPGA pin 49. SPI LCD interface will be blocked by that.<br>
