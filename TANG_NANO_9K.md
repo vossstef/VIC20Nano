@@ -60,7 +60,7 @@ Linux:<br>
 ```cat basic-901486-01.bin kernal.901486-07.bin basic-901486-01.bin kernal.901486-06.bin >32k.bin```<br>
 ```openFPGALoader --external-flash -o 0x000000 32k.bin```<br>
 Windows:<br>
-```COPY /B basic-901486-01.bin + kernal.901486-07.bin + basic-901486-01.bin + kernal.901486-06.bin > 32k.bin```<br>
+```COPY /B basic-901486-01.bin + kernal.901486-07.bin + basic-901486-01.bin + kernal.901486-06.bin 32k.bin```<br>
 
 You might need to use an older version of the Gowin Programmer [SW](https://dl.sipeed.com/shareURL/TANG/programmer) for the GW1NR device.<br>
 ```programmer_cli -r 38 --mcuFile 32k.bin --spiaddr 0x000000 --cable-index 1 --d GW1NR-9C```
