@@ -1008,9 +1008,9 @@ begin
       when "0100"  => joyA <= joyDS2;
       when "0101"  => joyA <= joyMouse;
       when "0110"  => joyA <= joyPaddle;
-      when "0111"  => joyA <= (others => '0');
-      when "1000"  => joyA <= joyUsb1A;
-      when "1001"  => joyA <= joyUsb2A;
+      when "0111"  => joyA <= joyUsb1A;
+      when "1000"  => joyA <= joyUsb2A;
+      when "1001"  => joyA <= (others => '0');
       when others => null;
     end case;
   end if;
@@ -1027,17 +1027,17 @@ begin
       when "0100"  => joyB <= joyDS2;
       when "0101"  => joyB <= joyMouse;
       when "0110"  => joyB <= joyPaddle2;
-      when "0111"  => joyB <= (others => '0');
-      when "1000"  => joyB <= joyUsb1A;
-      when "1001"  => joyB <= joyUsb2A;
+      when "0111"  => joyB <= joyUsb1A;
+      when "1000"  => joyB <= joyUsb2A;
+      when "1001"  => joyB <= (others => '0');
       when others => null;
       end case;
   end if;
 end process;
 
 -- paddle pins - mouse
-pot1 <= not paddle_1 when port_1_sel = "0110" else joystick0a0 when port_1_sel = "1000" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
-pot2 <= not paddle_2 when port_1_sel = "0110" else joystick0a1 when port_1_sel = "1000" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
+pot1 <= not paddle_1 when port_1_sel = "0110" else not joystick0a0 when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
+pot2 <= not paddle_2 when port_1_sel = "0110" else not joystick0a1 when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
 
 process(clk32, system_reset(0))
  variable mov_x: signed(6 downto 0);
