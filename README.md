@@ -3,7 +3,7 @@ The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
 [ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) for the :<br>
 [Tang Nano 20k](https://wiki.sipeed.com/nano20k) ([Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/)).<br>
-[Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) (no Dualshock 2, no Paddles and no Retro DB9 Joystick support).<br>
+[Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) (no Dualshock 2, no Retro DB9 Joystick support).<br>
 [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([Gowin GW2A](https://www.gowinsemi.com/en/product/detail/46/)).<br>[Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html) ([Gowin GW1NR](https://www.gowinsemi.com/en/product/detail/38/)) (no C1541, no Tape, 8k or 16k memory expansion, micro SD card [HW modification](TANG_NANO_9K.md#hw-modification) ! needed).<br>
 <br>
 
@@ -13,8 +13,10 @@ c1541 by [darfpga](https://github.com/darfpga)<br>
 
 Features:
 * PAL 832x576p@50Hz or NTSC 800x480p@60Hz HDMI Video and Audio Output
-* USB Keyboard via [Sipeed M0S Dock BL616 µC](https://wiki.sipeed.com/hardware/en/maixzero/m0s/m0s.html)
-* USB Joystick via µC
+* USB Keyboard via µC (Sipeed M0S Dock BL616 / Raspberry Pi Pico RP2040 / ESP32 S2/S3)
+* [USB Joystick](https://en.wikipedia.org/wiki/Joystick) via µC
+* [USB Mouse](https://en.wikipedia.org/wiki/Computer_mouse) via µC as [c1351](https://en.wikipedia.org/wiki/Commodore_1351) Mouse emulation
+* [USB Gamepad](https://en.wikipedia.org/wiki/Gamepad) Stick via µC as [Paddle](https://www.c64-wiki.com/wiki/Paddle) Emulation<br>
 * [legacy D9 Joystick](https://en.wikipedia.org/wiki/Atari_CX40_joystick) (Atari / Commodore digital type) [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)<br>
 * Joystick emulation on Keyboard [Numpad](https://en.wikipedia.org/wiki/Numeric_keypad)<br>
 * [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) Keys & Stick as Joystick<br>
@@ -170,9 +172,9 @@ invoke by F12 keypress<br>
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: **Retro D9**<br>
 or<br>
-USB Joystick(s). OSD: **USB #1** or **USB #2** <br>
+USB Joystick(s). OSD: **USB #1 Joy** or **USB #2 Joy** <br>
 or<br>
-Gamepad. OSD: **DualShock**
+Gamepad Stick as Joystick. OSD: **DualShock2**
 <br>**stick digital** for Move and Left **L1** or Right **R1** shoulder Button for Trigger or following **Pad** controls:<br>
 | Buttons | - | - |
 | - | - | -  |
@@ -190,10 +192,14 @@ or Keyboard Numpad. OSD: **Numpad**<br>
 or Mouse. OSD: **Mouse**<br>
 USB Mouse as c1351 Mouse emulation.
 
-or Paddle. OSD: **Paddle**<br>
+or Dualshock2 Gamepad as Paddle. OSD: **DS2 Paddle**<br>
 Dualshock 2 Sticks in analog mode as VC-1312 Paddle emulation.<br>
 Left **L1 / L2**  and Right **R1 / R2** shoulder Button as Trigger<br>
 You have first to set the DS2 Sticks into analog mode by pressing the DS2 ANALOG button. Mode indicated by red light indicator.<br>Configure DIGITAL mode (press ANALOG button again) when using the **Joystick** mode again and set OSD: **DualShock**<br>
+
+or USB Paddle. OSD: **USB #1 Padd** or **USB #2 Padd** <br>
+Left Stick in X / Y analog mode as VC-1312 Paddle emulation.<br>
+Button **1 / 2** as Trigger<br>
 
 ## Keyboard 
  ![Layout](\.assets/keymap.gif)
@@ -286,5 +292,6 @@ TFT Monitor with HDMI Input and Speaker<br>
 | USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH)  |x|x|x|
 | [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | - |x|x|x|
 | USB Mouse | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | -  |x|x|x|
+| USB Gamepad |[4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  | -  |x|x|x|
 | Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|-|-|
 | [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) | breadboard to wire everything up and some jumper wires |-|x|x|
