@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------
---  VIC20 Top level for Tang Nano
+--  VIC20 Top level for Tang Primer 20k
 --  2024 Stefan Voss
 --  based on the work of many others
 --
@@ -367,12 +367,19 @@ signal memerr          : std_logic;
 signal meminit_check   : std_logic; 
 signal ddr_busy        : std_logic; 
 signal testing         : std_logic; 
-signal uart_rx_d : std_logic := '0';
-signal sd_det_a_d : std_logic := '0';
-signal joystick0a0     : std_logic_vector(7 downto 0);
-signal joystick1a0     : std_logic_vector(7 downto 0);
-signal joystick0a1     : std_logic_vector(7 downto 0);
-signal joystick1a1     : std_logic_vector(7 downto 0);
+signal uart_rx_d       : std_logic := '0';
+signal sd_det_a_d      : std_logic := '0';
+signal joystick0ax     : signed(7 downto 0);
+signal joystick0ay     : signed(7 downto 0);
+signal joystick1ax     : signed(7 downto 0);
+signal joystick1ay     : signed(7 downto 0);
+signal joystick_strobe : std_logic;
+signal joystick1_x_pos : std_logic_vector(7 downto 0);
+signal joystick1_y_pos : std_logic_vector(7 downto 0);
+signal joystick2_x_pos : std_logic_vector(7 downto 0);
+signal joystick2_y_pos : std_logic_vector(7 downto 0);
+signal extra_button0   : std_logic_vector(7 downto 0);
+signal extra_button1   : std_logic_vector(7 downto 0);
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -991,8 +998,8 @@ joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
 joyPaddle  <=    ("00" & '0' & key_l1 & key_l2 & "00"); -- bound to physical paddle position DS2
 joyPaddle2 <=    ("00" & '0' & key_r1 & key_r2 & "00");
-joyUsb1A    <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- trigger POT Y trigger POT X
-joyUsb2A    <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00");
+joyUsb1A   <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
+joyUsb2A   <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
 
 -- send external DB9 joystick port to µC
 db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
@@ -1036,8 +1043,8 @@ begin
 end process;
 
 -- paddle pins - mouse
-pot1 <= not paddle_1 when port_1_sel = "0110" else not joystick0a0 when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0');
-pot2 <= not paddle_2 when port_1_sel = "0110" else not joystick0a1 when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0');
+pot1 <= not paddle_1 when port_1_sel = "0110" else joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_1_sel = "0101" else x"ff";
+pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_1_sel = "0101" else x"ff";
 
 process(clk32, system_reset(0))
  variable mov_x: signed(6 downto 0);
@@ -1046,13 +1053,18 @@ begin
   if  system_reset(0) = '1' then
     mouse_x_pos <= (others => '0');
     mouse_y_pos <= (others => '0');
+    joystick1_x_pos <= x"ff";
+    joystick1_y_pos <= x"ff";
   elsif rising_edge(clk32) then
     if mouse_strobe = '1' then
      -- due to limited resolution on the c64 side, limit the mouse movement speed
-     if mouse_x > 40 then mov_x:="0101000"; elsif mouse_x < -40 then mov_x:= "1011000"; else mov_x := mouse_x(6 downto 0); end if;
-     if mouse_y > 40 then mov_y:="0101000"; elsif mouse_y < -40 then mov_y:= "1011000"; else mov_y := mouse_y(6 downto 0); end if;
-     mouse_x_pos <= mouse_x_pos - mov_x;
-     mouse_y_pos <= mouse_y_pos + mov_y;
+      if mouse_x > 40 then mov_x:="0101000"; elsif mouse_x < -40 then mov_x:= "1011000"; else mov_x := mouse_x(6 downto 0); end if;
+      if mouse_y > 40 then mov_y:="0101000"; elsif mouse_y < -40 then mov_y:= "1011000"; else mov_y := mouse_y(6 downto 0); end if;
+      mouse_x_pos <= mouse_x_pos - mov_x;
+      mouse_y_pos <= mouse_y_pos + mov_y;
+     elsif joystick_strobe = '1' then
+      joystick1_x_pos <= std_logic_vector(joystick0ax(7 downto 0));
+      joystick1_y_pos <= std_logic_vector(joystick0ay(7 downto 0));
     end if;
   end if;
 end process;
@@ -1108,10 +1120,13 @@ hid_inst: entity work.hid
   mouse_x         => mouse_x,
   mouse_y         => mouse_y,
   mouse_strobe    => mouse_strobe,
-  joystick0a0     => joystick0a0,
-  joystick1a0     => joystick1a0,
-  joystick0a1     => joystick0a1,
-  joystick1a1     => joystick1a1
+  joystick0ax     => joystick0ax,
+  joystick0ay     => joystick0ay,
+  joystick1ax     => joystick1ax,
+  joystick1ay     => joystick1ay,
+  joystick_strobe => joystick_strobe,
+  extra_button0   => extra_button0,
+  extra_button1   => extra_button1
  );
 
  port_2_sel <= "0000";
