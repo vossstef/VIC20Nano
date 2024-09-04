@@ -37,7 +37,7 @@ wire [1:0]	   dspi_out;
    
 // drive hold and wp to their static default
 assign mspi_hold = 1'b1;
-assign mspi_wp   = 1'b0;
+assign mspi_wp   = 1'b1; // 1'b0;
 
 // use "fast read dual IO" command
 wire [7:0]   CMD_RD_DIO = 8'hbb;  

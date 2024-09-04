@@ -998,8 +998,8 @@ joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
 joyPaddle  <=    ("00" & '0' & key_l1 & key_l2 & "00"); -- bound to physical paddle position DS2
 joyPaddle2 <=    ("00" & '0' & key_r1 & key_r2 & "00");
-joyUsb1A   <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
-joyUsb2A   <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
+joyUsb1A   <=    ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
+joyUsb2A   <=    ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
 
 -- send external DB9 joystick port to µC
 db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
@@ -1243,8 +1243,8 @@ vic_inst: entity work.VIC20
 		--
 		i_joy         => not joyA(3 downto 0), -- 0 up, 1 down, 2 left,  3 right
 		i_fire        => not joyA(4),          -- all low active
-		i_potx        => pot1,
-		i_poty        => pot2,
+		i_potx        => not pot1,
+		i_poty        => not pot2,
 
 		--
 		i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set

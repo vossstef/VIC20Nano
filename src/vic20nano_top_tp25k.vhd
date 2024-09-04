@@ -959,8 +959,8 @@ resetvic20 <= system_reset(0) or not pll_locked or cart_reset or mc_reset;
       --
       i_joy         => not joyA(3 downto 0), -- 0 up, 1 down, 2 left,  3 right
       i_fire        => not joyA(4),          -- all low active
-      i_potx        => pot1,
-      i_poty        => pot2,
+      i_potx        => not pot1,
+      i_poty        => not pot2,
   
       --
       i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set
