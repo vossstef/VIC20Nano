@@ -119,8 +119,6 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   -- mouse / paddle
   signal pot1        : std_logic_vector(7 downto 0);
   signal pot2        : std_logic_vector(7 downto 0);
-  signal pot3        : std_logic_vector(7 downto 0);
-  signal pot4        : std_logic_vector(7 downto 0);
   signal mouse_x_pos : signed(10 downto 0);
   signal mouse_y_pos : signed(10 downto 0);
   
@@ -208,7 +206,6 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   
   signal cart_addr      : std_logic_vector(22 downto 0);
   signal db9_joy        : std_logic_vector(5 downto 0);
-  signal sid_filter     : std_logic;
   signal turbo_mode     : std_logic_vector(1 downto 0);
   signal turbo_speed    : std_logic_vector(1 downto 0);
   signal flash_ready    : std_logic;
@@ -305,7 +302,7 @@ signal vic_blk5_sel    : std_logic;
 signal vic_ram123_sel  : std_logic;
 signal vic_data        : std_logic_vector(7 downto 0);
 signal vic_addr        : std_logic_vector(15 downto 0);
-signal mc_loaded       : std_logic := '1';
+signal mc_loaded       : std_logic := '0';
 signal mc_data         : std_logic_vector(7 downto 0);
 signal sdram_out       : std_logic_vector(7 downto 0);
 signal mc_nvram_out    : std_logic_vector(7 downto 0);
@@ -742,8 +739,8 @@ flashclock: entity work.Gowin_PLL_flash
       when "0111"  => joyA <= joyUsb1A;
       when "1000"  => joyA <= joyUsb2A;
       when "1001"  => joyA <= (others => '0');
-        when others => null;
-      end case;
+      when others => null;
+    end case;
     end if;
   end process;
   
@@ -761,8 +758,8 @@ flashclock: entity work.Gowin_PLL_flash
       when "0111"  => joyB <= joyUsb1A;
       when "1000"  => joyB <= joyUsb2A;
       when "1001"  => joyB <= (others => '0');
-        when others => null;
-        end case;
+      when others => null;
+      end case;
     end if;
   end process;
   
@@ -777,8 +774,8 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) w
     if  system_reset(0) = '1' then
       mouse_x_pos <= (others => '0');
       mouse_y_pos <= (others => '0');
-    joystick1_x_pos <= x"ff";
-    joystick1_y_pos <= x"ff";
+      joystick1_x_pos <= x"ff";
+      joystick1_y_pos <= x"ff";
     elsif rising_edge(clk32) then
       if mouse_strobe = '1' then
        -- due to limited resolution on the c64 side, limit the mouse movement speed
@@ -887,7 +884,7 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) w
     system_crt_write    => crt_writeable,
   
     int_out_n           => m0s(4),
-    int_in              => std_logic_vector(unsigned'("0000" & sdc_int & '0' & hid_int & '0')),
+    int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & '0' & hid_int & '0')),
     int_ack             => int_ack,
   
     buttons             => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
@@ -966,11 +963,11 @@ resetvic20 <= system_reset(0) or not pll_locked or cart_reset or mc_reset;
       i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set
       i_ram_ext     => i_ram_ext,    -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
       --
-      i_extmem_en   => mc_loaded,
+      i_extmem_en   => '0',
       o_extmem_sel  => extmem_sel,
       o_extmem_r_wn => vic_wr_n,
       o_extmem_addr => vic_addr,
-      i_extmem_data => mc_data,
+      i_extmem_data => (others => '0'),
       o_extmem_data => vic_data,
       o_io2_sel     => vic_io2_sel,
       o_io3_sel     => vic_io3_sel,
@@ -1137,7 +1134,7 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and (load_crt or load_mc) = '1' then
+    if old_download /= ioctl_download and load_crt = '1' then
         cart_reset <= ioctl_download;
       end if;
 
@@ -1156,42 +1153,6 @@ begin
     
    end if;
 end process;
-
-process(clk32)
-begin
-  if rising_edge(clk32) then
-   if system_reset(1) = '1' or (ioctl_download and load_crt) = '1' then
-        mc_loaded <= '0'; 
-      end if;
-   if ioctl_download and load_mc then
-      mc_loaded <= '1'; 
-    end if;
-
-  end if;
-end process;
-
-mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
-
-mc_inst: entity work.megacart
-port map 
-(
-	clk             => clk32,
-	reset_n         => mc_loaded and not system_reset(0) and not cart_reset,
-
-	vic_addr        => vic_addr,
-	vic_wr_n        => vic_wr_n,
-	vic_io2_sel     => vic_io2_sel,
-	vic_io3_sel     => vic_io3_sel,
-	vic_blk123_sel  => vic_blk123_sel,
-	vic_blk5_sel    => vic_blk5_sel,
-	vic_ram123_sel  => vic_ram123_sel,
-	vic_data        => vic_data,
-
-	mc_addr         => mc_addr,
-	mc_wr_n         => mc_wr_n,
-	mc_nvram_sel    => mc_nvram_sel,
-	mc_soft_reset   => mc_reset
-);
 
 -------------- TAP -------------------
 timer_inst: entity work.core_timer
