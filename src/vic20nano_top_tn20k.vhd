@@ -347,15 +347,13 @@ signal ioctl_req_wr    : std_logic := '0';
 signal img_present     : std_logic := '0';
 signal c1541_sd_rd     : std_logic;
 signal c1541_sd_wr     : std_logic;
-signal joystick0ax     : signed(7 downto 0);
-signal joystick0ay     : signed(7 downto 0);
-signal joystick1ax     : signed(7 downto 0);
-signal joystick1ay     : signed(7 downto 0);
+signal joystick0ax     : std_logic_vector(7 downto 0);
+signal joystick0ay     : std_logic_vector(7 downto 0);
+signal joystick1ax     : std_logic_vector(7 downto 0);
+signal joystick1ay     : std_logic_vector(7 downto 0);
 signal joystick_strobe : std_logic;
 signal joystick1_x_pos : std_logic_vector(7 downto 0);
 signal joystick1_y_pos : std_logic_vector(7 downto 0);
-signal joystick2_x_pos : std_logic_vector(7 downto 0);
-signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
 
@@ -1300,42 +1298,6 @@ begin
     
    end if;
 end process;
-
---process(clk32)
---begin
---  if rising_edge(clk32) then
---   if system_reset(1) = '1' or (ioctl_download and load_crt) = '1' then
---        mc_loaded <= '0'; 
---      end if;
---   if ioctl_download and load_mc then
---      mc_loaded <= '1'; 
---    end if;
-
---  end if;
---end process;
-
---mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
-
---mc_inst: entity work.megacart
---port map 
---(
---	clk             => clk32,
---	reset_n         => mc_loaded and not system_reset(0) and not cart_reset,
-
---	vic_addr        => vic_addr,
---	vic_wr_n        => vic_wr_n,
---	vic_io2_sel     => vic_io2_sel,
---	vic_io3_sel     => vic_io3_sel,
---	vic_blk123_sel  => vic_blk123_sel,
---	vic_blk5_sel    => vic_blk5_sel,
---	vic_ram123_sel  => vic_ram123_sel,
---	vic_data        => vic_data,
-
---	mc_addr         => mc_addr,
---	mc_wr_n         => mc_wr_n,
---	mc_nvram_sel    => mc_nvram_sel,
---	mc_soft_reset   => mc_reset
---);
 
 -------------- TAP -------------------
 timer_inst: entity work.core_timer

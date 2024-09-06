@@ -369,15 +369,13 @@ signal ddr_busy        : std_logic;
 signal testing         : std_logic; 
 signal uart_rx_d       : std_logic := '0';
 signal sd_det_a_d      : std_logic := '0';
-signal joystick0ax     : signed(7 downto 0);
-signal joystick0ay     : signed(7 downto 0);
-signal joystick1ax     : signed(7 downto 0);
-signal joystick1ay     : signed(7 downto 0);
+signal joystick0ax     : std_logic_vector(7 downto 0);
+signal joystick0ay     : std_logic_vector(7 downto 0);
+signal joystick1ax     : std_logic_vector(7 downto 0);
+signal joystick1ay     : std_logic_vector(7 downto 0);
 signal joystick_strobe : std_logic;
 signal joystick1_x_pos : std_logic_vector(7 downto 0);
 signal joystick1_y_pos : std_logic_vector(7 downto 0);
-signal joystick2_x_pos : std_logic_vector(7 downto 0);
-signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
 
@@ -998,8 +996,8 @@ joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
 joyPaddle  <=    ("00" & '0' & key_l1 & key_l2 & "00"); -- bound to physical paddle position DS2
 joyPaddle2 <=    ("00" & '0' & key_r1 & key_r2 & "00");
-joyUsb1A   <=    ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
-joyUsb2A   <=    ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
+joyUsb1A   <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
+joyUsb2A   <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
 
 -- send external DB9 joystick port to µC
 db9_joy <= not('1' & io(0), io(2), io(1), io(4), io(3));
@@ -1055,7 +1053,7 @@ begin
     mouse_y_pos <= (others => '0');
     joystick1_x_pos <= x"ff";
     joystick1_y_pos <= x"ff";
-  elsif rising_edge(clk32) then
+    elsif rising_edge(clk32) then
     if mouse_strobe = '1' then
      -- due to limited resolution on the c64 side, limit the mouse movement speed
       if mouse_x > 40 then mov_x:="0101000"; elsif mouse_x < -40 then mov_x:= "1011000"; else mov_x := mouse_x(6 downto 0); end if;
@@ -1065,7 +1063,7 @@ begin
      elsif joystick_strobe = '1' then
       joystick1_x_pos <= std_logic_vector(joystick0ax(7 downto 0));
       joystick1_y_pos <= std_logic_vector(joystick0ay(7 downto 0));
-    end if;
+     end if;
   end if;
 end process;
 
@@ -1127,7 +1125,7 @@ hid_inst: entity work.hid
   joystick_strobe => joystick_strobe,
   extra_button0   => extra_button0,
   extra_button1   => extra_button1
- );
+  );
 
  port_2_sel <= "0000";
 
@@ -1422,7 +1420,7 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and (load_crt or load_mc) = '1' then
+    if old_download /= ioctl_download and load_crt  = '1' then
         cart_reset <= ioctl_download;
       end if;
 
@@ -1434,49 +1432,9 @@ begin
           cart_reset <= '0';
           cart_blk <= (others => '0');
         end if;
-
-    if ioctl_download = '1' and load_mc = '1' then 
-          cart_blk <= (others => '0'); 
-        end if;
     
    end if;
 end process;
-
---process(clk32)
---begin
---  if rising_edge(clk32) then
---   if system_reset(1) = '1' or (ioctl_download and load_crt) = '1' then
---        mc_loaded <= '0'; 
---      end if;
---   if ioctl_download and load_mc then
---      mc_loaded <= '1'; 
---    end if;
-
---  end if;
---end process;
-
---mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
-
---mc_inst: entity work.megacart
---port map 
---(
---	clk             => clk32,
---	reset_n         => mc_loaded and not system_reset(0) and not cart_reset,
-
---	vic_addr        => vic_addr,
---	vic_wr_n        => vic_wr_n,
---	vic_io2_sel     => vic_io2_sel,
---	vic_io3_sel     => vic_io3_sel,
---	vic_blk123_sel  => vic_blk123_sel,
---	vic_blk5_sel    => vic_blk5_sel,
---	vic_ram123_sel  => vic_ram123_sel,
---	vic_data        => vic_data,
-
---	mc_addr         => mc_addr,
---	mc_wr_n         => mc_wr_n,
---	mc_nvram_sel    => mc_nvram_sel,
---	mc_soft_reset   => mc_reset
---);
 
 -------------- TAP -------------------
 timer_inst: entity work.core_timer

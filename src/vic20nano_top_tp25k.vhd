@@ -347,15 +347,13 @@ signal ioctl_req_wr    : std_logic := '0';
 signal img_present     : std_logic := '0';
 signal c1541_sd_rd     : std_logic;
 signal c1541_sd_wr     : std_logic;
-signal joystick0ax     : signed(7 downto 0);
-signal joystick0ay     : signed(7 downto 0);
-signal joystick1ax     : signed(7 downto 0);
-signal joystick1ay     : signed(7 downto 0);
+signal joystick0ax     : std_logic_vector(7 downto 0);
+signal joystick0ay     : std_logic_vector(7 downto 0);
+signal joystick1ax     : std_logic_vector(7 downto 0);
+signal joystick1ay     : std_logic_vector(7 downto 0);
 signal joystick_strobe : std_logic;
 signal joystick1_x_pos : std_logic_vector(7 downto 0);
 signal joystick1_y_pos : std_logic_vector(7 downto 0);
-signal joystick2_x_pos : std_logic_vector(7 downto 0);
-signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
 
@@ -706,25 +704,26 @@ flashclock: entity work.Gowin_PLL_flash
       SELFORCE => '1'
   );
   
-  leds_n <=  not leds;
-  leds(0) <= led1541;
-  leds(1) <= system_leds(0);
-  
-  -- 4 3 2 1 0 digital c64
-  joyDS2     <=    (others => '0');
-  joyDigital <=    (others => '0');
-  joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
-  joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
-  joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
-  joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
-  joyPaddle  <=    (others => '0');
-  joyPaddle2 <=    (others => '0');
-  joyUsb1A   <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
-  joyUsb2A   <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
-  
-  -- send external DB9 joystick port to µC
-  db9_joy <= "000000";
-  
+leds_n <=  not leds;
+leds(0) <= led1541;
+leds(1) <= system_leds(0);
+
+-- 4 3 2 1 0 digital c64
+joyDS2     <=    (others => '0');
+--                       TR RI LE DN UP
+joyDigital <=    (others => '0');
+joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
+joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
+joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
+joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
+joyPaddle  <=    (others => '0');
+joyPaddle2 <=    (others => '0');
+joyUsb1A   <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
+joyUsb2A   <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
+
+-- send external DB9 joystick port to µC
+db9_joy <= "000000";
+
   process(clk32)
   begin
     if rising_edge(clk32) then
@@ -1134,7 +1133,7 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and load_crt = '1' then
+    if old_download /= ioctl_download and load_crt  = '1' then
         cart_reset <= ioctl_download;
       end if;
 
@@ -1145,10 +1144,6 @@ begin
     if system_reset(1) = '1' then
           cart_reset <= '0';
           cart_blk <= (others => '0');
-        end if;
-
-    if ioctl_download = '1' and load_mc = '1' then 
-          cart_blk <= (others => '0'); 
         end if;
     
    end if;
