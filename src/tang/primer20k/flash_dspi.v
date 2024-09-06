@@ -37,7 +37,7 @@ wire [1:0]	   dspi_out;
    
 // drive hold and wp to their static default
 assign mspi_hold = 1'b1;
-assign mspi_wp   = 1'b0;
+assign mspi_wp   = 1'b1; // 1'b0;
 
 // use "fast read dual IO" command
 wire [7:0]   CMD_RD_DIO = 8'hbb;  
@@ -92,7 +92,7 @@ wire [1:0] dspi_in = { mspi_do, mspi_di };
 `endif
    
 always @(posedge clk or negedge resetn) begin
-   reg csD, csD2, csD3;
+   reg csD, csD2;
    
    if(!resetn) begin
       // initially assume regular spi mode
@@ -102,11 +102,9 @@ always @(posedge clk or negedge resetn) begin
       init <= 5'd20;
       csD <= 1'b0;
       csD2 <= 1'b0;
-      csD3 <= 1'b0;
    end else begin
       csD <= cs;     // bring cs into local clock domain
       csD2 <= csD;   // delay to detect rising edge
-      csD3 <= csD2;
 
       // send 16 1's on IO0 to make sure M4 = 1 and dspi is left and we are in a known state
       if(init != 5'd0) begin
@@ -118,7 +116,7 @@ always @(posedge clk or negedge resetn) begin
       end
 	 
       // wait for rising edge of cs or end of init phase
-      if((csD2 && !csD3 && !busy)||(init == 5'd2)) begin
+      if((csD && !csD2 && !busy)||(init == 5'd2)) begin
         mspi_cs <= 1'b0;	  // select flash chip	 
         busy <= 1'b1;
 
@@ -142,9 +140,11 @@ always @(posedge clk or negedge resetn) begin
         if(state == 6'd27) dout[1:0] <= dspi_in;
         // signal that the transfer is done
         if(state == 6'd27) begin
-            state <= 6'd0;	    
-            busy <= 1'b0;
             mspi_cs <= 1'b1;	// deselect flash chip	 
+        end
+        if(state == 6'd30) begin
+            state <= 6'd0;
+            busy <= 1'b0;
         end
       end
    end
