@@ -1,6 +1,7 @@
-set_device GW5AST-LV138FPG676AES -name GW5AST-138B
+set_device GW5AST-LV138FPG676AC1/I0 -device_version B
 
 add_file src/c1541/mist_sd_card.sv
+add_file src/dualshock2.v
 add_file src/gowin_dpb/gowin_dpb_track_buffer_b.v
 add_file src/gowin_dpb/gowin_dpb_trkbuf.v
 add_file src/gowin_dpb/sector_dpram.v
@@ -25,6 +26,7 @@ add_file src/misc/sdcmd_ctrl.v
 add_file src/misc/sysctrl.v
 add_file src/misc/video.v
 add_file src/misc/video_analyzer.v
+add_file src/misc/ws2812.v
 add_file src/sdram.v
 add_file src/c1541/c1541_logic.vhd
 add_file src/c1541/c1541_sd.vhd
@@ -52,12 +54,12 @@ add_file src/t65/T65_Pack.vhd
 add_file src/vic20_tp25k.vhd
 add_file src/vic20_clocks.vhd
 add_file src/vic20_keyboard.vhd
-add_file src/gowin_pll/gowin_pll_flash.vhd
-add_file src/gowin_pll/gowin_pll_ntsc.vhd
-add_file src/gowin_pll/gowin_pll_pal.vhd
-add_file src/vic20nano_top_tm138k.vhd
-add_file src/vic20nano_top_tm138k.cst
-add_file src/vic20nano_top_tm138k.sdc
+add_file src/gowin_pll/gowin_pll_138k_flash.vhd
+add_file src/gowin_pll/gowin_pll_138k_ntsc.vhd
+add_file src/gowin_pll/gowin_pll_138k_pal.vhd
+add_file src/tang/mega138k/vic20nano_top_tm138k.vhd
+add_file src/tang/mega138k/vic20nano_top_tm138k.cst
+add_file src/tang/mega138k/vic20nano_top_tm138k.sdc
 add_file src/loader_sd_card.sv
 add_file src/c1530.vhd
 add_file src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd
@@ -67,7 +69,7 @@ set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name vic20nano_tm138k
 set_option -verilog_std sysv2017
 set_option -vhdl_std vhd2008
-set_option -top_module vic20nano_top_tm138k
+set_option -top_module VIC20_TOP_tm138k
 set_option -use_mspi_as_gpio 1
 set_option -use_sspi_as_gpio 1
 set_option -use_done_as_gpio 1
