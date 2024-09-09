@@ -919,9 +919,9 @@ port map(
     CALIB  => '0'
 );
 
--- phase shift 135° TN20k, TP20k, TP25k
+-- phase shift 135° TN20k, TP25k
 --             270° TM 138k
-
+--              90° TP20k
 -- 64.125Mhz for flash controller c1541 ROM
 flashclock: rPLL
         generic map (
@@ -933,7 +933,7 @@ flashclock: rPLL
           FBDIV_SEL => 18,
           DYN_ODIV_SEL => "false",
           ODIV_SEL => 8,
-          PSDA_SEL => "0110", -- phase shift 135°
+          PSDA_SEL => "0100", -- phase shift 90 °
           DYN_DA_EN => "false",
           DUTYDA_SEL => "1000",
           CLKOUT_FT_DIR => '1',
