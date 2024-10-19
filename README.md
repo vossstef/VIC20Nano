@@ -7,6 +7,9 @@ The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/
 [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([Gowin GW2A](https://www.gowinsemi.com/en/product/detail/46/)).<br>[Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html) ([Gowin GW1NR](https://www.gowinsemi.com/en/product/detail/38/)) (no C1541, no Tape, 8k or 16k memory expansion, micro SD card [HW modification](TANG_NANO_9K.md#hw-modification) ! needed).<br>
 [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html) ([Gowin GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/)) too.<br>
 <br>
+Be aware that the [C64](https://en.wikipedia.org/wiki/Commodore_64) had been ported too in similar manner ([C64Nano](https://github.com/vossstef/tang_nano_20k_c64)).<br>
+Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).<br>
+
 Original VIC-20 core by [MikeJ (Mike Johnson)](https://www.fpgaarcade.com/author/mikej/) and [WoS (Wolfgang Scherr)](https://www.researchgate.net/profile/Wolfgang_Scherr2)<br>
 All HID, SDcard and [BL616 MCU](https://en.bouffalolab.com/product/?type=detail&id=25) µC firmware by [Till Harbaum](http://www.harbaum.org/till/mist)<br>
 c1541 by [darfpga](https://github.com/darfpga)<br>
