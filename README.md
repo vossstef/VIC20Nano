@@ -2,11 +2,18 @@
 The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
 [ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) for the :<br>
-[Tang Nano 20k](https://wiki.sipeed.com/nano20k) ([Gowin GW2AR](https://www.gowinsemi.com/en/product/detail/38/)).<br>
-[Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)  ([Gowin GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)) (no Dualshock 2, no Retro DB9 Joystick support).<br>
-[Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html) ([Gowin GW2A](https://www.gowinsemi.com/en/product/detail/46/)).<br>[Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html) ([Gowin GW1NR](https://www.gowinsemi.com/en/product/detail/38/)) (no C1541, no Tape, 8k or 16k memory expansion, micro SD card [HW modification](TANG_NANO_9K.md#hw-modification) ! needed).<br>
-[Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html) ([Gowin GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/)) too.<br>
+
+| Board      | FPGA       | support |Note|
+| ---        |        -   | -     |-|
+| [Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html)       | [GW1NR](https://www.gowinsemi.com/en/product/detail/38/)  |X |no C1541, no Tape, 8k or 16k memory expansion<br> micro SD card [HW modification](TANG_NANO_9K.md#hw-modification) ! needed|
+| [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | X |- |
+| [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html)| [GW2A](https://www.gowinsemi.com/en/product/detail/46/)| X |- |
+| [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | X |no Dualshock 2, no Retro DB9 Joystick support |
+| [Tang Mega 60k](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| planned |- |
+| [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | X |- |
+
 <br>
+
 Be aware that the [C64](https://en.wikipedia.org/wiki/Commodore_64) had been ported too in similar manner ([C64Nano](https://github.com/vossstef/tang_nano_20k_c64)).<br>
 Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).<br>
 
@@ -31,7 +38,7 @@ Features:
 * Tape (*.TAP) image loader [C1530 Datasette](https://en.wikipedia.org/wiki/Commodore_Datasette)
 * Loadable 8K Kernal ROM (*.BIN)
 * On Screen Display (OSD) for configuration and D64 image selection<br>
-* 3K, 8K, 16K, 24K, 32K RAM Expansion<br>
+* 3K, 8K, 16K, 24K, 32K RAM Expansion (35k with cardtridge RAM)<br>
 * 8K RAM at $A000 as loadable Cartridge Slot<br>
 <br>
 <img src="./.assets/vic20nano.png" alt="image" width="80%" height="auto">
@@ -82,7 +89,7 @@ Take care to activate the correct size of needed expansion before you load *.PRG
 | 8k | -  | x  |- |- |
 | 16k | -  | x |x |- |
 | 24k | -  | x  |x |x |
-| 32k | x  | x  |x |x |
+| 32k(35k) | x  | x  |x |x |
 
 ## Cartridge ROM Loader (.PRG/.CRT)
 Cartrige ROM can be loaded via OSD file selection.<br>
