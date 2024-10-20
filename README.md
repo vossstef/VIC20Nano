@@ -1,7 +1,7 @@
 # VIC20Nano
 The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/wiki) and 
 [MiSTer](https://mister-devel.github.io/MkDocs_MiSTer/) components of the
-[ VIC20 FPGA core ](https://en.wikipedia.org/wiki/VIC-20) for the :<br>
+[VIC20](https://en.wikipedia.org/wiki/VIC-20) for the :<br>
 
 | Board      | FPGA       | support |Note|
 | ---        |        -   | -     |-|
