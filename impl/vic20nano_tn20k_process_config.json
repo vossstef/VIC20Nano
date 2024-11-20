@@ -19,7 +19,7 @@
  "EXTERNAL_MASTER_CONFIG_CLOCK" : false,
  "Enable_DSRM" : false,
  "FORMAT" : "binary",
- "FREQUENCY_DIVIDER" : "1",
+ "FREQUENCY_DIVIDER" : "",
  "Generate_Constraint_File_of_Ports" : false,
  "Generate_IBIS_File" : false,
  "Generate_Plain_Text_Timing_Report" : false,
@@ -32,6 +32,8 @@
  "HOTBOOT" : false,
  "I2C" : false,
  "I2C_SLAVE_ADDR" : "00",
+ "INCREMENTAL_PLACE_AND_ROUTING" : "0",
+ "INCREMENTAL_PLACE_ONLY" : "0",
  "IncludePath" : [
 
  ],
@@ -77,7 +79,7 @@
  "Synthesize_tool" : "GowinSyn",
  "TclPre" : "",
  "TopModule" : "VIC20_TOP",
- "USERCODE" : "default",
+ "USERCODE" : "00000001",
  "Unused_Pin" : "As_input_tri_stated_with_pull_up",
  "VCC" : "1.0",
  "VCCAUX" : 3.3,
