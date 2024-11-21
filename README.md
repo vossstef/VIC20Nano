@@ -9,7 +9,7 @@ The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/
 | [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | X |- |
 | [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html)| [GW2A](https://www.gowinsemi.com/en/product/detail/46/)| X |- |
 | [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | X |no Dualshock 2, no Retro DB9 Joystick |
-| [Tang Mega 60k](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| planned |- |
+| [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| X |- |
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | X |- |
 
 <br>
@@ -52,15 +52,18 @@ HID interfaces aligned in pinmap and control to match [MiSTeryNano project's mis
 The installation of VIC20 Nano on the Tang Nano 20k board can be done using a Linux PC or a Windows PC
 [Instruction](INSTALLATION_WINDOWS.md).<br>
 
-## VIC20Nano on Tang Primer 25K
-See [Tang Primer 25K](TANG_PRIMER_25K.md)
+## VIC20Nano on Tang Nano 9K
+See [Tang Primer 9K](TANG_NANO_9K.md)
 
 ## VIC20Nano on Tang Primer 20K (Dock ext board)
 See [Tang Primer 20K](TANG_PRIMER_20K.md)<br>
 The DDR3 memory controller is a slight modified copy of [nestang](https://github.com/nand2mario/nestang). It had been tested on a board eqipped with a SKHynix DDR3 memory and is used as a buffer for the TAP Tape loading.
 
-## VIC20Nano on Tang Nano 9K
-See [Tang Primer 9K](TANG_NANO_9K.md)
+## VIC20Nano on Tang Primer 25K
+See [Tang Primer 25K](TANG_PRIMER_25K.md)
+
+## c64 Nano on Tang Mega 60k NEO
+See [Tang Mega 60K NEO](TANG_MEGA_60K.md)
 
 ## VIC20Nano on Tang Mega 138K Pro
 See [Tang Mega 138K Pro](TANG_MEGA_138K.md)
@@ -220,14 +223,14 @@ Button **1 / 2** as Trigger<br>
 
 ## LED UI
 
-| LED | function        | TN20K | TP20K | TP25K | TM138K |TN9k|
-| --- |        -        | -     |-      | -     | -      |-|
-| 0   | c1541 activity  | x     |x      |  x    | x      |N/A|
-| 1   | D64 selected    | x     |x      | -     | x      |x|
-| 2   | CRT seleced     | x     |x      | -     | x      |x|
-| 3   | PRG selected    | x     |x      | -     | x      |x|
-| 4   | Kernal selected |x      |x      | -     | x      |x|
-| 5   | TAP selected    | x     |x      | -     | x      |N/A|
+| LED | function        | TN20K | TP20K | TP25K |TM60k |TM138K |TN9k|
+| --- |        -        | -     |-      | -     |x done |-      |-|
+| 0   | c1541 activity  | x     |x      |  x    |x ready |x      |N/A|
+| 1   | D64 selected    | x     |x      | -     |- |x      |x|
+| 2   | CRT seleced     | x     |x      | -     |- |x      |x|
+| 3   | PRG selected    | x     |x      | -     |- |x      |x|
+| 4   | Kernal selected |x      |x      | -     |- |x      |x|
+| 5   | TAP selected    | x     |x      | -     |- |x      |N/A|
 
 Solid **<font color="red">red</font>** of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
@@ -235,6 +238,7 @@ Solid **<font color="red">red</font>** of the c1541 led after power-up indicates
 * **<font color="green">green</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;all fine and ready to go<br>
 * **<font color="red">red</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;something wrong with SDcard / default boot image<br>
 * **<font color="blue">blue</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;µC firmware detected valid FPGA core<br>
+* **<font color="yellow">yellow</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;FPGA core can't detect valid firmware<br>
 * **white**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;-<br>
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
@@ -288,7 +292,7 @@ In order to use this Design the following things are needed:
 or [Sipeed Tang Primer 25k](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html)<br>
 and [PMOD DVI](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DVI)<br>
 and [PMOD TF-CARD](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_TF-CARD)<br>
-and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
+and [SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)
  or ad hoc wiring + soldering.<br>
 or [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html)<br>
@@ -296,7 +300,11 @@ and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0
 and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>
 or [Tang Nano 9K](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html)<br>
 or [Sipeed Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)<br>
-and [PMOD SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
+and [SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
+and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>
+and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)<br>
+or [Tang Mega 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)<br>
+and [SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM)<br>
 and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2)<br>
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)<br>
 
@@ -304,11 +312,11 @@ microSD or microSDHC card FAT/exFAT formatted<br>
 TFT Monitor with HDMI Input and Speaker<br>
 <br>
 
-| HID and Gamecontrol Hardware option | needs | alternative option |Primer 25K|Mega 138K|Primer 20K|
-| ----------- | --- |--- | ---  | ---| -|
-| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH)  |x|x|x|
-| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | - |x|x|x|
-| USB Mouse | [4 port mini USB hub](https://a.aliexpress.com/_EIidgjH) | -  |x|x|x|
+| HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 60K|Mega 138K|
+| -----------                         | ---         | ---                | ---      | -      | -       |
+| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) | [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  |x|x|x|
+| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)| [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH) | - |x|x|x|
+| USB Mouse   | [4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  | -  |x|x|x|
 | USB Gamepad |[4 port mini USB hub HS8836A](https://a.aliexpress.com/_EIidgjH)  | -  |x|x|x|
-| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|-|-|
-| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) | breadboard to wire everything up and some jumper wires |-|x|x|
+| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|adhoc SDRAM1 Joy D9|adhoc PMOD Joy D9|
+| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) respectively<br> PMOD DS2x2 | breadboard to wire everything up and some jumper wires |-|PMOD DS2x2|PMOD DS2x2|
