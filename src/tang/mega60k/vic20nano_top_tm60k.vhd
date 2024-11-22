@@ -517,7 +517,7 @@ c1541_sd_inst : entity work.c1541_sd
 port map
  (
     clk32         => clk32,
-    reset         => (not flash_ready) or disk_reset,
+    reset         => disk_reset,
     pause         => loader_busy,
     ce            => '0',
 
@@ -935,7 +935,7 @@ module_inst: entity work.sysctrl
   int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & '0' & hid_int & '0')),
   int_ack             => int_ack,
 
-  buttons             => unsigned'(not reset & not user), -- S0 and S1 buttons
+  buttons             => std_logic_vector(unsigned'(not reset & not user)), -- S0 and S1 buttons
   leds                => system_leds,         -- two leds can be controlled from the MCU
   color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
@@ -1182,7 +1182,7 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and (load_crt or load_rom or load_crt) = '1' then
+    if old_download /= ioctl_download and (load_crt or load_rom) = '1' then
         cart_reset <= ioctl_download;
       end if;
 

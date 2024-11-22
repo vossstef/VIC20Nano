@@ -1138,7 +1138,7 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and (load_crt or load_rom or load_crt) = '1' then
+    if old_download /= ioctl_download and (load_crt or load_rom) = '1' then
         cart_reset <= ioctl_download;
       end if;
 

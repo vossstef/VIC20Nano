@@ -82,7 +82,7 @@ reg [1:0] system_resetD;
 	wr <= 1'b0;
 	if(sd_busy) {sd_rd,sd_wr} <= 0;
 
-	if(system_reset[1])
+	if(system_reset[0])
 	begin
 		sd_rd <= 4'd0;
 		sd_wr <= 4'd0;
