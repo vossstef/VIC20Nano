@@ -1,11 +1,11 @@
 --Copyright (C)2014-2024 Gowin Semiconductor Corporation.
 --All rights reserved.
 --File Title: IP file
---Tool Version: V1.9.10.03 (64-bit)
+--Tool Version: V1.9.10.03
 --Part Number: GW5AT-LV60PG484AC1/I0
 --Device: GW5AT-60
 --Device Version: B
---Created Time: Wed Nov 20 20:33:01 2024
+--Created Time: Fri Nov 22 10:55:20 2024
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -204,8 +204,8 @@ begin
             DYN_DPA_EN => "FALSE",
             CLKOUT0_PE_COARSE => 0,
             CLKOUT0_PE_FINE => 0,
-            CLKOUT1_PE_COARSE => 18,
-            CLKOUT1_PE_FINE => 6,
+            CLKOUT1_PE_COARSE => 9,
+            CLKOUT1_PE_FINE => 3,
             CLKOUT2_PE_COARSE => 0,
             CLKOUT2_PE_FINE => 0,
             CLKOUT3_PE_COARSE => 0,

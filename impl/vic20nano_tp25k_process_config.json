@@ -1,6 +1,6 @@
 {
  "BACKGROUND_PROGRAMMING" : "off",
- "COMPRESS" : false,
+ "COMPRESS" : true,
  "CPU" : true,
  "CRC_CHECK" : true,
  "Clock_Route_Order" : 0,
@@ -32,6 +32,8 @@
  "HOTBOOT" : false,
  "I2C" : true,
  "I2C_SLAVE_ADDR" : "00",
+ "INCREMENTAL_PLACE_AND_ROUTING" : "0",
+ "INCREMENTAL_PLACE_ONLY" : "0",
  "IncludePath" : [
 
  ],
@@ -47,7 +49,7 @@
  "MULTIJUMP_ADDRESS_WIDTH" : "24",
  "MULTIJUMP_MODE" : "Normal",
  "MULTIJUMP_SPI_FLASH_ADDRESS" : "000000",
- "Multi_Boot" : true,
+ "Multi_Boot" : false,
  "OUTPUT_BASE_NAME" : "vic20nano_tn20k",
  "POWER_ON_RESET_MONITOR" : true,
  "PRINT_BSRAM_VALUE" : true,

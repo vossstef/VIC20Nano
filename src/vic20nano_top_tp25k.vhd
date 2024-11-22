@@ -19,7 +19,7 @@ entity VIC20Nano_top_tp25k is
     leds_n      : out std_logic_vector(1 downto 0);
 
     -- SPI interface Sipeed M0S Dock external BL616 uC
-    m0s         : inout std_logic_vector(5 downto 0);
+    m0s         : inout std_logic_vector(4 downto 0);
 
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
@@ -107,15 +107,13 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal joyDigital   : std_logic_vector(6 downto 0);
   signal joyNumpad    : std_logic_vector(6 downto 0);
   signal joyMouse     : std_logic_vector(6 downto 0);
-  signal joyPaddle    : std_logic_vector(6 downto 0); 
-  signal joyPaddle2   : std_logic_vector(6 downto 0); 
+  signal joyDS2A_p1   : std_logic_vector(6 downto 0); 
+
   signal numpad       : std_logic_vector(7 downto 0);
-  signal joyDS2       : std_logic_vector(6 downto 0);
+  signal joyDS2_p1    : std_logic_vector(6 downto 0);
   -- joystick interface
   signal joyA        : std_logic_vector(6 downto 0);
-  signal joyB        : std_logic_vector(6 downto 0);
   signal port_1_sel  : std_logic_vector(3 downto 0);
-  signal port_2_sel  : std_logic_vector(3 downto 0);
   -- mouse / paddle
   signal pot1        : std_logic_vector(7 downto 0);
   signal pot2        : std_logic_vector(7 downto 0);
@@ -229,15 +227,11 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal hbl_out         : std_logic; 
   signal vbl_out         : std_logic;
   signal st_midi         : std_logic_vector(2 downto 0);
-  signal joystick_cs_i   : std_logic;
-  signal joystick_miso_i : std_logic;
   signal frz_hbl         : std_logic;
   signal frz_vbl         : std_logic;
   signal system_pause    : std_logic;
   signal paddle_1        : std_logic_vector(7 downto 0);
   signal paddle_2        : std_logic_vector(7 downto 0);
-  signal paddle_3        : std_logic_vector(7 downto 0);
-  signal paddle_4        : std_logic_vector(7 downto 0);
   signal key_r1          : std_logic;
   signal key_r2          : std_logic;
   signal key_l1          : std_logic;
@@ -246,6 +240,12 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal key_square      : std_logic;
   signal key_circle      : std_logic;
   signal key_cross       : std_logic;
+  signal key_up          : std_logic;
+  signal key_down        : std_logic;
+  signal key_left        : std_logic;
+  signal key_right       : std_logic;
+  signal key_start       : std_logic;
+  signal key_select      : std_logic;
   signal ntscModeD       : std_logic;
   signal audio_div       : unsigned(8 downto 0);
   signal flash_clk       : std_logic;
@@ -287,13 +287,6 @@ signal addr            : std_logic_vector(15 downto 0);
 signal cart_reset      : std_logic := '0';
 signal cart_blk        : std_logic_vector(4 downto 0)  := "00000";
 signal state           : std_logic_vector(3 downto 0)  := "0000";
-signal ioctl_file_ext  : std_logic_vector(31 downto 0);
-signal load_mc         : std_logic := '0';
-signal mc_reset        : std_logic;
-signal mc_addr         : std_logic_vector(22 downto 0);
-signal mc_wr_n         : std_logic;
-signal mc_nvram_sel    : std_logic;
-signal mc_rom_sel      : std_logic;
 signal vic_wr_n        : std_logic;
 signal vic_io2_sel     : std_logic;
 signal vic_io3_sel     : std_logic;
@@ -302,10 +295,7 @@ signal vic_blk5_sel    : std_logic;
 signal vic_ram123_sel  : std_logic;
 signal vic_data        : std_logic_vector(7 downto 0);
 signal vic_addr        : std_logic_vector(15 downto 0);
-signal mc_loaded       : std_logic := '0';
-signal mc_data         : std_logic_vector(7 downto 0);
 signal sdram_out       : std_logic_vector(7 downto 0);
-signal mc_nvram_out    : std_logic_vector(7 downto 0);
 signal ioctl_wr_d      : std_logic;
 signal extmem_sel      : std_logic;
 signal p2_h            : std_logic;
@@ -354,8 +344,11 @@ signal joystick1ay     : std_logic_vector(7 downto 0);
 signal joystick_strobe : std_logic;
 signal joystick1_x_pos : std_logic_vector(7 downto 0);
 signal joystick1_y_pos : std_logic_vector(7 downto 0);
+signal joystick2_x_pos : std_logic_vector(7 downto 0);
+signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
+signal detach_reset    : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -381,7 +374,6 @@ constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
     spi_io_ss   <= m0s(2);
     spi_io_clk  <= m0s(3);
     m0s(0)      <= spi_io_dout; -- M0 Dock
-    m0s(5)      <= 'Z';
   
     process(clk32, disk_reset)
       variable reset_cnt : integer range 0 to 2147483647;
@@ -402,7 +394,7 @@ constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
     end if;
   end process;
   
-  disk_reset <= c1541_osd_reset or not pll_locked or c1541_reset or not flash_lock;
+disk_reset <= c1541_osd_reset or c1541_reset or not flash_lock or system_reset(0) or not pll_locked;
   
   -- rising edge sd_change triggers detection of new disk
   process(clk32, pll_locked)
@@ -708,64 +700,50 @@ leds_n <=  not leds;
 leds(0) <= led1541;
 leds(1) <= system_leds(0);
 
--- 4 3 2 1 0 digital c64
-joyDS2     <=    (others => '0');
---                       TR RI LE DN UP
+joyDS2_p1     <=    (others => '0');
 joyDigital <=    (others => '0');
 joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
 joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
 joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyPaddle  <=    (others => '0');
-joyPaddle2 <=    (others => '0');
+joyDS2A_p1  <=    (others => '0');
 joyUsb1A   <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
 joyUsb2A   <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
 
 -- send external DB9 joystick port to µC
 db9_joy <= "000000";
 
-  process(clk32)
-  begin
-    if rising_edge(clk32) then
-      case port_1_sel is
+process(clk32)
+begin
+	if rising_edge(clk32) then
+    case port_1_sel is
       when "0000"  => joyA <= joyDigital;
       when "0001"  => joyA <= joyUsb1;
       when "0010"  => joyA <= joyUsb2;
       when "0011"  => joyA <= joyNumpad;
-      when "0100"  => joyA <= joyDS2;
+      when "0100"  => joyA <= joyDS2_p1;
       when "0101"  => joyA <= joyMouse;
-      when "0110"  => joyA <= joyPaddle;
+      when "0110"  => joyA <= joyDS2A_p1;
       when "0111"  => joyA <= joyUsb1A;
       when "1000"  => joyA <= joyUsb2A;
       when "1001"  => joyA <= (others => '0');
-      when others => null;
+      when others  => joyA <= (others => '0');
     end case;
-    end if;
-  end process;
-  
-  process(clk32)
-  begin
-    if rising_edge(clk32) then
-      case port_2_sel is
-      when "0000"  => joyB <= joyDigital;
-      when "0001"  => joyB <= joyUsb1;
-      when "0010"  => joyB <= joyUsb2;
-      when "0011"  => joyB <= joyNumpad;
-      when "0100"  => joyB <= joyDS2;
-      when "0101"  => joyB <= joyMouse;
-      when "0110"  => joyB <= joyPaddle2;
-      when "0111"  => joyB <= joyUsb1A;
-      when "1000"  => joyB <= joyUsb2A;
-      when "1001"  => joyB <= (others => '0');
-      when others => null;
-      end case;
-    end if;
-  end process;
-  
-  -- paddle pins - mouse
-pot1 <= not paddle_1 when port_1_sel = "0110" else joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0') when port_1_sel = "0101" else x"ff";
-pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else ('0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0') when port_1_sel = "0101" else x"ff";
-  
+  end if;
+end process;
+
+-- paddle pins - mouse
+pot1 <= not paddle_1 when port_1_sel = "0110" else 
+        joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else
+        joystick2_x_pos(7 downto 0) when port_1_sel = "1000" else
+        '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
+        x"ff";
+
+pot2 <= not paddle_2 when port_1_sel = "0110" else 
+        joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else 
+        joystick2_y_pos(7 downto 0) when port_1_sel = "1000" else
+        '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
+        x"ff";
   process(clk32, system_reset(0))
    variable mov_x: signed(6 downto 0);
    variable mov_y: signed(6 downto 0);
@@ -775,6 +753,8 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) w
       mouse_y_pos <= (others => '0');
       joystick1_x_pos <= x"ff";
       joystick1_y_pos <= x"ff";
+      joystick2_x_pos <= x"ff";
+      joystick2_y_pos <= x"ff";
     elsif rising_edge(clk32) then
       if mouse_strobe = '1' then
        -- due to limited resolution on the c64 side, limit the mouse movement speed
@@ -785,6 +765,8 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) w
      elsif joystick_strobe = '1' then
       joystick1_x_pos <= std_logic_vector(joystick0ax(7 downto 0));
       joystick1_y_pos <= std_logic_vector(joystick0ay(7 downto 0));
+      joystick2_x_pos <= std_logic_vector(joystick1ax(7 downto 0));
+      joystick2_y_pos <= std_logic_vector(joystick1ay(7 downto 0));
       end if;
     end if;
   end process;
@@ -849,7 +831,6 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) w
     extra_button1   => extra_button1
    );
   
-   port_2_sel <= "0000";
   
   module_inst: entity work.sysctrl 
    port map 
@@ -881,12 +862,13 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) w
     system_i_ram_ext4   => extram(4),
     system_i_center     => i_center,
     system_crt_write    => crt_writeable,
-  
+    system_detach_reset => detach_reset,
+    cold_boot           => open,
     int_out_n           => m0s(4),
-    int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & '0' & hid_int & '0')),
+    int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
     int_ack             => int_ack,
   
-    buttons             => std_logic_vector(unsigned'(reset & user)), -- S0 and S1 buttons on Tang Nano 20k
+    buttons             => unsigned'(reset & user), -- S0 and S1 buttons
     leds                => system_leds,         -- two leds can be controlled from the MCU
     color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
   );
@@ -917,7 +899,7 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else joystick1_y_pos(7 downto 0) w
       resetn    => flash_lock,
       ready     => flash_ready,
       busy      => open,
-      address   => ("0010" & "000" & dos_sel & c1541rom_addr),
+      address   => (x"2" & "000" & dos_sel & c1541rom_addr),
       cs        => c1541rom_cs,
       dout      => c1541rom_data,
       mspi_cs   => mspi_cs,
@@ -933,10 +915,10 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
   & (cart_blk(1) and not crt_writeable)
   & (cart_blk(0) and not crt_writeable);
 
-i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
-i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
+i_ram_ext_ro <= ext_ro;
+i_ram_ext <= extram or cart_blk;
 
-resetvic20 <= system_reset(0) or not pll_locked or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or cart_reset or detach_reset;
   
   vic_inst: entity work.VIC20
     port map(
@@ -1133,18 +1115,14 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and load_crt  = '1' then
+    if old_download /= ioctl_download and (load_crt or load_rom or load_crt) = '1' then
         cart_reset <= ioctl_download;
       end if;
 
-    if old_download /= ioctl_download and load_rom = '1' then
-        cart_reset <= ioctl_download;
-      end if;
-
-    if system_reset(1) = '1' then
-          cart_reset <= '0';
-          cart_blk <= (others => '0');
-        end if;
+    if (system_reset(1) or detach_reset) = '1' then
+      cart_reset <= '0';
+      cart_blk <= (others => '0');
+    end if;
     
    end if;
 end process;

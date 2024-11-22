@@ -1,10 +1,10 @@
 [General]
+version=1.0
 ipc_version=4
 file=gowin_pll_60k_flash
 module=Gowin_PLL_60k_flash
 target_device=gw5at60b-002
 type=clock_plladv
-version=1.0
 
 [Config]
 AdvancedMode=false
@@ -49,8 +49,8 @@ Clkout1DutyTrimStaticRising=true
 Clkout1DutyTrimStaticStep=0
 Clkout1ExpectedFrequency=64
 Clkout1PhaseDynamic=false
-Clkout1PhaseStaticValue=270
-Clkout1Tolerance=2.0
+Clkout1PhaseStaticValue=135
+Clkout1Tolerance=0.0
 Clkout1VCODivideFactorStatic=true
 Clkout1VCODivideFactorStaticValue=25
 Clkout2Bypass=false
