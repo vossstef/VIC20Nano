@@ -365,6 +365,14 @@ signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
 signal detach_reset    : std_logic;
+signal user_port_cb1_in  : std_logic;
+signal user_port_cb2_in  : std_logic;
+signal user_port_cb1_out : std_logic;
+signal user_port_cb2_out : std_logic;
+signal user_port_in      : std_logic_vector(7 downto 0);
+signal user_port_out     : std_logic_vector(7 downto 0);
+signal uart_rxD          : std_logic_vector(1 downto 0);
+signal uart_rx_filtered  : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -399,7 +407,6 @@ end component;
 begin
 
 hpd_en <= '1';
-uart_tx <= '1';
 -- ----------------- SPI input parser ----------------------
 -- map output data onto both spi outputs
   spi_io_din  <= m0s(1);
@@ -760,8 +767,7 @@ flashclock: entity work.Gowin_PLL_60k_flash
       SELFORCE => '1'
   );
   
-leds_n(1 downto 0) <=  not leds(1 downto 0
-);
+leds_n(1 downto 0) <= leds(1 downto 0);
 leds(0) <= led1541;
 
 --                    6   5  4  3  2  1  0
@@ -932,10 +938,10 @@ module_inst: entity work.sysctrl
   cold_boot           => open,
 
   int_out_n           => m0s(4),
-  int_in              => std_logic_vector(unsigned'(x"0" & sdc_int & '0' & hid_int & '0')),
+  int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
   int_ack             => int_ack,
 
-  buttons             => std_logic_vector(unsigned'(not reset & not user)), -- S0 and S1 buttons
+  buttons             => unsigned'(not reset & not user), -- S0 and S1 buttons on Tang Nano 20k
   leds                => system_leds,         -- two leds can be controlled from the MCU
   color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
@@ -1053,7 +1059,15 @@ vic_inst: entity work.VIC20
 		conf_clk      => clk32,
 		conf_wr       => dl_wr,
 		conf_ai       => dl_addr,
-		conf_di       => dl_data
+		conf_di       => dl_data,
+
+    -- user port RS232
+    user_port_cb1_in  => user_port_cb1_in,
+    user_port_cb2_in  => user_port_cb2_in,
+    user_port_cb1_out => user_port_cb1_out,
+    user_port_cb2_out => user_port_cb2_out,
+    user_port_in      => user_port_in,
+    user_port_out     => user_port_out
 	);
 
   crt_inst : entity work.loader_sd_card
@@ -1247,5 +1261,43 @@ port map (
   osd_play_stop_toggle => tap_start,
   ear_input       => '0'
 );
+
+-- UART_RX synchronizer
+process(clk32)
+begin
+    if rising_edge(clk32) then
+      uart_rxD(0) <= uart_rx;
+      uart_rxD(1) <= uart_rxD(0);
+      if uart_rxD(0) = uart_rxD(1) then
+        uart_rx_filtered <= uart_rxD(1);
+      end if;
+    end if;
+end process;
+
+-- connect user port RS232
+process (all)
+begin
+  -- CB1_i RXD
+  -- PB0_i RXD in
+  -- PB1_o RTS out
+  -- PB2_o DTR out
+  -- PB3_i RI in
+  -- PB4_i DCD in
+  -- PB5
+  -- PB6_i CTS in
+  -- PB7_i DSR in
+  -- CB2_o TXD
+  user_port_in <= user_port_out;
+  --user_port_cb1_in <= user_port_cb1_out;
+  user_port_cb2_in <= user_port_cb2_out;
+
+  uart_tx <= user_port_cb2_out;
+  user_port_cb1_in <= uart_rx_filtered;
+  user_port_in(0) <= uart_rx_filtered;
+  -- Zeromodem
+  user_port_in(6) <= not user_port_out(1);  -- RTS > CTS
+  user_port_in(4) <= not user_port_out(2);  -- DTR > DCD
+  user_port_in(7) <= not user_port_out(2);  -- DTR > DSR
+end process;
 
 end Behavioral_top;
