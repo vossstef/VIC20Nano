@@ -118,6 +118,13 @@ entity VIC20 is
 		conf_ai      : in  std_logic_vector(15 downto 0);
 		conf_di      : in  std_logic_vector(7 downto 0);
 
+    -- user port
+    user_port_cb1_in  : in  std_logic;
+    user_port_cb1_out : out std_logic;
+    user_port_cb2_in  : in  std_logic;
+    user_port_cb2_out : out std_logic;
+    user_port_in      : in  std_logic_vector(7 downto 0);
+    user_port_out     : out std_logic_vector(7 downto 0);
     -- external flash memory
     flash_clk    : in  std_logic;
     flash_lock   : in  std_logic;
@@ -229,9 +236,9 @@ signal serial_data_out_l  : std_logic;
 signal serial_data_in     : std_logic;
 
 -- user port
-signal user_port_cb1_in   : std_logic;
-signal user_port_cb2_in   : std_logic;
-signal user_port_in       : std_logic_vector(7 downto 0);
+--signal user_port_cb1_in   : std_logic;
+--signal user_port_cb2_in   : std_logic;
+--signal user_port_in       : std_logic_vector(7 downto 0);
 -- misc
 signal sw_reg             : std_logic_vector(3 downto 0);
 
@@ -290,10 +297,7 @@ begin
   expansion_nmi_l <= '1';
   expansion_irq_l <= '1';
 
-  -- user port
-  user_port_cb1_in <= '0';
-  user_port_cb2_in <= '0';
-  user_port_in <= x"00";
+
 
   -- tape
   cass_motor <= motor;
@@ -409,6 +413,7 @@ begin
     port_a_o    => via1_pa_out,
     port_a_i    => via1_pa_in,
     port_b_i    => user_port_in,
+    port_b_o    => user_port_out,
 
     -- handshake pins
     ca1_i       => keybd_restore,
@@ -417,7 +422,9 @@ begin
     ca2_i       => motor,
 
     cb1_i       => user_port_cb1_in,
+    cb1_o       => user_port_cb1_out,
     cb2_i       => user_port_cb2_in,
+    cb2_o       => user_port_cb2_out,
 
     irq         => via1_nmi
   );

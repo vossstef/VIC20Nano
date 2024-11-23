@@ -126,9 +126,7 @@ signal joyDS2_p1    : std_logic_vector(6 downto 0);
 signal joyDS2_p2    : std_logic_vector(6 downto 0);
 -- joystick interface
 signal joyA        : std_logic_vector(6 downto 0);
-signal joyB        : std_logic_vector(6 downto 0);
 signal port_1_sel  : std_logic_vector(3 downto 0);
-signal port_2_sel  : std_logic_vector(3 downto 0);
 -- mouse / paddle
 signal pot1        : std_logic_vector(7 downto 0);
 signal pot2        : std_logic_vector(7 downto 0);
@@ -247,8 +245,6 @@ signal frz_vbl         : std_logic;
 signal system_pause    : std_logic;
 signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
-signal paddle_3        : std_logic_vector(7 downto 0);
-signal paddle_4        : std_logic_vector(7 downto 0);
 signal key_r1          : std_logic;
 signal key_r2          : std_logic;
 signal key_l1          : std_logic;
@@ -366,6 +362,14 @@ signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
 signal detach_reset    : std_logic;
+signal user_port_cb1_in  : std_logic;
+signal user_port_cb2_in  : std_logic;
+signal user_port_cb1_out : std_logic;
+signal user_port_cb2_out : std_logic;
+signal user_port_in      : std_logic_vector(7 downto 0);
+signal user_port_out     : std_logic_vector(7 downto 0);
+signal uart_rxD          : std_logic_vector(1 downto 0);
+signal uart_rx_filtered  : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -399,7 +403,6 @@ end component;
 
 begin
 
-uart_tx <= '1';
 -- ----------------- SPI input parser ----------------------
 -- map output data onto both spi outputs
   spi_io_din  <= m0s(1);
@@ -1053,7 +1056,15 @@ vic_inst: entity work.VIC20
 		conf_clk      => clk32,
 		conf_wr       => dl_wr,
 		conf_ai       => dl_addr,
-		conf_di       => dl_data
+		conf_di       => dl_data,
+
+    -- user port RS232
+    user_port_cb1_in  => user_port_cb1_in,
+    user_port_cb2_in  => user_port_cb2_in,
+    user_port_cb1_out => user_port_cb1_out,
+    user_port_cb2_out => user_port_cb2_out,
+    user_port_in      => user_port_in,
+    user_port_out     => user_port_out
 	);
 
   crt_inst : entity work.loader_sd_card
@@ -1247,5 +1258,43 @@ port map (
   osd_play_stop_toggle => tap_start,
   ear_input       => '0'
 );
+
+-- UART_RX synchronizer
+process(clk32)
+begin
+    if rising_edge(clk32) then
+      uart_rxD(0) <= uart_rx;
+      uart_rxD(1) <= uart_rxD(0);
+      if uart_rxD(0) = uart_rxD(1) then
+        uart_rx_filtered <= uart_rxD(1);
+      end if;
+    end if;
+end process;
+
+-- connect user port RS232
+process (all)
+begin
+  -- CB1_i RXD
+  -- PB0_i RXD in
+  -- PB1_o RTS out
+  -- PB2_o DTR out
+  -- PB3_i RI in
+  -- PB4_i DCD in
+  -- PB5
+  -- PB6_i CTS in
+  -- PB7_i DSR in
+  -- CB2_o TXD
+  user_port_in <= user_port_out;
+  --user_port_cb1_in <= user_port_cb1_out;
+  user_port_cb2_in <= user_port_cb2_out;
+
+  uart_tx <= user_port_cb2_out;
+  user_port_cb1_in <= uart_rx_filtered;
+  user_port_in(0) <= uart_rx_filtered;
+  -- Zeromodem
+  user_port_in(6) <= not user_port_out(1);  -- RTS > CTS
+  user_port_in(4) <= not user_port_out(2);  -- DTR > DCD
+  user_port_in(7) <= not user_port_out(2);  -- DTR > DSR
+end process;
 
 end Behavioral_top;

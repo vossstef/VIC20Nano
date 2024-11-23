@@ -15,7 +15,7 @@ entity VIC20_TOP_tm60k is
     clk         : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
-    leds_n      : out std_logic_vector(1 downto 0);
+    leds_n      : inout std_logic_vector(1 downto 0);
     io          : in std_logic_vector(5 downto 0);
     -- USB-C BL616 UART
     uart_rx     : in std_logic;
@@ -766,8 +766,17 @@ flashclock: entity work.Gowin_PLL_60k_flash
       CLKIN3 => '0',
       SELFORCE => '1'
   );
-  
-leds_n(1 downto 0) <= leds(1 downto 0);
+
+-- ensure FPGA READY and DONE 
+process(clk32, pll_locked)
+begin
+  if pll_locked = '0' then
+    leds_n(1 downto 0) <= "ZZ";
+  elsif rising_edge(clk32) then
+     leds_n(1 downto 0) <= leds(1 downto 0);
+  end if;
+end process;
+
 leds(0) <= led1541;
 
 --                    6   5  4  3  2  1  0
