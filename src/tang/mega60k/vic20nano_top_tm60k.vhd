@@ -412,7 +412,7 @@ hpd_en <= '1';
 gamepad: entity work.dualshock2
     port map (
     clk           => clk32,
-    rst           => system_reset(0) and not pll_locked,
+    rst           => resetvic20,
     vsync         => vsync,
     ds2_dat       => ds_miso,
     ds2_cmd       => ds_mosi,
@@ -470,7 +470,7 @@ led_ws2812: entity work.ws2812
   end if;
 end process;
 
-disk_reset <= c1541_osd_reset or c1541_reset or not flash_lock or system_reset(0) or not pll_locked;
+disk_reset <= c1541_osd_reset or c1541_reset or system_reset(0) or not pll_locked;
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -692,7 +692,7 @@ dram_inst: entity work.sdram
   -- dram        71250000    66250000
   -- core/pixel  35625000    33125000
 
-pll_locked <= pll_locked_pal and pll_locked_ntsc;
+pll_locked <= pll_locked_pal and pll_locked_ntsc and flash_lock;
 dcsclksel <= "0001" when ntscMode = '0' else "0010";
 
 mainclock_pal: entity work.Gowin_PLL_60k_pal
@@ -719,6 +719,7 @@ port map (
 flashclock: entity work.Gowin_PLL_60k_flash
     port map (
         lock => flash_lock,
+        reset => not pll_locked_pal,
         clkout0 => flash_clk,
         clkout1 => mspi_clk,
         clkin => clk

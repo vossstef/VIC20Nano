@@ -1,11 +1,11 @@
 --Copyright (C)2014-2024 Gowin Semiconductor Corporation.
 --All rights reserved.
 --File Title: IP file
---Tool Version: V1.9.10.03
+--Tool Version: V1.9.10.03 (64-bit)
 --Part Number: GW5AT-LV60PG484AC1/I0
 --Device: GW5AT-60
 --Device Version: B
---Created Time: Fri Nov 22 10:55:20 2024
+--Created Time: Mon Nov 25 22:16:04 2024
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -15,7 +15,8 @@ entity Gowin_PLL_60k_flash is
         lock: out std_logic;
         clkout0: out std_logic;
         clkout1: out std_logic;
-        clkin: in std_logic
+        clkin: in std_logic;
+        reset: in std_logic
     );
 end Gowin_PLL_60k_flash;
 
@@ -250,7 +251,7 @@ begin
             MDRDO => mdrdo,
             CLKIN => clkin,
             CLKFB => gw_gnd,
-            RESET => gw_gnd,
+            RESET => reset,
             PLLPWD => gw_gnd,
             RESET_I => gw_gnd,
             RESET_O => gw_gnd,
