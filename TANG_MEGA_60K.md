@@ -9,7 +9,7 @@ Although the Tang Mega 60K comes with a significant ammount of
 DDR3-SDRAM, it also comes with a slot for the [Tang
 SDRAM](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#TANG_SDRAM). Using this board allows to use the same SDR-SDRAM memory access methods.<br> 
 
-The M0S required to control the C64 Nano is to be mounted in the
+The M0S required to control the VIC20Nano is to be mounted in the
 **right PMOD** close to the HDMI connector with the help of the [M0S PMOD adapter](board/m0s_pmod).
 
 Plug the optional Dualshock [DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.html#PMOD_DS2x2) Interface into the **edge PMOD** slot.<br>
@@ -41,7 +41,7 @@ Nano 20K](firmware/misterynano_fw/).
 
 On the software side the setup is very simuilar to the original Tang Nano 20K based solution. The core needs to be built specifically
 for the different FPGA of the Tang Primer using either the [TCL script with the GoWin command line interface](build_tm60k.tcl) or the
-[project file for the graphical GoWin IDE](tang_mega_60k_c64.gprj). The resulting bitstream is flashed to the TM60K as usual needing latest Gowin Programmer GUI 1.9.10.03 or newer.
+[project file for the graphical GoWin IDE](vic20nano_tm60k.gprj). The resulting bitstream is flashed to the TM60K as usual needing latest Gowin Programmer GUI 1.9.10.03 or newer.
 
 
 **HW modification**  

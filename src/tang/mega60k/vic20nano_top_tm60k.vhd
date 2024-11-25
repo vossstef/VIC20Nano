@@ -15,7 +15,7 @@ entity VIC20_TOP_tm60k is
     clk         : in std_logic;
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
-    leds_n      : inout std_logic_vector(1 downto 0);
+    leds_n      : out std_logic_vector(1 downto 0);
     io          : in std_logic_vector(5 downto 0);
     -- USB-C BL616 UART
     uart_rx     : in std_logic;
@@ -28,7 +28,6 @@ entity VIC20_TOP_tm60k is
     tmds_d_n    : out std_logic_vector( 2 downto 0);
     tmds_d_p    : out std_logic_vector( 2 downto 0);
     hpd_en      : out std_logic;
-
     -- sd interface
     sd_clk      : out std_logic;
     sd_cmd      : inout std_logic;
@@ -97,8 +96,6 @@ signal dout         : std_logic_vector(7 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(22 downto 0);
 signal ram_ready    : std_logic;
-signal cb_D         : std_logic;
---signal addr         : std_logic_vector(22 downto 0);
 signal cs           : std_logic;
 signal we           : std_logic;
 signal din          : std_logic_vector(7 downto 0);
@@ -174,9 +171,6 @@ signal mouse_btns     : std_logic_vector(1 downto 0);
 signal mouse_x        : signed(7 downto 0);
 signal mouse_y        : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
-signal freeze         : std_logic;
-signal freeze_sync    : std_logic;
-signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
 signal ws2812_color   : std_logic_vector(23 downto 0);
@@ -201,7 +195,6 @@ signal sd_change      : std_logic;
 signal sdc_int        : std_logic;
 signal sdc_iack       : std_logic;
 signal int_ack        : std_logic_vector(7 downto 0);
-signal spi_ext        : std_logic;
 signal spi_io_din     : std_logic;
 signal spi_io_ss      : std_logic;
 signal spi_io_clk     : std_logic;
@@ -223,7 +216,6 @@ signal cart_addr      : std_logic_vector(22 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
 signal turbo_mode     : std_logic_vector(1 downto 0);
 signal turbo_speed    : std_logic_vector(1 downto 0);
-signal flash_ready    : std_logic;
 signal dos_sel        : std_logic_vector(1 downto 0);
 signal c1541rom_cs    : std_logic;
 signal c1541rom_addr  : std_logic_vector(14 downto 0);
@@ -486,8 +478,10 @@ process(clk32, pll_locked)
   if pll_locked = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
-    disk_g64_d <= '0';
-    elsif rising_edge(clk32) then
+    sd_img_size_d <= (others => '0');
+    disk_chg_trg_d <= '0';
+    img_present <= '0';
+  elsif rising_edge(clk32) then
       sd_img_mounted_d <= sd_img_mounted(0);
       disk_chg_trg_d <= disk_chg_trg;
       disk_g64_d <= disk_g64;
@@ -497,25 +491,26 @@ process(clk32, pll_locked)
       end if;
 
       if sd_img_mounted_d = '0' and sd_img_mounted(0) = '1' then
-        sd_img_size_d <= sd_img_size; 
-      else 
-        sd_img_size_d <= (others => '0');
+        sd_img_size_d <= sd_img_size;
       end if;
 
-      if (sd_img_mounted(0) /= sd_img_mounted_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
+      if (sd_img_mounted(0) /= sd_img_mounted_d) or
+         (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
           sd_change  <= '1';
           else
           sd_change  <= '0';
+      end if;
+
       if sd_img_size_d >= 333744 then  -- g64 disk selected
         disk_g64 <= '1';
       else
         disk_g64 <= '0';
       end if;
+
       if (disk_g64 /= disk_g64_d) then
         c1541_reset  <= '1'; -- reset needed after G64 change
-        else
+      else
         c1541_reset  <= '0';
-        end if;
       end if;
   end if;
 end process;
@@ -612,16 +607,6 @@ generic map (
     outaddr         => sd_byte_index,     -- outaddr from 0 to 511, because the sector size is 512
     outbyte         => sd_rd_data         -- a byte of sector content
 );
-
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    old_sync <= freeze_sync;
-      if not old_sync and freeze_sync then
-          freeze <= osd_status and system_pause;
-        end if;
-  end if;
-end process;
 
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(371,9);
 cass_aud <= cass_read and not cass_sense and not cass_motor;
@@ -979,7 +964,7 @@ flash_inst: entity work.flash
 port map(
     clk       => flash_clk,
     resetn    => flash_lock,
-    ready     => flash_ready,
+    ready     => open,
     busy      => open,
     address   => (x"7" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,

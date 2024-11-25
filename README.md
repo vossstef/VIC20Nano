@@ -62,7 +62,7 @@ The DDR3 memory controller is a slight modified copy of [nestang](https://github
 ## VIC20Nano on Tang Primer 25K
 See [Tang Primer 25K](TANG_PRIMER_25K.md)
 
-## c64 Nano on Tang Mega 60k NEO
+## VIC20Nano on Tang Mega 60k NEO
 See [Tang Mega 60K NEO](TANG_MEGA_60K.md)
 
 ## VIC20Nano on Tang Mega 138K Pro
