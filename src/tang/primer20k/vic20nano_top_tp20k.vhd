@@ -170,9 +170,6 @@ signal mouse_btns     : std_logic_vector(1 downto 0);
 signal mouse_x        : signed(7 downto 0);
 signal mouse_y        : signed(7 downto 0);
 signal mouse_strobe   : std_logic;
-signal freeze         : std_logic;
-signal freeze_sync    : std_logic;
-signal c64_pause      : std_logic;
 signal old_sync       : std_logic;
 signal osd_status     : std_logic;
 signal ws2812_color   : std_logic_vector(23 downto 0);
@@ -197,7 +194,6 @@ signal sd_change      : std_logic;
 signal sdc_int        : std_logic;
 signal sdc_iack       : std_logic;
 signal int_ack        : std_logic_vector(7 downto 0);
-signal spi_ext        : std_logic;
 signal spi_io_din     : std_logic;
 signal spi_io_ss      : std_logic;
 signal spi_io_clk     : std_logic;
@@ -489,7 +485,6 @@ generic (
 end component;
 
 begin
-
 -- ----------------- SPI input parser ----------------------
 -- map output data onto both spi outputs
   spi_io_din  <= m0s(1);
@@ -503,7 +498,7 @@ begin
 gamepad: entity work.dualshock2
     port map (
     clk           => clk32,
-    rst           => system_reset(0) and not pll_locked,
+    rst           => resetvic20,
     vsync         => vsync,
     ds2_dat       => ds_miso,
     ds2_cmd       => ds_mosi,
@@ -695,16 +690,6 @@ generic map (
     outaddr         => sd_byte_index,     -- outaddr from 0 to 511, because the sector size is 512
     outbyte         => sd_rd_data         -- a byte of sector content
 );
-
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    old_sync <= freeze_sync;
-      if not old_sync and freeze_sync then
-          freeze <= osd_status and system_pause;
-        end if;
-  end if;
-end process;
 
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(371,9);
 cass_aud <= cass_read and not cass_sense and not cass_motor;

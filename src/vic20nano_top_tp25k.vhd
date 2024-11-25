@@ -160,9 +160,6 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal mouse_x        : signed(7 downto 0);
   signal mouse_y        : signed(7 downto 0);
   signal mouse_strobe   : std_logic;
-  signal freeze         : std_logic;
-  signal freeze_sync    : std_logic;
-  signal c64_pause      : std_logic;
   signal old_sync       : std_logic;
   signal osd_status     : std_logic;
   signal ws2812_color   : std_logic_vector(23 downto 0);
@@ -187,7 +184,6 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal sdc_int        : std_logic;
   signal sdc_iack       : std_logic;
   signal int_ack        : std_logic_vector(7 downto 0);
-  signal spi_ext        : std_logic;
   signal spi_io_din     : std_logic;
   signal spi_io_ss      : std_logic;
   signal spi_io_clk     : std_logic;
@@ -198,7 +194,7 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal c1541_osd_reset : std_logic;
   signal system_wide_screen : std_logic;
   signal system_floppy_wprot : std_logic_vector(1 downto 0);
-  signal leds           : std_logic_vector(1 downto 0);
+  signal leds           : std_logic_vector(5 downto 0);
   signal system_leds    : std_logic_vector(1 downto 0);
   signal led1541        : std_logic;
   
@@ -209,7 +205,6 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal db9_joy        : std_logic_vector(5 downto 0);
   signal turbo_mode     : std_logic_vector(1 downto 0);
   signal turbo_speed    : std_logic_vector(1 downto 0);
-  signal flash_ready    : std_logic;
   signal dos_sel        : std_logic_vector(1 downto 0);
   signal c1541rom_cs    : std_logic;
   signal c1541rom_addr  : std_logic_vector(14 downto 0);
@@ -451,7 +446,7 @@ disk_reset <= c1541_osd_reset or c1541_reset or not flash_lock or system_reset(0
   port map
    (
       clk32         => clk32,
-      reset         => (not flash_ready) or disk_reset,
+      reset         => disk_reset,
       pause         => loader_busy,
       ce            => '0',
   
@@ -538,16 +533,6 @@ sdc_iack <= int_ack(3);
       outaddr         => sd_byte_index,     -- outaddr from 0 to 511, because the sector size is 512
       outbyte         => sd_rd_data         -- a byte of sector content
   );
-  
-  process(clk32)
-  begin
-    if rising_edge(clk32) then
-      old_sync <= freeze_sync;
-        if not old_sync and freeze_sync then
-            freeze <= osd_status and system_pause;
-          end if;
-    end if;
-  end process;
   
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(371,9);
 cass_aud <= cass_read and not cass_sense and not cass_motor;
@@ -707,19 +692,18 @@ flashclock: entity work.Gowin_PLL_flash
       SELFORCE => '1'
   );
   
-leds_n <=  not leds;
+leds_n(1 downto 0) <=  not leds(1 downto 0);
 leds(0) <= led1541;
-leds(1) <= system_leds(0);
 
-joyDS2_p1     <=    (others => '0');
-joyDigital <=    (others => '0');
-joyUsb1    <=    ("00" & joystick1(4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3));
-joyUsb2    <=    ("00" & joystick2(4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3));
-joyNumpad  <=     "00" & numpad(4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
-joyMouse   <=     "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyDS2A_p1  <=    (others => '0');
-joyUsb1A   <=   ("00" & '0' & joystick1(5) & joystick1(4) & "00"); -- Y,X button
-joyUsb2A   <=   ("00" & '0' & joystick2(5) & joystick2(4) & "00"); -- Y,X button
+joyDS2_p1  <= (others => '0');
+joyDigital <= (others => '0');
+joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3);
+joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
+joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
+joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
+joyDS2A_p1 <= (others => '0');
+joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
+joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
 -- send external DB9 joystick port to µC
 db9_joy <= "000000";
@@ -908,7 +892,7 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else
   port map(
       clk       => flash_clk,
       resetn    => flash_lock,
-      ready     => flash_ready,
+      ready     => open,
       busy      => open,
       address   => (x"2" & "000" & dos_sel & c1541rom_addr),
       cs        => c1541rom_cs,
@@ -1030,7 +1014,7 @@ resetvic20 <= system_reset(0) or not pll_locked or cart_reset or detach_reset;
     load_rom          => load_rom,
     load_tap          => load_tap,
     sd_img_size       => sd_img_size,
-    leds              => open,
+    leds              => leds(5 downto 1),
     img_select        => img_select,
   
     ioctl_download    => ioctl_download,
