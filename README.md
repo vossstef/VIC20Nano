@@ -40,6 +40,7 @@ Features:
 * On Screen Display (OSD) for configuration and D64 image selection<br>
 * 3K, 8K, 16K, 24K, 32K RAM Expansion (35k with cardtridge RAM)<br>
 * 8K RAM at $A000 as loadable Cartridge Slot<br>
+* RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) to Tang onboard USB-C serial port.
 <br>
 <img src="./.assets/vic20nano.png" alt="image" width="80%" height="auto">
 <br>
@@ -161,9 +162,13 @@ The core will after power cycle/ cold-boot start downloading the images on the s
 > [!NOTE] 
 (1) BIN Kernal, (2) CRT ROM, (3) PRG Basic.<br>
 
-## Push Button utilization
-* (TN20k/ TP25k): **S2** keep pressed during power-up to prevent FPGA bitstream load from FLASH. Needed for FLASH programming.<br>
-* (TP20k): There is by default unfortunately no Button/Switch to prevent FPGA bitstream load from FLASH (see rework how to add).
+## Push Button / DIP Switch utilization
+* Nano 20k S2 keep pressed during power-up for FLASH programming of FPGA bitstream<br>
+* Primer 20k: There is by default unfortunately no Button/Switch to prevent FPGA bitstream load from FLASH (see rework how to add).
+* Mega 60k NEO ```SW1 ON``` ```SW6 ON``` + Press & **Hold** ```RECONFIG``` + Power the Board + release ```RECONFIG``` and perform programming.
+> [!CAUTION]
+A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
+
 
 * **S1** reserved <br>
 
@@ -240,6 +245,10 @@ Solid **<font color="red">red</font>** of the c1541 led after power-up indicates
 * **<font color="blue">blue</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;µC firmware detected valid FPGA core<br>
 * **<font color="yellow">yellow</font>**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;FPGA core can't detect valid firmware<br>
 * **white**&ensp;&thinsp;&ensp;&thinsp;&ensp;&thinsp;-<br>
+## RS232 Serial Interface 
+The Tang onboard USB-C serial port can be used for communication with the Userport Serial port [VIC-1011](http://www.zimmers.net/cbmpics/xother.html).<br>
+Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal.<br> For a first start use 1200Baud and a Terminal program like [VIC term](https://github.com/sblendorio/victerm300) and on the PC side [Putty](https://www.putty.org).<br>
+
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 
 ## Synthesis
