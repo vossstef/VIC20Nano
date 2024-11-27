@@ -488,7 +488,7 @@ disk_reset <= c1541_osd_reset or c1541_reset or system_reset(0) or not pll_locke
 
 sd_lba <= loader_lba when loader_busy = '1' else loader_lba when img_present = '0' else disk_lba;
 sd_rd(0) <= c1541_sd_rd when img_present = '1' else '0';
-sd_wr(0) <= c1541_sd_wr when img_present = '1' else '0';  ext_en <= '1' when dos_sel(0) = '0' else '0';
+sd_wr(0) <= c1541_sd_wr when img_present = '1' else '0';
 ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sdc_iack <= int_ack(3);
   

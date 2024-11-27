@@ -567,7 +567,7 @@ port map
     sd_buff_wr    => sd_rd_byte_strobe,
 
     led           => led1541,
-    ext_en        => '0',
+    ext_en        => ext_en,
     c1541rom_cs   => c1541rom_cs,
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
