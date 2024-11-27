@@ -554,7 +554,7 @@ port map
     sd_buff_wr    => sd_rd_byte_strobe,
 
     led           => led1541,
-    ext_en        => '0',
+    ext_en        => ext_en,
     c1541rom_cs   => c1541rom_cs,
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
@@ -719,7 +719,6 @@ port map (
 flashclock: entity work.Gowin_PLL_60k_flash
     port map (
         lock => flash_lock,
-        reset => not pll_locked_pal,
         clkout0 => flash_clk,
         clkout1 => mspi_clk,
         clkin => clk
@@ -964,7 +963,7 @@ end process;
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => flash_lock,
+    resetn    => pll_locked,
     ready     => open,
     busy      => open,
     address   => (x"7" & "000" & dos_sel & c1541rom_addr),
