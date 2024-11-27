@@ -44,10 +44,11 @@ entity VIC20_TOP_tm60k is
     O_sdram_ba      : out std_logic_vector(1 downto 0); -- two banks
     O_sdram_dqm     : out std_logic_vector(1 downto 0); -- 16/2
     -- Gamepad Dualshock P0
-    ds_clk          : out std_logic;
-    ds_mosi         : out std_logic;
-    ds_miso         : in std_logic;
-    ds_cs           : out std_logic;
+    -- debug
+    --ds_clk          : out std_logic;
+    --ds_mosi         : out std_logic;
+    --ds_miso         : in std_logic;
+    --ds_cs           : out std_logic;
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -59,6 +60,12 @@ entity VIC20_TOP_tm60k is
 end;
 
 architecture Behavioral_top of VIC20_TOP_tm60k is
+
+-- debug
+signal  ds_clk          : std_logic;
+signal  ds_mosi         : std_logic;
+signal  ds_miso         : std_logic;
+signal  ds_cs           : std_logic;
 
 signal clk64          : std_logic;
 signal clk32          : std_logic;
@@ -122,7 +129,6 @@ signal joyMouse     : std_logic_vector(6 downto 0);
 signal joyDS2A_p1   : std_logic_vector(6 downto 0); 
 signal joyDS2A_p2   : std_logic_vector(6 downto 0); 
 signal numpad       : std_logic_vector(7 downto 0);
-signal numpad_d     : std_logic_vector(7 downto 0);
 signal joyDS2_p1    : std_logic_vector(6 downto 0);
 signal joyDS2_p2    : std_logic_vector(6 downto 0);
 -- joystick interface

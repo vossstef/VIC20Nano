@@ -244,7 +244,6 @@ architecture Behavioral_top of VIC20Nano_top_tp25k is
   signal key_right       : std_logic;
   signal key_start       : std_logic;
   signal key_select      : std_logic;
-  signal ntscModeD       : std_logic;
   signal audio_div       : unsigned(8 downto 0);
   signal flash_clk       : std_logic;
   signal flash_lock      : std_logic;
@@ -400,7 +399,7 @@ constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
     end if;
   end process;
   
-disk_reset <= c1541_osd_reset or c1541_reset or not flash_lock or system_reset(0) or not pll_locked;
+disk_reset <= c1541_osd_reset or c1541_reset or system_reset(0) or not pll_locked;
   
   -- rising edge sd_change triggers detection of new disk
   process(clk32, pll_locked)
@@ -481,7 +480,7 @@ disk_reset <= c1541_osd_reset or c1541_reset or not flash_lock or system_reset(0
       sd_buff_wr    => sd_rd_byte_strobe,
   
       led           => led1541,
-      ext_en        => '0',
+      ext_en        => ext_en,
       c1541rom_cs   => c1541rom_cs,
       c1541rom_addr => c1541rom_addr,
       c1541rom_data => c1541rom_data
@@ -490,6 +489,7 @@ disk_reset <= c1541_osd_reset or c1541_reset or not flash_lock or system_reset(0
 sd_lba <= loader_lba when loader_busy = '1' else loader_lba when img_present = '0' else disk_lba;
 sd_rd(0) <= c1541_sd_rd when img_present = '1' else '0';
 sd_wr(0) <= c1541_sd_wr when img_present = '1' else '0';  ext_en <= '1' when dos_sel(0) = '0' else '0';
+ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sdc_iack <= int_ack(3);
   
   sd_card_inst: entity work.sd_card
@@ -664,21 +664,7 @@ flashclock: entity work.Gowin_PLL_flash
       SELFORCE => '1'
   );
   
---  clk_switch_2: DCS
---  generic map (
---      DCS_MODE => "RISING"
---  )
---  port map (
---      CLKOUT => clk64,
---      CLKSEL => dcsclksel,
---      CLKIN0 => clk64_pal,
---      CLKIN1 => clk64_ntsc,
---      CLKIN2 => '0',
---      CLKIN3 => '0',
---      SELFORCE => '1'
---  );
-
-  clk_switch_3: DCS
+  clk_switch_2: DCS
   generic map (
       DCS_MODE => "RISING"
   )
@@ -891,7 +877,7 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else
   flash_inst: entity work.flash 
   port map(
       clk       => flash_clk,
-      resetn    => flash_lock,
+      resetn    => pll_locked,
       ready     => open,
       busy      => open,
       address   => (x"2" & "000" & dos_sel & c1541rom_addr),
