@@ -362,6 +362,14 @@ signal uart_rxD          : std_logic_vector(1 downto 0);
 signal uart_rx_filtered  : std_logic;
 signal clkref            : std_logic;
 signal oe                : std_logic;
+signal force_erase       : std_logic := '0';
+signal erasing           : std_logic := '0';
+signal do_erase          : std_logic;
+signal reset_n           : std_logic;
+signal old_download_r    : std_logic;
+signal reset_wait        : std_logic := '0';
+signal por               : std_logic;
+signal erase_to          : std_logic_vector(4 downto 0);
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -1090,7 +1098,7 @@ vic_inst: entity work.VIC20
 		--
 		i_sysclk      => clk32,
 		i_sysclk_en   => v20_en,
-		i_reset       => resetvic20,
+		i_reset       => not reset_n,
 		o_p2h         => p2_h,
 
 		-- serial bus pins
@@ -1192,14 +1200,42 @@ vic_inst: entity work.VIC20
     ioctl_addr        => ioctl_addr,
     ioctl_data        => ioctl_data,
     ioctl_wr          => ioctl_wr,
-    ioctl_wait        => ioctl_req_wr
+    ioctl_wait        => ioctl_req_wr or reset_wait
   );
 
-process(clk32)
+por <= system_reset(0) or not pll_locked or detach_reset or not ram_ready;
+
+process(clk32, por)
+variable reset_counter : integer;
 begin
-  if rising_edge(clk32) then
+  if por = '1' then
+      reset_counter := 1000000;
+      do_erase <= '1';
+      reset_n <= '0';
+      reset_wait <= '0';
+      force_erase <= '0';
+      cart_blk <= (others => '0');
+  elsif rising_edge(clk32) then
+      if reset_counter = 0 then reset_n <= '1'; else reset_n <= '0'; end if;
+      old_download <= ioctl_download;
+      if old_download = '0' and ioctl_download = '1' and load_prg = '1' then
+        do_erase <= '1';
+        reset_wait <= '1';
+        reset_counter := 255;
+      elsif ioctl_download = '1' and (load_crt = '1' or load_rom = '1' or load_mc = '1') then
+        cart_blk <= (others => '0');
+        do_erase <= '1';
+        reset_counter := 255;
+      elsif erasing = '1' then force_erase <= '0';
+      elsif reset_counter = 0 then
+        do_erase <= '0';
+        if reset_wait = '1' and c64_addr = X"FFCF" then reset_wait <= '0'; end if;
+      else
+        reset_counter := reset_counter - 1;
+        if reset_counter = 100 and do_erase = '1' then force_erase <= '1'; end if;
+      end if;
+    -----
     dl_wr <= '0';
-    old_download <= ioctl_download;
     io_cycleD <= io_cycle;
 
     if io_cycle = '0' and io_cycleD = '1' then
@@ -1220,6 +1256,25 @@ begin
       io_cycle_we <= '0';
     end if;
 
+    -- start RAM erasing
+    if erasing = '0' and force_erase ='1' then
+      erasing <= '1';
+      ioctl_load_addr <= (others => '0');
+    end if;
+
+    -- RAM erasing control
+    if erasing = '1' and ioctl_req_wr = '0' then
+      erase_to <= erase_to + 1;
+      if erase_to = "11111" then
+          if ioctl_load_addr(15 downto 0) < x"FFFF" then 
+            ioctl_req_wr <= '1';
+          else
+            erasing <= '0';
+          end if;
+      end if;
+    end if;
+
+   --
     if ioctl_wr = '1' and load_tap = '1' then
       state <= x"0";
       if ioctl_addr = 0  then ioctl_load_addr <= TAP_ADDR; end if;
@@ -1289,31 +1344,24 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and (load_crt or load_mc or load_rom) = '1' then
-        cart_reset <= ioctl_download;
+--    if old_download /= ioctl_download and (load_crt or load_mc or load_rom) = '1' then
+--        cart_reset <= ioctl_download;
+--    end if;
+
+--    if system_reset(1) or detach_reset then
+--      cart_reset <= '0';
+--      cart_blk <= (others => '0');
+--    end if;
+
+--    if ioctl_download and load_mc then
+--     cart_blk <= (others => '0');
+--   end if;
+
+    if ioctl_download and load_crt then mc_loaded <= '0';
+    elsif ioctl_download and load_mc then mc_loaded <= '1';
     end if;
 
-    if system_reset(1) or detach_reset then
-      cart_reset <= '0';
-      cart_blk <= (others => '0');
-    end if;
-
-    if ioctl_download and load_mc then
-     cart_blk <= (others => '0');
    end if;
-
-   end if;
-end process;
-
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    if ioctl_download and load_crt then 
-      mc_loaded <= '0';
-    elsif ioctl_download and load_mc then 
-      mc_loaded <= '1';
-    end if;
-end if;
 end process;
 
 mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
@@ -1322,7 +1370,7 @@ mc_inst: entity work.megacart
 port map 
 (
 	clk             => clk32,
-	reset_n         => mc_loaded and not system_reset(1) and not cart_reset,
+	reset_n         => mc_loaded and not system_reset(1), -- and not cart_reset,
 
 	vic_addr        => vic_addr,
 	vic_wr_n        => vic_wr_n,
@@ -1339,10 +1387,27 @@ port map
 	mc_soft_reset   => mc_reset
 );
 
--- 8k megacart NVRAM / TM60k /138k
---nvram_inst: entity work.
---  port map (
---  );
+-- 8k megacart NVRAM
+-- TM60k /138k
+--mc_nvram_inst: entity work.Gowin_DPB_8k
+--    port map (
+--        douta   => mc_nvram_out,
+--        doutb   => sd_buff_din(0),
+--        clka    => clk32,
+--        ocea    => '1',
+--        cea     => '1',
+--        reseta  => '0',
+--        wrea    => mc_nvram_sel and not mc_wr_n,
+--        clkb    => clk32,
+--        oceb    => '1',
+--        ceb     => '1',
+--        resetb  => '0',
+--        wreb    => insd_buff_wr and sd_ack(0),
+--        ada     => vic_addr,
+--        dina    => vic_data,
+--        adb     => sd_buff_addr,
+--        dinb    => sd_buff_dout
+-- );
 
 -------------- TAP -------------------
 timer_inst: entity work.core_timer
