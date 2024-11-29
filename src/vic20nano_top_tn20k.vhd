@@ -165,10 +165,10 @@ signal disk_chg_trg   : std_logic;
 signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
 signal sd_img_size_d  : std_logic_vector(31 downto 0);
-signal sd_img_mounted : std_logic_vector(4 downto 0);
+signal sd_img_mounted : std_logic_vector(5 downto 0);
 signal sd_img_mounted_d : std_logic;
-signal sd_rd          : std_logic_vector(4 downto 0);
-signal sd_wr          : std_logic_vector(4 downto 0);
+signal sd_rd          : std_logic_vector(5 downto 0);
+signal sd_wr          : std_logic_vector(5 downto 0);
 signal sd_lba         : std_logic_vector(31 downto 0);
 signal sd_busy        : std_logic;
 signal sd_done        : std_logic;
@@ -281,6 +281,12 @@ signal addr            : std_logic_vector(15 downto 0);
 signal cart_reset      : std_logic := '0';
 signal cart_blk        : std_logic_vector(4 downto 0)  := "00000";
 signal state           : std_logic_vector(3 downto 0)  := "0000";
+signal load_mc         : std_logic := '0';
+signal mc_reset        : std_logic;
+signal mc_addr         : std_logic_vector(22 downto 0);
+signal mc_wr_n         : std_logic;
+signal mc_nvram_sel    : std_logic;
+signal mc_rom_sel      : std_logic;
 signal vic_wr_n        : std_logic;
 signal vic_io2_sel     : std_logic;
 signal vic_io3_sel     : std_logic;
@@ -289,7 +295,10 @@ signal vic_blk5_sel    : std_logic;
 signal vic_ram123_sel  : std_logic;
 signal vic_data        : std_logic_vector(7 downto 0);
 signal vic_addr        : std_logic_vector(15 downto 0);
+signal mc_loaded       : std_logic := '0';
+signal mc_data         : std_logic_vector(7 downto 0);
 signal sdram_out       : std_logic_vector(7 downto 0);
+signal mc_nvram_out    : std_logic_vector(7 downto 0);
 signal ioctl_wr_d      : std_logic;
 signal extmem_sel      : std_logic;
 signal p2_h            : std_logic;
@@ -351,6 +360,8 @@ signal user_port_in      : std_logic_vector(7 downto 0);
 signal user_port_out     : std_logic_vector(7 downto 0);
 signal uart_rxD          : std_logic_vector(1 downto 0);
 signal uart_rx_filtered  : std_logic;
+signal clkref            : std_logic;
+signal oe                : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -663,6 +674,15 @@ port map(
       tmds_d_n   => tmds_d_n,
       tmds_d_p   => tmds_d_p
       );
+
+we <= ioctl_wr_d when (ioctl_download and load_mc) else (not mc_nvram_sel and extmem_sel and not mc_wr_n);
+oe <= '0' when (ioctl_download and load_mc) else ( not mc_nvram_sel and  extmem_sel and  mc_wr_n);
+din <= ioctl_data when (ioctl_download and load_mc) else vic_data;
+dram_addr <= ioctl_addr when (ioctl_download and load_mc) else mc_addr;
+--idle <= ioctl_wr when ioctl_download else p2_h;
+clkref <= ioctl_wr when ioctl_download else p2_h;
+
+-- TM60k / 138k swap DRAM / DDR3
 
 dram_inst: entity work.sdram8
    port map(
@@ -1060,10 +1080,10 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
           & (cart_blk(1) and not crt_writeable)
           & (cart_blk(0) and not crt_writeable);
 
-i_ram_ext_ro <= ext_ro;
-i_ram_ext <= extram or cart_blk;
+i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
+i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= system_reset(0) or not pll_locked or cart_reset or detach_reset;
+resetvic20 <= system_reset(0) or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1089,11 +1109,11 @@ vic_inst: entity work.VIC20
 		i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set
 		i_ram_ext     => i_ram_ext,    -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
 		--
-		i_extmem_en   => '0',
+		i_extmem_en   => mc_loaded,
 		o_extmem_sel  => extmem_sel,
 		o_extmem_r_wn => vic_wr_n,
 		o_extmem_addr => vic_addr,
-		i_extmem_data => (others => '0'),
+		i_extmem_data => mc_data,
 		o_extmem_data => vic_data,
 		o_io2_sel     => vic_io2_sel,
 		o_io3_sel     => vic_io3_sel,
@@ -1145,11 +1165,11 @@ vic_inst: entity work.VIC20
   crt_inst : entity work.loader_sd_card
   port map (
     clk               => clk32,
-    system_reset      => system_reset,
+    reset             => not pll_locked,
   
     sd_lba            => loader_lba,
-    sd_rd             => sd_rd(4 downto 1),
-    sd_wr             => sd_wr(4 downto 1),
+    sd_rd             => sd_rd(5 downto 1),
+    sd_wr             => sd_wr(5 downto 1),
     sd_busy           => sd_busy,
     sd_done           => sd_done,
   
@@ -1163,6 +1183,7 @@ vic_inst: entity work.VIC20
     load_prg          => load_prg,
     load_rom          => load_rom,
     load_tap          => load_tap,
+    load_flt          => load_mc,
     sd_img_size       => sd_img_size,
     leds              => leds(5 downto 1),
     img_select        => img_select,
@@ -1171,7 +1192,7 @@ vic_inst: entity work.VIC20
     ioctl_addr        => ioctl_addr,
     ioctl_data        => ioctl_data,
     ioctl_wr          => ioctl_wr,
-    ioctl_wait        => ioctl_wait
+    ioctl_wait        => ioctl_req_wr
   );
 
 process(clk32)
@@ -1268,17 +1289,60 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and (load_crt or load_rom) = '1' then
+    if old_download /= ioctl_download and (load_crt or load_mc or load_rom) = '1' then
         cart_reset <= ioctl_download;
-      end if;
+    end if;
 
-    if (system_reset(1) or detach_reset) = '1' then
+    if system_reset(1) or detach_reset then
       cart_reset <= '0';
       cart_blk <= (others => '0');
     end if;
-    
+
+    if ioctl_download and load_mc then
+     cart_blk <= (others => '0');
+   end if;
+
    end if;
 end process;
+
+process(clk32)
+begin
+  if rising_edge(clk32) then
+    if ioctl_download and load_crt then 
+      mc_loaded <= '0';
+    elsif ioctl_download and load_mc then 
+      mc_loaded <= '1';
+    end if;
+end if;
+end process;
+
+mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
+
+mc_inst: entity work.megacart
+port map 
+(
+	clk             => clk32,
+	reset_n         => mc_loaded and not system_reset(1) and not cart_reset,
+
+	vic_addr        => vic_addr,
+	vic_wr_n        => vic_wr_n,
+	vic_io2_sel     => vic_io2_sel,
+	vic_io3_sel     => vic_io3_sel,
+	vic_blk123_sel  => vic_blk123_sel,
+	vic_blk5_sel    => vic_blk5_sel,
+	vic_ram123_sel  => vic_ram123_sel,
+	vic_data        => vic_data,
+
+	mc_addr         => mc_addr,
+	mc_wr_n         => mc_wr_n,
+	mc_nvram_sel    => mc_nvram_sel,
+	mc_soft_reset   => mc_reset
+);
+
+-- 8k megacart NVRAM / TM60k /138k
+--nvram_inst: entity work.
+--  port map (
+--  );
 
 -------------- TAP -------------------
 timer_inst: entity work.core_timer
