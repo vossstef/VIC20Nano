@@ -60,7 +60,7 @@ reg [4:0] rd_sel;
 reg boot_crt;
 reg boot_bin;
 reg boot_prg;
-//reg boot_tap;
+reg boot_tap;
 reg boot_flt;
 
 	for(integer i = 0; i < 6; i = i + 1'd1)
@@ -103,7 +103,7 @@ reg boot_flt;
 		boot_crt <= 1'b0;
 		boot_bin <= 1'b0;
 		boot_prg <= 1'b0;
-//		boot_tap <= 1'b0;
+		boot_tap <= 1'b0;
 		boot_flt <= 1'b0;
 		io_state <= START;
 	end
@@ -111,7 +111,7 @@ reg boot_flt;
 	begin
 	case(io_state)
 
-		START:        // 0 c1541 1 CRT 2 PRG 3 BIN 4 TAP 5 FLT
+		START:        // 0 c1541 1 CRT 2 PRG 3 BIN 4 TAP 5 FLT(MC)
 			begin
 				if((img_present[3] && ~img_presentD[3]) || (img_present[3] && ~boot_bin))
 					begin
@@ -141,17 +141,16 @@ reg boot_flt;
 						rd_sel = 5'b10000;
 						boot_flt <= 1'b1;
 					end
-//				else if((img_present[4] && ~img_presentD[4]) || (img_present[4] && ~boot_tap))
-				else if(img_present[4] && ~img_presentD[4])
+				else if(img_present[4] && ~img_presentD[4])  // TAP
 					begin 
 						img_select <= 4;
 						io_state <= GO4IT;
 						rd_sel = 5'b01000;
-//						boot_tap <= 1'b1;
+						boot_tap <= 1'b1;
 					end
 				else if(img_present[0] && ~img_presentD[0])
 					begin
-						img_select <= 0; 
+				//		img_select <= 0; 
 					end
 			end
 
