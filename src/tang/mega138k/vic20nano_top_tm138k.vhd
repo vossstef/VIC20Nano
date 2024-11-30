@@ -84,7 +84,6 @@ attribute syn_keep of clk_pixel_x5_pal  : signal is 1;
 attribute syn_keep of clk_pixel_x5_ntsc : signal is 1;
 attribute syn_keep of clk_pixel_x5  : signal is 1;
 attribute syn_keep of mspi_clk_x5   : signal is 1;
-
 signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
 
@@ -478,7 +477,7 @@ variable pause_cnt : integer range 0 to 2147483647;
   if pause_cnt = 0 then 
     disk_pause <= '0';
   else
-    disk_pause <= '0';
+    disk_pause <= '1';
   end if;
 end process;
 
@@ -978,7 +977,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= not ram_ready or system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(

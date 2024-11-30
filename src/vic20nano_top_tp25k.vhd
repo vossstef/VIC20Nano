@@ -407,7 +407,7 @@ variable pause_cnt : integer range 0 to 2147483647;
   if pause_cnt = 0 then 
     disk_pause <= '0';
   else
-    disk_pause <= '0';
+    disk_pause <= '1';
   end if;
 end process;
 
@@ -639,7 +639,7 @@ dram_inst: entity work.sdram
   -- dram        71250000    66250000
   -- core/pixel  35625000    33125000
 
-pll_locked <= pll_locked_pal and pll_locked_ntsc;
+pll_locked <= pll_locked_pal and pll_locked_ntsc and flash_lock;
 dcsclksel <= "0001" when ntscMode = '0' else "0010";
 
 mainclock_pal: entity work.Gowin_PLL_pal
@@ -903,7 +903,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= not ram_ready or system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(

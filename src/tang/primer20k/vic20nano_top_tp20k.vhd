@@ -179,10 +179,10 @@ signal disk_chg_trg   : std_logic;
 signal disk_chg_trg_d : std_logic;
 signal sd_img_size    : std_logic_vector(31 downto 0);
 signal sd_img_size_d  : std_logic_vector(31 downto 0);
-signal sd_img_mounted : std_logic_vector(4 downto 0);
+signal sd_img_mounted : std_logic_vector(5 downto 0);
 signal sd_img_mounted_d : std_logic;
-signal sd_rd          : std_logic_vector(4 downto 0);
-signal sd_wr          : std_logic_vector(4 downto 0);
+signal sd_rd          : std_logic_vector(5 downto 0);
+signal sd_wr          : std_logic_vector(5 downto 0);
 signal sd_lba         : std_logic_vector(31 downto 0);
 signal sd_busy        : std_logic;
 signal sd_done        : std_logic;
@@ -208,36 +208,18 @@ signal leds           : std_logic_vector(5 downto 0);
 signal system_leds    : std_logic_vector(1 downto 0);
 signal led1541        : std_logic;
 
-signal cart_ce        : std_logic;
-signal cart_we        : std_logic;
-
-signal cart_addr      : std_logic_vector(22 downto 0);
 signal db9_joy        : std_logic_vector(5 downto 0);
-signal turbo_mode     : std_logic_vector(1 downto 0);
-signal turbo_speed    : std_logic_vector(1 downto 0);
 signal dos_sel        : std_logic_vector(1 downto 0);
 signal c1541rom_cs    : std_logic;
 signal c1541rom_addr  : std_logic_vector(14 downto 0);
 signal c1541rom_data  : std_logic_vector(7 downto 0);
 signal ext_en         : std_logic;
 signal freeze_key     : std_logic;
-signal disk_access    : std_logic;
-signal c64_iec_clk_old : std_logic;
-signal drive_iec_clk_old : std_logic;
-signal drive_stb_i_old : std_logic;
-signal drive_stb_o_old : std_logic;
 signal hsync_out       : std_logic;
 signal vsync_out       : std_logic;
 signal hblank          : std_logic;
 signal vblank          : std_logic;
-signal frz_hs          : std_logic;
-signal frz_vs          : std_logic;
-signal hbl_out         : std_logic; 
-signal vbl_out         : std_logic;
-signal st_midi         : std_logic_vector(2 downto 0);
-signal frz_hbl         : std_logic;
-signal frz_vbl         : std_logic;
-signal system_pause    : std_logic;
+
 signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
 signal key_r1          : std_logic;
@@ -282,7 +264,7 @@ signal loader_lba      : std_logic_vector(31 downto 0);
 signal loader_busy     : std_logic;
 signal img_select      : std_logic_vector(2 downto 0);
 signal ioctl_download  : std_logic := '0';
-signal old_download    : std_logic;
+signal old_download    : std_logic := '0';
 signal ioctl_load_addr : std_logic_vector(22 downto 0);
 signal ioctl_wr        : std_logic;
 signal ioctl_data      : std_logic_vector(7 downto 0);
@@ -295,6 +277,12 @@ signal addr            : std_logic_vector(15 downto 0);
 signal cart_reset      : std_logic := '0';
 signal cart_blk        : std_logic_vector(4 downto 0)  := "00000";
 signal state           : std_logic_vector(3 downto 0)  := "0000";
+signal load_mc         : std_logic := '0';
+signal mc_reset        : std_logic;
+signal mc_addr         : std_logic_vector(22 downto 0);
+signal mc_wr_n         : std_logic;
+signal mc_nvram_sel    : std_logic;
+signal mc_rom_sel      : std_logic;
 signal vic_wr_n        : std_logic;
 signal vic_io2_sel     : std_logic;
 signal vic_io3_sel     : std_logic;
@@ -303,7 +291,10 @@ signal vic_blk5_sel    : std_logic;
 signal vic_ram123_sel  : std_logic;
 signal vic_data        : std_logic_vector(7 downto 0);
 signal vic_addr        : std_logic_vector(15 downto 0);
+signal mc_loaded       : std_logic := '0';
+signal mc_data         : std_logic_vector(7 downto 0);
 signal sdram_out       : std_logic_vector(7 downto 0);
+signal mc_nvram_out    : std_logic_vector(7 downto 0);
 signal ioctl_wr_d      : std_logic;
 signal extmem_sel      : std_logic;
 signal p2_h            : std_logic;
@@ -376,6 +367,10 @@ signal user_port_in      : std_logic_vector(7 downto 0);
 signal user_port_out     : std_logic_vector(7 downto 0);
 signal uart_rxD          : std_logic_vector(1 downto 0);
 signal uart_rx_filtered  : std_logic;
+signal clkref            : std_logic;
+signal oe                : std_logic;
+signal system_reset_d    : std_logic;
+signal disk_pause        : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -537,35 +532,57 @@ led_ws2812: entity work.ws2812
    data   => ws2812
   );
 
-	process(clk32, flash_lock)
+	process(clk32, disk_reset)
     variable reset_cnt : integer range 0 to 2147483647;
     begin
-		if flash_lock = '0' then
+		if disk_reset = '1' then
       disk_chg_trg <= '0';
 			reset_cnt := 64000000;
       elsif rising_edge(clk32) then
-        uart_rx_d  <= uart_rx;
-        sd_det_a_d <= sd_det;
+			if reset_cnt /= 0 then
+				reset_cnt := reset_cnt - 1;
+			end if;
+		end if;
 
-        if reset_cnt /= 0 then
-				  reset_cnt := reset_cnt - 1;
-          disk_chg_trg <= '0';
-        else
-          disk_chg_trg <= '1';
-        end if;
+  if reset_cnt = 0 then
+    disk_chg_trg <= '1';
+  else 
+    disk_chg_trg <= '0';
   end if;
 end process;
 
-disk_reset <= resetvic20 or c1541_reset or not disk_chg_trg;
+-- delay disk start to keep loader at power-up intact
+process(clk32, resetvic20)
+variable pause_cnt : integer range 0 to 2147483647;
+  begin
+  if resetvic20 = '1' then
+    disk_pause <= '1';
+    pause_cnt := 34000000;
+    elsif rising_edge(clk32) then
+    if pause_cnt /= 0 then
+      pause_cnt := pause_cnt - 1;
+    end if;
+  end if;
+
+  if pause_cnt = 0 then 
+    disk_pause <= '0';
+  else
+    disk_pause <= '1';
+  end if;
+end process;
+
+disk_reset <= '1' when disk_pause or c1541_osd_reset or c1541_reset or resetvic20 else '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
-begin
+  begin
   if pll_locked = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
-    c1541_reset <= '0';
-    elsif rising_edge(clk32) then
+    sd_img_size_d <= (others => '0');
+    disk_chg_trg_d <= '0';
+    img_present <= '0';
+  elsif rising_edge(clk32) then
       sd_img_mounted_d <= sd_img_mounted(0);
       disk_chg_trg_d <= disk_chg_trg;
       disk_g64_d <= disk_g64;
@@ -575,25 +592,26 @@ begin
       end if;
 
       if sd_img_mounted_d = '0' and sd_img_mounted(0) = '1' then
-        sd_img_size_d <= sd_img_size; 
-      else 
-        sd_img_size_d <= (others => '0');
+        sd_img_size_d <= sd_img_size;
       end if;
 
-      if (sd_img_mounted(0) /= sd_img_mounted_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
+      if (sd_img_mounted(0) /= sd_img_mounted_d) or
+         (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
           sd_change  <= '1';
           else
           sd_change  <= '0';
+      end if;
+
       if sd_img_size_d >= 333744 then  -- g64 disk selected
         disk_g64 <= '1';
       else
         disk_g64 <= '0';
       end if;
+
       if (disk_g64 /= disk_g64_d) then
         c1541_reset  <= '1'; -- reset needed after G64 change
-        else
+      else
         c1541_reset  <= '0';
-        end if;
       end if;
   end if;
 end process;
@@ -607,7 +625,7 @@ port map
     ce            => '0',
 
     disk_num      => (others =>'0'),
-    disk_change   => sd_change,
+    disk_change   => sd_change, 
     disk_mount    => img_present,
     disk_readonly => system_floppy_wprot(0),
     disk_g64      => disk_g64,
@@ -637,15 +655,15 @@ port map
     sd_buff_wr    => sd_rd_byte_strobe,
 
     led           => led1541,
-    ext_en        => '0',
+    ext_en        => ext_en,
     c1541rom_cs   => c1541rom_cs,
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
 );
 
-sd_lba <= loader_lba when loader_busy = '1' else loader_lba when img_present = '0' else disk_lba;
-sd_rd(0) <= c1541_sd_rd when img_present = '1' else '0';
-sd_wr(0) <= c1541_sd_wr when img_present = '1' else '0';
+sd_lba <= loader_lba when loader_busy = '1' else disk_lba;
+sd_rd(0) <= c1541_sd_rd;
+sd_wr(0) <= c1541_sd_wr;
 ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sdc_iack <= int_ack(3);
 
@@ -1143,25 +1161,6 @@ module_inst: entity work.sysctrl
   color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
 );
 
-process(clk32)
-variable toX:	integer;
-begin
-  if rising_edge(clk32) then
-    c64_iec_clk_old   <= iec_clk_i;
-    drive_iec_clk_old <= iec_clk_o;
-    drive_stb_i_old   <= pc2_n;
-    drive_stb_o_old   <= flag2_n;
-    if ( c64_iec_clk_old /= iec_clk_i or drive_iec_clk_old /= iec_clk_o or ((drive_stb_i_old /= pc2_n or drive_stb_o_old /= flag2_n) and ext_en = '1') ) then
-        disk_access <= '1';
-        toX := 16000000; -- 0.5s
-    elsif (toX /= 0) then
-      toX := toX - 1;
-    else  
-      disk_access <= '0';
-    end if;
-  end if;
-end process;
-
 -- c1541 ROM's SPI Flash
 -- TN20k  Winbond 25Q64JVIQ
 -- TP20k  XTX XT25F32B-S, 4MB
@@ -1174,7 +1173,7 @@ end process;
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => flash_lock,
+    resetn    => pll_locked,
     ready     => open,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),
@@ -1193,10 +1192,10 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
           & (cart_blk(1) and not crt_writeable)
           & (cart_blk(0) and not crt_writeable);
 
-i_ram_ext_ro <= ext_ro;
-i_ram_ext <= extram or cart_blk;
+i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
+i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= system_reset(0) or not pll_locked or cart_reset or detach_reset;
+resetvic20 <= not ram_ready or system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1222,11 +1221,11 @@ vic_inst: entity work.VIC20
 		i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set
 		i_ram_ext     => i_ram_ext,    -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
 		--
-		i_extmem_en   => '0',
+		i_extmem_en   => mc_loaded,
 		o_extmem_sel  => extmem_sel,
 		o_extmem_r_wn => vic_wr_n,
 		o_extmem_addr => vic_addr,
-		i_extmem_data => (others => '0'),
+		i_extmem_data => mc_data,
 		o_extmem_data => vic_data,
 		o_io2_sel     => vic_io2_sel,
 		o_io3_sel     => vic_io3_sel,
@@ -1265,23 +1264,24 @@ vic_inst: entity work.VIC20
 		conf_wr       => dl_wr,
 		conf_ai       => dl_addr,
 		conf_di       => dl_data,
-      -- user port RS232
-      user_port_cb1_in  => user_port_cb1_in,
-      user_port_cb2_in  => user_port_cb2_in,
-      user_port_cb1_out => user_port_cb1_out,
-      user_port_cb2_out => user_port_cb2_out,
-      user_port_in      => user_port_in,
-      user_port_out     => user_port_out
+
+    -- user port RS232
+    user_port_cb1_in  => user_port_cb1_in,
+    user_port_cb2_in  => user_port_cb2_in,
+    user_port_cb1_out => user_port_cb1_out,
+    user_port_cb2_out => user_port_cb2_out,
+    user_port_in      => user_port_in,
+    user_port_out     => user_port_out
 	);
 
   crt_inst : entity work.loader_sd_card
   port map (
     clk               => clk32,
-    system_reset      => system_reset,
+    reset             => system_reset(1),
   
     sd_lba            => loader_lba,
-    sd_rd             => sd_rd(4 downto 1),
-    sd_wr             => sd_wr(4 downto 1),
+    sd_rd             => sd_rd(5 downto 1),
+    sd_wr             => sd_wr(5 downto 1),
     sd_busy           => sd_busy,
     sd_done           => sd_done,
   
@@ -1295,9 +1295,10 @@ vic_inst: entity work.VIC20
     load_prg          => load_prg,
     load_rom          => load_rom,
     load_tap          => load_tap,
+    load_flt          => load_mc,
     sd_img_size       => sd_img_size,
     leds              => leds(5 downto 1),
-    img_select        => img_select,
+    img_select        => open,
   
     ioctl_download    => ioctl_download,
     ioctl_addr        => ioctl_addr,
@@ -1312,6 +1313,12 @@ begin
     dl_wr <= '0';
     old_download <= ioctl_download;
     io_cycleD <= io_cycle;
+    ioctl_wr_d <= ioctl_wr;
+    system_reset_d <= system_reset(1);
+
+    if not system_reset_d and system_reset(1) then
+      ioctl_req_wr <= '0'; 
+    end if;
 
     if io_cycle = '0' and io_cycleD = '1' and ddr_busy = '0' then
       io_cycle_ce <= '1';
@@ -1332,7 +1339,7 @@ begin
       io_cycle_we <= '0';
     end if;
 
-    if ioctl_wr = '1' and load_tap = '1' then
+    if ioctl_wr = '1' and ioctl_download = '1' and load_tap = '1' then
       state <= x"0";
       if ioctl_addr = 0  then ioctl_load_addr <= TAP_ADDR; end if;
       if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
@@ -1356,7 +1363,8 @@ begin
     end if;
 
     if old_download = '1' and ioctl_download = '0' and load_prg = '1' then
-        state <= x"1"; end if;
+        state <= x"1"; 
+    end if;
 
     if state /= x"0" then state <= state + 1; end if;
 
@@ -1375,9 +1383,11 @@ begin
     if ioctl_download and load_rom then
       state <= x"0";
       if ioctl_wr = '1' then
+        if ioctl_addr < x"2000" then
           dl_addr <= ioctl_addr(15 downto 0) or x"E000";
           dl_data <= ioctl_data;
           dl_wr <= '1';
+        end if;
       end if;
     end if;
 
@@ -1401,17 +1411,70 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and (load_crt or load_rom or load_crt) = '1' then
-        cart_reset <= ioctl_download;
-      end if;
+    if old_download /= ioctl_download and (load_crt or load_mc or load_rom) = '1' then
+      cart_reset <= ioctl_download;
+    elsif old_download /= ioctl_download and load_mc = '1' then
+      cart_blk <= (others => '0');
+    end if;
 
     if (system_reset(1) or detach_reset) = '1' then
       cart_reset <= '0';
       cart_blk <= (others => '0');
     end if;
-    
-   end if;
+
+    if (ioctl_download and load_crt) = '1' or detach_reset = '1' then
+      mc_loaded <= '0';
+    elsif ioctl_download and load_mc then 
+      mc_loaded <= '1';
+    end if;
+
+    end if;
 end process;
+
+mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
+
+mc_inst: entity work.megacart
+port map 
+(
+	clk             => clk32,
+	reset_n         => mc_loaded and not system_reset(0) and not cart_reset,
+
+	vic_addr        => vic_addr,
+	vic_wr_n        => vic_wr_n,
+	vic_io2_sel     => vic_io2_sel,
+	vic_io3_sel     => vic_io3_sel,
+	vic_blk123_sel  => vic_blk123_sel,
+	vic_blk5_sel    => vic_blk5_sel,
+	vic_ram123_sel  => vic_ram123_sel,
+	vic_data        => vic_data,
+
+	mc_addr         => mc_addr,
+	mc_wr_n         => mc_wr_n,
+	mc_nvram_sel    => mc_nvram_sel,
+	mc_soft_reset   => mc_reset
+);
+
+-- 8k megacart NVRAM
+-- TM60k / TM138k
+--mc_nvram_inst: entity work.Gowin_DPB_8k
+--    port map (
+--        douta   => mc_nvram_out,
+--        doutb   => sd_buff_din(0),
+--        clka    => clk32,
+--        ocea    => '1',
+--        cea     => '1',
+--        reseta  => '0',
+--        wrea    => mc_nvram_sel and not mc_wr_n,
+--        clkb    => clk32,
+--        oceb    => '1',
+--        ceb     => '1',
+--        resetb  => '0',
+--        wreb    => insd_buff_wr and sd_ack(0),
+--        ada     => vic_addr,
+--        dina    => vic_data,
+--        adb     => sd_buff_addr,
+--        dinb    => sd_buff_dout
+-- );
 
 -------------- TAP -------------------
 timer_inst: entity work.core_timer

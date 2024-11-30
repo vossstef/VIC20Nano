@@ -494,7 +494,7 @@ variable pause_cnt : integer range 0 to 2147483647;
   if pause_cnt = 0 then 
     disk_pause <= '0';
   else
-    disk_pause <= '0';
+    disk_pause <= '1';
   end if;
 end process;
 

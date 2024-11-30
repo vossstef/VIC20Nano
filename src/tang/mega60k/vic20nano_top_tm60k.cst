@@ -66,8 +66,8 @@ IO_PORT "hpd_en"  PULL_MODE=UP BANK_VCCIO=3.3;
 IO_PORT "sd_clk" PULL_MODE=NONE IO_TYPE=LVCMOS33; 
 //IO_LOC "sd_cmd" Y16; // MOSI
 IO_PORT "sd_cmd" PULL_MODE=NONE IO_TYPE=LVCMOS33;
-//IO_LOC "sd_dat[0]" AA15; // MISO or SD card DO, needs pull-up
-IO_PORT "sd_dat[0]" PULL_MODE=UP IO_TYPE=LVCMOS33;
+//IO_LOC "sd_dat[0]" AA15; // MISO or SD card DO
+IO_PORT "sd_dat[0]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 //IO_LOC "sd_dat[1]" AB15;
 IO_PORT "sd_dat[1]" PULL_MODE=NONE IO_TYPE=LVCMOS33;
 //IO_LOC "sd_dat[2]" W14;
