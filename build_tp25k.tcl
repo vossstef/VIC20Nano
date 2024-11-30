@@ -55,9 +55,9 @@ add_file src/vic20_keyboard.vhd
 add_file src/gowin_pll/gowin_pll_flash.vhd
 add_file src/gowin_pll/gowin_pll_ntsc.vhd
 add_file src/gowin_pll/gowin_pll_pal.vhd
-add_file src/vic20nano_top_tp25k.vhd
-add_file src/vic20nano_top_tp25k.cst
-add_file src/vic20nano_top_tp25k.sdc
+add_file src/tang/primer25k/vic20nano_top_tp25k.vhd
+add_file src/tang/primer25k/vic20nano_top_tp25k.cst
+add_file src/tang/primer25k/vic20nano_top_tp25k.sdc
 add_file src/loader_sd_card.sv
 add_file src/c1530.vhd
 add_file src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd

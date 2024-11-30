@@ -46,7 +46,8 @@ module sysctrl (
   output reg [1:0]  system_i_center,
   output reg        system_crt_write,
   output reg        system_detach_reset,
-  output reg        cold_boot
+  output reg        cold_boot,
+  output reg [1:0]  system_uart
 );
 
 reg [3:0] state = 4'd0;
@@ -111,6 +112,7 @@ always @(posedge clk) begin
       system_i_center <= 2'b00;
       system_crt_write <= 1'b1;
       system_detach_reset <= 1'b0;
+      system_uart <= 2'b00;
 
    end else begin
 
@@ -212,6 +214,8 @@ always @(posedge clk) begin
                     if(id == "V") system_crt_write <= data_in[0];
                     // cartridge detach
                     if(id == "F") system_detach_reset <= data_in[0];
+                    // RS232 UART port
+                    if(id == "*") system_uart <= data_in[1:0];
                 end
             end
 
