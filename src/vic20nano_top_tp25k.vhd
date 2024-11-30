@@ -23,7 +23,7 @@ entity VIC20Nano_top_tp25k is
     uart_tx     : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
-
+    --
     tmds_clk_n  : out std_logic;
     tmds_clk_p  : out std_logic;
     tmds_d_n    : out std_logic_vector( 2 downto 0);
@@ -54,214 +54,193 @@ end;
 
 architecture Behavioral_top of VIC20Nano_top_tp25k is
 
-  signal clk64          : std_logic;
-  signal clk32          : std_logic;
-  signal pll_locked     : std_logic;
-  signal clk_pixel_x5   : std_logic;
-  signal mspi_clk_x5    : std_logic;
-  signal clk64_pal      : std_logic;
-  signal clk32_pal      : std_logic;
-  signal pll_locked_pal : std_logic;
-  signal clk_pixel_x5_pal   : std_logic;
-  signal clk64_ntsc     : std_logic;
-  signal clk32_ntsc     : std_logic;
-  signal pll_locked_ntsc: std_logic;
-  signal clk_pixel_x5_ntsc  : std_logic;
-  signal dcsclksel       : std_logic_vector(3 downto 0);
-  attribute syn_keep : integer;
-  attribute syn_keep of clk64         : signal is 1;
-  attribute syn_keep of clk32         : signal is 1;
-  attribute syn_keep of clk_pixel_x5  : signal is 1;
-  attribute syn_keep of mspi_clk_x5   : signal is 1;
-  
-  signal audio_data_l  : std_logic_vector(17 downto 0);
-  signal audio_data_r  : std_logic_vector(17 downto 0);
-  
-  -- external memory
-  signal c64_addr     : unsigned(15 downto 0);
-  signal c64_data_out : unsigned(7 downto 0);
-  signal sdram_data   : unsigned(7 downto 0);
-  signal dout         : std_logic_vector(7 downto 0);
-  signal idle         : std_logic;
-  signal dram_addr    : std_logic_vector(22 downto 0);
-  signal ram_ready    : std_logic;
-  signal cb_D         : std_logic;
---signal addr         : std_logic_vector(22 downto 0);
-  signal cs           : std_logic;
-  signal we           : std_logic;
-  signal din          : std_logic_vector(7 downto 0);
-  signal ds           : std_logic_vector(1 downto 0);
-  
-  -- IEC
-  signal iec_data_o  : std_logic;
-  signal iec_data_i  : std_logic;
-  signal iec_clk_o   : std_logic;
-  signal iec_clk_i   : std_logic;
-  signal iec_atn_o   : std_logic;
-  signal iec_atn_i   : std_logic;
-  
-    -- keyboard
-  signal keyboard_matrix_out : std_logic_vector(7 downto 0);
-  signal keyboard_matrix_in  : std_logic_vector(7 downto 0);
-  signal joyUsb1      : std_logic_vector(6 downto 0);
-  signal joyUsb2      : std_logic_vector(6 downto 0);
-  signal joyUsb1A     : std_logic_vector(6 downto 0);
-  signal joyUsb2A     : std_logic_vector(6 downto 0);
-  signal joyDigital   : std_logic_vector(6 downto 0);
-  signal joyNumpad    : std_logic_vector(6 downto 0);
-  signal joyMouse     : std_logic_vector(6 downto 0);
-  signal joyDS2A_p1   : std_logic_vector(6 downto 0); 
+signal clk64          : std_logic;
+signal clk32          : std_logic;
+signal pll_locked     : std_logic;
+signal clk_pixel_x5   : std_logic;
+signal mspi_clk_x5    : std_logic;
+signal clk64_pal      : std_logic;
+signal clk32_pal      : std_logic;
+signal pll_locked_pal : std_logic;
+signal clk_pixel_x5_pal   : std_logic;
+signal clk64_ntsc     : std_logic;
+signal clk32_ntsc     : std_logic;
+signal pll_locked_ntsc: std_logic;
+signal clk_pixel_x5_ntsc  : std_logic;
+signal dcsclksel       : std_logic_vector(3 downto 0);
+attribute syn_keep : integer;
+attribute syn_keep of clk64         : signal is 1;
+attribute syn_keep of clk32         : signal is 1;
+attribute syn_keep of clk_pixel_x5  : signal is 1;
+attribute syn_keep of mspi_clk_x5   : signal is 1;
 
-  signal numpad       : std_logic_vector(7 downto 0);
-  signal joyDS2_p1    : std_logic_vector(6 downto 0);
-  -- joystick interface
-  signal joyA        : std_logic_vector(6 downto 0);
-  signal port_1_sel  : std_logic_vector(3 downto 0);
-  -- mouse / paddle
-  signal pot1        : std_logic_vector(7 downto 0);
-  signal pot2        : std_logic_vector(7 downto 0);
-  signal mouse_x_pos : signed(10 downto 0);
-  signal mouse_y_pos : signed(10 downto 0);
-  
-  signal ram_ce      :  std_logic;
-  signal ram_we      :  std_logic;
-  signal romCE       :  std_logic;
-  
-  signal ntscMode    :  std_logic;
-  signal hsync       :  std_logic;
-  signal vsync       :  std_logic;
-  signal r           :  unsigned(7 downto 0);
-  signal g           :  unsigned(7 downto 0);
-  signal b           :  unsigned(7 downto 0);
-  
-  signal pb_out      : std_logic_vector(7 downto 0);
-  signal pc2_n       : std_logic;
-  signal pb_in       : std_logic_vector(7 downto 0);
-  signal flag2_n     : std_logic;
-  
-  -- BL616 interfaces
-  signal mcu_start      : std_logic;
-  signal mcu_sys_strobe : std_logic;
-  signal mcu_hid_strobe : std_logic;
-  signal mcu_osd_strobe : std_logic;
-  signal mcu_sdc_strobe : std_logic;
-  signal data_in_start  : std_logic;
-  signal mcu_data_out   : std_logic_vector(7 downto 0);
-  signal hid_data_out   : std_logic_vector(7 downto 0);
-  signal osd_data_out   : std_logic_vector(7 downto 0) :=  X"55";
-  signal sys_data_out   : std_logic_vector(7 downto 0);
-  signal sdc_data_out   : std_logic_vector(7 downto 0);
-  signal hid_int        : std_logic;
-  signal system_scanlines : std_logic_vector(1 downto 0);
-  signal system_volume  : std_logic_vector(1 downto 0);
-  signal joystick1       : std_logic_vector(7 downto 0);
-  signal joystick2       : std_logic_vector(7 downto 0);
-  signal mouse_btns     : std_logic_vector(1 downto 0);
-  signal mouse_x        : signed(7 downto 0);
-  signal mouse_y        : signed(7 downto 0);
-  signal mouse_strobe   : std_logic;
-  signal old_sync       : std_logic;
-  signal osd_status     : std_logic;
-  signal ws2812_color   : std_logic_vector(23 downto 0);
-  signal system_reset   : std_logic_vector(1 downto 0);
-  signal disk_reset     : std_logic;
-  signal disk_chg_trg   : std_logic;
-  signal disk_chg_trg_d : std_logic;
-  signal sd_img_size    : std_logic_vector(31 downto 0);
-  signal sd_img_size_d  : std_logic_vector(31 downto 0);
-  signal sd_img_mounted : std_logic_vector(4 downto 0);
-  signal sd_img_mounted_d : std_logic;
-  signal sd_rd          : std_logic_vector(4 downto 0);
-  signal sd_wr          : std_logic_vector(4 downto 0);
-  signal sd_lba         : std_logic_vector(31 downto 0);
-  signal sd_busy        : std_logic;
-  signal sd_done        : std_logic;
-  signal sd_rd_byte_strobe : std_logic;
-  signal sd_byte_index  : std_logic_vector(8 downto 0);
-  signal sd_rd_data     : std_logic_vector(7 downto 0);
-  signal sd_wr_data     : std_logic_vector(7 downto 0);
-  signal sd_change      : std_logic;
-  signal sdc_int        : std_logic;
-  signal sdc_iack       : std_logic;
-  signal int_ack        : std_logic_vector(7 downto 0);
-  signal spi_io_din     : std_logic;
-  signal spi_io_ss      : std_logic;
-  signal spi_io_clk     : std_logic;
-  signal spi_io_dout    : std_logic;
-  signal disk_g64       : std_logic;
-  signal disk_g64_d     : std_logic;
-  signal c1541_reset    : std_logic;
-  signal c1541_osd_reset : std_logic;
-  signal system_wide_screen : std_logic;
-  signal system_floppy_wprot : std_logic_vector(1 downto 0);
-  signal leds           : std_logic_vector(5 downto 0);
-  signal system_leds    : std_logic_vector(1 downto 0);
-  signal led1541        : std_logic;
-  
-  signal cart_ce        : std_logic;
-  signal cart_we        : std_logic;
-  
-  signal cart_addr      : std_logic_vector(22 downto 0);
-  signal db9_joy        : std_logic_vector(5 downto 0);
-  signal turbo_mode     : std_logic_vector(1 downto 0);
-  signal turbo_speed    : std_logic_vector(1 downto 0);
-  signal dos_sel        : std_logic_vector(1 downto 0);
-  signal c1541rom_cs    : std_logic;
-  signal c1541rom_addr  : std_logic_vector(14 downto 0);
-  signal c1541rom_data  : std_logic_vector(7 downto 0);
-  signal ext_en         : std_logic;
-  signal freeze_key     : std_logic;
-  signal disk_access    : std_logic;
-  signal c64_iec_clk_old : std_logic;
-  signal drive_iec_clk_old : std_logic;
-  signal drive_stb_i_old : std_logic;
-  signal drive_stb_o_old : std_logic;
-  signal hsync_out       : std_logic;
-  signal vsync_out       : std_logic;
-  signal hblank          : std_logic;
-  signal vblank          : std_logic;
-  signal frz_hs          : std_logic;
-  signal frz_vs          : std_logic;
-  signal hbl_out         : std_logic; 
-  signal vbl_out         : std_logic;
-  signal st_midi         : std_logic_vector(2 downto 0);
-  signal frz_hbl         : std_logic;
-  signal frz_vbl         : std_logic;
-  signal system_pause    : std_logic;
-  signal paddle_1        : std_logic_vector(7 downto 0);
-  signal paddle_2        : std_logic_vector(7 downto 0);
-  signal key_r1          : std_logic;
-  signal key_r2          : std_logic;
-  signal key_l1          : std_logic;
-  signal key_l2          : std_logic;
-  signal key_triangle    : std_logic;
-  signal key_square      : std_logic;
-  signal key_circle      : std_logic;
-  signal key_cross       : std_logic;
-  signal key_up          : std_logic;
-  signal key_down        : std_logic;
-  signal key_left        : std_logic;
-  signal key_right       : std_logic;
-  signal key_start       : std_logic;
-  signal key_select      : std_logic;
-  signal audio_div       : unsigned(8 downto 0);
-  signal flash_clk       : std_logic;
-  signal flash_lock      : std_logic;
-  ---
-  signal v20_en          : std_logic; 
-  signal video_r         : std_logic_vector(3 downto 0);
-  signal video_g         : std_logic_vector(3 downto 0);
-  signal video_b         : std_logic_vector(3 downto 0);
-  signal vic_audio       : std_logic_vector(5 downto 0);
-  signal IDSEL           : std_logic_vector(5 downto 0);
-  signal FBDSEL          : std_logic_vector(5 downto 0);
-  signal i_ram_ext       : std_logic_vector(4 downto 0) := "11111";
-  signal extram          : std_logic_vector(4 downto 0);
-  signal i_ram_ext_ro    : std_logic_vector(4 downto 0);
-  signal ext_ro          : std_logic_vector(4 downto 0);
-  signal i_center        : std_logic_vector(1 downto 0);
-  signal crt_writeable   : std_logic; 
-  -- loader
+signal audio_data_l  : std_logic_vector(17 downto 0);
+signal audio_data_r  : std_logic_vector(17 downto 0);
+
+-- external memory
+signal c64_addr     : unsigned(15 downto 0);
+signal c64_data_out : unsigned(7 downto 0);
+signal sdram_data   : unsigned(7 downto 0);
+signal dout         : std_logic_vector(7 downto 0);
+signal idle         : std_logic;
+signal dram_addr    : std_logic_vector(22 downto 0);
+signal ram_ready    : std_logic;
+signal cs           : std_logic;
+signal we           : std_logic;
+signal din          : std_logic_vector(7 downto 0);
+signal ds           : std_logic_vector(1 downto 0);
+
+-- IEC
+signal iec_data_o  : std_logic;
+signal iec_data_i  : std_logic;
+signal iec_clk_o   : std_logic;
+signal iec_clk_i   : std_logic;
+signal iec_atn_o   : std_logic;
+signal iec_atn_i   : std_logic;
+
+  -- keyboard
+signal keyboard_matrix_out : std_logic_vector(7 downto 0);
+signal keyboard_matrix_in  : std_logic_vector(7 downto 0);
+signal joyUsb1      : std_logic_vector(6 downto 0);
+signal joyUsb2      : std_logic_vector(6 downto 0);
+signal joyUsb1A     : std_logic_vector(6 downto 0);
+signal joyUsb2A     : std_logic_vector(6 downto 0);
+signal joyDigital   : std_logic_vector(6 downto 0);
+signal joyNumpad    : std_logic_vector(6 downto 0);
+signal joyMouse     : std_logic_vector(6 downto 0);
+signal joyDS2A_p1   : std_logic_vector(6 downto 0); 
+signal numpad       : std_logic_vector(7 downto 0);
+signal joyDS2_p1    : std_logic_vector(6 downto 0);
+-- joystick interface
+signal joyA        : std_logic_vector(6 downto 0);
+signal port_1_sel  : std_logic_vector(3 downto 0);
+-- mouse / paddle
+signal pot1        : std_logic_vector(7 downto 0);
+signal pot2        : std_logic_vector(7 downto 0);
+signal mouse_x_pos : signed(10 downto 0);
+signal mouse_y_pos : signed(10 downto 0);
+
+signal ram_ce      :  std_logic;
+signal ram_we      :  std_logic;
+signal romCE       :  std_logic;
+
+signal ntscMode    :  std_logic;
+signal hsync       :  std_logic;
+signal vsync       :  std_logic;
+signal r           :  unsigned(7 downto 0);
+signal g           :  unsigned(7 downto 0);
+signal b           :  unsigned(7 downto 0);
+
+signal pb_out      : std_logic_vector(7 downto 0);
+signal pc2_n       : std_logic;
+signal pb_in       : std_logic_vector(7 downto 0);
+signal flag2_n     : std_logic;
+
+-- BL616 interfaces
+signal mcu_start      : std_logic;
+signal mcu_sys_strobe : std_logic;
+signal mcu_hid_strobe : std_logic;
+signal mcu_osd_strobe : std_logic;
+signal mcu_sdc_strobe : std_logic;
+signal data_in_start  : std_logic;
+signal mcu_data_out   : std_logic_vector(7 downto 0);
+signal hid_data_out   : std_logic_vector(7 downto 0);
+signal osd_data_out   : std_logic_vector(7 downto 0) :=  X"55";
+signal sys_data_out   : std_logic_vector(7 downto 0);
+signal sdc_data_out   : std_logic_vector(7 downto 0);
+signal hid_int        : std_logic;
+signal system_scanlines : std_logic_vector(1 downto 0);
+signal system_volume  : std_logic_vector(1 downto 0);
+signal joystick1       : std_logic_vector(7 downto 0);
+signal joystick2       : std_logic_vector(7 downto 0);
+signal mouse_btns     : std_logic_vector(1 downto 0);
+signal mouse_x        : signed(7 downto 0);
+signal mouse_y        : signed(7 downto 0);
+signal mouse_strobe   : std_logic;
+signal old_sync       : std_logic;
+signal osd_status     : std_logic;
+signal ws2812_color   : std_logic_vector(23 downto 0);
+signal system_reset   : std_logic_vector(1 downto 0);
+signal disk_reset     : std_logic;
+signal disk_chg_trg   : std_logic;
+signal disk_chg_trg_d : std_logic;
+signal sd_img_size    : std_logic_vector(31 downto 0);
+signal sd_img_size_d  : std_logic_vector(31 downto 0);
+signal sd_img_mounted : std_logic_vector(5 downto 0);
+signal sd_img_mounted_d : std_logic;
+signal sd_rd          : std_logic_vector(5 downto 0);
+signal sd_wr          : std_logic_vector(5 downto 0);
+signal sd_lba         : std_logic_vector(31 downto 0);
+signal sd_busy        : std_logic;
+signal sd_done        : std_logic;
+signal sd_rd_byte_strobe : std_logic;
+signal sd_byte_index  : std_logic_vector(8 downto 0);
+signal sd_rd_data     : std_logic_vector(7 downto 0);
+signal sd_wr_data     : std_logic_vector(7 downto 0);
+signal sd_change      : std_logic;
+signal sdc_int        : std_logic;
+signal sdc_iack       : std_logic;
+signal int_ack        : std_logic_vector(7 downto 0);
+signal spi_io_din     : std_logic;
+signal spi_io_ss      : std_logic;
+signal spi_io_clk     : std_logic;
+signal spi_io_dout    : std_logic;
+signal disk_g64       : std_logic;
+signal disk_g64_d     : std_logic;
+signal c1541_reset    : std_logic;
+signal c1541_osd_reset : std_logic;
+signal system_wide_screen : std_logic;
+signal system_floppy_wprot : std_logic_vector(1 downto 0);
+signal leds           : std_logic_vector(5 downto 0);
+signal system_leds    : std_logic_vector(1 downto 0);
+signal led1541        : std_logic;
+
+signal db9_joy        : std_logic_vector(5 downto 0);
+signal dos_sel        : std_logic_vector(1 downto 0);
+signal c1541rom_cs    : std_logic;
+signal c1541rom_addr  : std_logic_vector(14 downto 0);
+signal c1541rom_data  : std_logic_vector(7 downto 0);
+signal ext_en         : std_logic;
+signal freeze_key     : std_logic;
+signal hsync_out       : std_logic;
+signal vsync_out       : std_logic;
+signal hblank          : std_logic;
+signal vblank          : std_logic;
+
+signal paddle_1        : std_logic_vector(7 downto 0);
+signal paddle_2        : std_logic_vector(7 downto 0);
+signal key_r1          : std_logic;
+signal key_r2          : std_logic;
+signal key_l1          : std_logic;
+signal key_l2          : std_logic;
+signal key_triangle    : std_logic;
+signal key_square      : std_logic;
+signal key_circle      : std_logic;
+signal key_cross       : std_logic;
+signal key_up          : std_logic;
+signal key_down        : std_logic;
+signal key_left        : std_logic;
+signal key_right       : std_logic;
+signal key_start       : std_logic;
+signal key_select      : std_logic;
+signal audio_div       : unsigned(8 downto 0);
+signal flash_clk       : std_logic;
+signal flash_lock      : std_logic;
+---
+signal v20_en          : std_logic; 
+signal video_r         : std_logic_vector(3 downto 0);
+signal video_g         : std_logic_vector(3 downto 0);
+signal video_b         : std_logic_vector(3 downto 0);
+signal vic_audio       : std_logic_vector(5 downto 0);
+signal IDSEL           : std_logic_vector(5 downto 0);
+signal FBDSEL          : std_logic_vector(5 downto 0);
+signal i_ram_ext       : std_logic_vector(4 downto 0) := "11111";
+signal extram          : std_logic_vector(4 downto 0);
+signal i_ram_ext_ro    : std_logic_vector(4 downto 0);
+signal ext_ro          : std_logic_vector(4 downto 0);
+signal i_center        : std_logic_vector(1 downto 0);
+signal crt_writeable   : std_logic; 
+-- loader
 signal load_crt        : std_logic := '0';
 signal load_prg        : std_logic := '0';
 signal load_rom        : std_logic := '0';
@@ -271,7 +250,7 @@ signal loader_lba      : std_logic_vector(31 downto 0);
 signal loader_busy     : std_logic;
 signal img_select      : std_logic_vector(2 downto 0);
 signal ioctl_download  : std_logic := '0';
-signal old_download    : std_logic;
+signal old_download    : std_logic := '0';
 signal ioctl_load_addr : std_logic_vector(22 downto 0);
 signal ioctl_wr        : std_logic;
 signal ioctl_data      : std_logic_vector(7 downto 0);
@@ -284,6 +263,12 @@ signal addr            : std_logic_vector(15 downto 0);
 signal cart_reset      : std_logic := '0';
 signal cart_blk        : std_logic_vector(4 downto 0)  := "00000";
 signal state           : std_logic_vector(3 downto 0)  := "0000";
+signal load_mc         : std_logic := '0';
+signal mc_reset        : std_logic;
+signal mc_addr         : std_logic_vector(22 downto 0);
+signal mc_wr_n         : std_logic;
+signal mc_nvram_sel    : std_logic;
+signal mc_rom_sel      : std_logic;
 signal vic_wr_n        : std_logic;
 signal vic_io2_sel     : std_logic;
 signal vic_io3_sel     : std_logic;
@@ -292,7 +277,10 @@ signal vic_blk5_sel    : std_logic;
 signal vic_ram123_sel  : std_logic;
 signal vic_data        : std_logic_vector(7 downto 0);
 signal vic_addr        : std_logic_vector(15 downto 0);
+signal mc_loaded       : std_logic := '0';
+signal mc_data         : std_logic_vector(7 downto 0);
 signal sdram_out       : std_logic_vector(7 downto 0);
+signal mc_nvram_out    : std_logic_vector(7 downto 0);
 signal ioctl_wr_d      : std_logic;
 signal extmem_sel      : std_logic;
 signal p2_h            : std_logic;
@@ -354,6 +342,10 @@ signal user_port_in      : std_logic_vector(7 downto 0);
 signal user_port_out     : std_logic_vector(7 downto 0);
 signal uart_rxD          : std_logic_vector(1 downto 0);
 signal uart_rx_filtered  : std_logic;
+signal clkref            : std_logic;
+signal oe                : std_logic;
+signal system_reset_d    : std_logic;
+signal disk_pause        : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -370,213 +362,243 @@ constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
       CLKIN3: in std_logic;
       SELFORCE: in std_logic
   );
- end component;
+end component;
 
-  begin
-  -- ----------------- SPI input parser ----------------------
-  -- map output data onto both spi outputs
-    spi_io_din  <= m0s(1);
-    spi_io_ss   <= m0s(2);
-    spi_io_clk  <= m0s(3);
-    m0s(0)      <= spi_io_dout; -- M0 Dock
-  
-    process(clk32, disk_reset)
-      variable reset_cnt : integer range 0 to 2147483647;
-      begin
-      if disk_reset = '1' then
-        disk_chg_trg <= '0';
-        reset_cnt := 64000000;
-        elsif rising_edge(clk32) then
-        if reset_cnt /= 0 then
-          reset_cnt := reset_cnt - 1;
-        end if;
-      end if;
-  
-    if reset_cnt = 0 then
-      disk_chg_trg <= '1';
-    else 
-      disk_chg_trg <= '0';
-    end if;
-  end process;
-  
-disk_reset <= c1541_osd_reset or c1541_reset or system_reset(0) or not pll_locked;
-  
-  -- rising edge sd_change triggers detection of new disk
-  process(clk32, pll_locked)
+begin
+-- ----------------- SPI input parser ----------------------
+-- map output data onto both spi outputs
+  spi_io_din  <= m0s(1);
+  spi_io_ss   <= m0s(2);
+  spi_io_clk  <= m0s(3);
+  m0s(0)      <= spi_io_dout; -- M0 Dock
+
+process(clk32, disk_reset)
+    variable reset_cnt : integer range 0 to 2147483647;
     begin
-    if pll_locked = '0' then
-      sd_change <= '0';
-      disk_g64 <= '0';
-      disk_g64_d <= '0';
+		if disk_reset = '1' then
+      disk_chg_trg <= '0';
+			reset_cnt := 64000000;
       elsif rising_edge(clk32) then
-        sd_img_mounted_d <= sd_img_mounted(0);
-        disk_chg_trg_d <= disk_chg_trg;
-        disk_g64_d <= disk_g64;
+			if reset_cnt /= 0 then
+				reset_cnt := reset_cnt - 1;
+			end if;
+		end if;
+
+  if reset_cnt = 0 then
+    disk_chg_trg <= '1';
+  else 
+    disk_chg_trg <= '0';
+  end if;
+end process;
+
+-- delay disk start to keep loader at power-up intact
+process(clk32, resetvic20)
+variable pause_cnt : integer range 0 to 2147483647;
+  begin
+  if resetvic20 = '1' then
+    disk_pause <= '1';
+    pause_cnt := 34000000;
+    elsif rising_edge(clk32) then
+    if pause_cnt /= 0 then
+      pause_cnt := pause_cnt - 1;
+    end if;
+  end if;
+
+  if pause_cnt = 0 then 
+    disk_pause <= '0';
+  else
+    disk_pause <= '0';
+  end if;
+end process;
+
+disk_reset <= '1' when disk_pause or c1541_osd_reset or c1541_reset or resetvic20 else '0';
+
+-- rising edge sd_change triggers detection of new disk
+process(clk32, pll_locked)
+  begin
+  if pll_locked = '0' then
+    sd_change <= '0';
+    disk_g64 <= '0';
+    sd_img_size_d <= (others => '0');
+    disk_chg_trg_d <= '0';
+    img_present <= '0';
+  elsif rising_edge(clk32) then
+      sd_img_mounted_d <= sd_img_mounted(0);
+      disk_chg_trg_d <= disk_chg_trg;
+      disk_g64_d <= disk_g64;
 
       if sd_img_mounted(0) = '1' then
         img_present <= '0' when sd_img_size = 0 else '1';
       end if;
 
       if sd_img_mounted_d = '0' and sd_img_mounted(0) = '1' then
-        sd_img_size_d <= sd_img_size; 
-      else 
-        sd_img_size_d <= (others => '0');
+        sd_img_size_d <= sd_img_size;
       end if;
 
-      if (sd_img_mounted(0) /= sd_img_mounted_d) or (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
-            sd_change  <= '1';
-            else
-            sd_change  <= '0';
-      if sd_img_size_d >= 333744 then  -- g64 disk selected
-          disk_g64 <= '1';
-        else
-          disk_g64 <= '0';
-        end if;
-        if (disk_g64 /= disk_g64_d) then
-          c1541_reset  <= '1'; -- reset needed after G64 change
+      if (sd_img_mounted(0) /= sd_img_mounted_d) or
+         (disk_chg_trg_d = '0' and disk_chg_trg = '1') then
+          sd_change  <= '1';
           else
-          c1541_reset  <= '0';
-          end if;
-        end if;
-    end if;
-  end process;
-  
-  c1541_sd_inst : entity work.c1541_sd
-  port map
-   (
-      clk32         => clk32,
-      reset         => disk_reset,
-      pause         => loader_busy,
-      ce            => '0',
-  
-      disk_num      => (others =>'0'),
-      disk_change   => sd_change, 
-      disk_mount    => img_present,
-      disk_readonly => system_floppy_wprot(0),
-      disk_g64      => disk_g64,
-  
-      iec_atn_i     => iec_atn_o,
-      iec_data_i    => iec_data_o,
-      iec_clk_i     => iec_clk_o,
-  
-      iec_atn_o     => iec_atn_i,
-      iec_data_o    => iec_data_i,
-      iec_clk_o     => iec_clk_i,
-  
-      -- Userport parallel bus to 1541 disk
-      par_data_i    => "11111111",
-      par_stb_i     => '1',
-      par_data_o    => open,
-      par_stb_o     => open,
-  
-      sd_lba        => disk_lba,
-      sd_rd         => c1541_sd_rd,
-      sd_wr         => c1541_sd_wr,
-      sd_ack        => sd_busy,
-  
-      sd_buff_addr  => sd_byte_index,
-      sd_buff_dout  => sd_rd_data,
-      sd_buff_din   => sd_wr_data,
-      sd_buff_wr    => sd_rd_byte_strobe,
-  
-      led           => led1541,
-      ext_en        => ext_en,
-      c1541rom_cs   => c1541rom_cs,
-      c1541rom_addr => c1541rom_addr,
-      c1541rom_data => c1541rom_data
-  );
+          sd_change  <= '0';
+      end if;
 
-sd_lba <= loader_lba when loader_busy = '1' else loader_lba when img_present = '0' else disk_lba;
-sd_rd(0) <= c1541_sd_rd when img_present = '1' else '0';
-sd_wr(0) <= c1541_sd_wr when img_present = '1' else '0';
+      if sd_img_size_d >= 333744 then  -- g64 disk selected
+        disk_g64 <= '1';
+      else
+        disk_g64 <= '0';
+      end if;
+
+      if (disk_g64 /= disk_g64_d) then
+        c1541_reset  <= '1'; -- reset needed after G64 change
+      else
+        c1541_reset  <= '0';
+      end if;
+  end if;
+end process;
+
+c1541_sd_inst : entity work.c1541_sd
+port map
+ (
+    clk32         => clk32,
+    reset         => disk_reset,
+    pause         => loader_busy,
+    ce            => '0',
+
+    disk_num      => (others =>'0'),
+    disk_change   => sd_change, 
+    disk_mount    => img_present,
+    disk_readonly => system_floppy_wprot(0),
+    disk_g64      => disk_g64,
+
+    iec_atn_i     => iec_atn_o,
+    iec_data_i    => iec_data_o,
+    iec_clk_i     => iec_clk_o,
+
+    iec_atn_o     => iec_atn_i,
+    iec_data_o    => iec_data_i,
+    iec_clk_o     => iec_clk_i,
+
+    -- Userport parallel bus to 1541 disk
+    par_data_i    => "11111111",
+    par_stb_i     => '1',
+    par_data_o    => open,
+    par_stb_o     => open,
+
+    sd_lba        => disk_lba,
+    sd_rd         => c1541_sd_rd,
+    sd_wr         => c1541_sd_wr,
+    sd_ack        => sd_busy,
+
+    sd_buff_addr  => sd_byte_index,
+    sd_buff_dout  => sd_rd_data,
+    sd_buff_din   => sd_wr_data,
+    sd_buff_wr    => sd_rd_byte_strobe,
+
+    led           => led1541,
+    ext_en        => ext_en,
+    c1541rom_cs   => c1541rom_cs,
+    c1541rom_addr => c1541rom_addr,
+    c1541rom_data => c1541rom_data
+);
+
+sd_lba <= loader_lba when loader_busy = '1' else disk_lba;
+sd_rd(0) <= c1541_sd_rd;
+sd_wr(0) <= c1541_sd_wr;
 ext_en <= '1' when dos_sel(0) = '0' else '0'; -- dolphindos, speeddos
 sdc_iack <= int_ack(3);
+
+sd_card_inst: entity work.sd_card
+generic map (
+    CLK_DIV  => 1
+  )
+    port map (
+    rstn            => pll_locked, 
+    clk             => clk32,
   
-  sd_card_inst: entity work.sd_card
-  generic map (
-      CLK_DIV  => 1
-    )
-      port map (
-      rstn            => pll_locked, 
-      clk             => clk32,
-    
-      -- SD card signals
-      sdclk           => sd_clk,
-      sdcmd           => sd_cmd,
-      sddat           => sd_dat,
-  
-      -- mcu interface
-      data_strobe     => mcu_sdc_strobe,
-      data_start      => mcu_start,
-      data_in         => mcu_data_out,
-      data_out        => sdc_data_out,
-  
-      -- interrupt to signal communication request
-      irq             => sdc_int,
-      iack            => sdc_iack,
-  
-      -- output file/image information. Image size is e.g. used by fdc to 
-      -- translate between sector/track/side and lba sector
-      image_size      => sd_img_size,           -- length of image file
-      image_mounted   => sd_img_mounted,
-  
-      -- user read sector command interface (sync with clk)
-      rstart          => sd_rd,
-      wstart          => sd_wr, 
-      rsector         => sd_lba,
-      rbusy           => sd_busy,
-      rdone           => sd_done,           --  done from sd reader acknowledges/clears start
-  
-      -- sector data output interface (sync with clk)
-      inbyte          => sd_wr_data,        -- sector data output interface (sync with clk)
-      outen           => sd_rd_byte_strobe, -- when outen=1, a byte of sector content is read out from outbyte
-      outaddr         => sd_byte_index,     -- outaddr from 0 to 511, because the sector size is 512
-      outbyte         => sd_rd_data         -- a byte of sector content
-  );
-  
+    -- SD card signals
+    sdclk           => sd_clk,
+    sdcmd           => sd_cmd,
+    sddat           => sd_dat,
+
+    -- mcu interface
+    data_strobe     => mcu_sdc_strobe,
+    data_start      => mcu_start,
+    data_in         => mcu_data_out,
+    data_out        => sdc_data_out,
+
+    -- interrupt to signal communication request
+    irq             => sdc_int,
+    iack            => sdc_iack,
+
+    -- output file/image information. Image size is e.g. used by fdc to 
+    -- translate between sector/track/side and lba sector
+    image_size      => sd_img_size,           -- length of image file
+    image_mounted   => sd_img_mounted,
+
+    -- user read sector command interface (sync with clk)
+    rstart          => sd_rd,
+    wstart          => sd_wr, 
+    rsector         => sd_lba,
+    rbusy           => sd_busy,
+    rdone           => sd_done,           --  done from sd reader acknowledges/clears start
+
+    -- sector data output interface (sync with clk)
+    inbyte          => sd_wr_data,        -- sector data output interface (sync with clk)
+    outen           => sd_rd_byte_strobe, -- when outen=1, a byte of sector content is read out from outbyte
+    outaddr         => sd_byte_index,     -- outaddr from 0 to 511, because the sector size is 512
+    outbyte         => sd_rd_data         -- a byte of sector content
+);
+
 audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(371,9);
 cass_aud <= cass_read and not cass_sense and not cass_motor;
 audio_l <= (vic_audio & "000000000000") or (5x"00" & cass_aud & 12x"00000");
 audio_r <= audio_l;
 
-  video_inst: entity work.video 
-  port map(
-        pll_lock     => pll_locked, 
-        clk          => clk32,
-        clk_pixel_x5 => clk_pixel_x5,
-        audio_div    => audio_div,
-        
-        v20_en       => v20_en,
-  
-        ntscmode  => ntscMode,
-        vb_in     => vblank,
-        hb_in     => hblank,
-        hs_in_n   => hsync,
-        vs_in_n   => vsync,
-  
-        r_in      => std_logic_vector(video_r),
-        g_in      => std_logic_vector(video_g),
-        b_in      => std_logic_vector(video_b),
-  
-        audio_l => audio_l,
-        audio_r => audio_r,
-        osd_status => osd_status,
-  
-        mcu_start => mcu_start,
-        mcu_osd_strobe => mcu_osd_strobe,
-        mcu_data  => mcu_data_out,
-  
-        -- values that can be configure by the user via osd
-        system_wide_screen => system_wide_screen,
-        system_scanlines => system_scanlines,
-        system_volume => system_volume,
-  
-        tmds_clk_n => tmds_clk_n,
-        tmds_clk_p => tmds_clk_p,
-        tmds_d_n   => tmds_d_n,
-        tmds_d_p   => tmds_d_p
-        );
-  
+video_inst: entity work.video 
+port map(
+      pll_lock     => pll_locked, 
+      clk          => clk32,
+      clk_pixel_x5 => clk_pixel_x5,
+      audio_div    => audio_div,
+      
+      v20_en       => v20_en,
+
+      ntscmode  => ntscMode,
+      vb_in     => vblank,
+      hb_in     => hblank,
+      hs_in_n   => hsync,
+      vs_in_n   => vsync,
+
+      r_in      => std_logic_vector(video_r),
+      g_in      => std_logic_vector(video_g),
+      b_in      => std_logic_vector(video_b),
+
+      audio_l => audio_l,
+      audio_r => audio_r,
+      osd_status => osd_status,
+
+      mcu_start => mcu_start,
+      mcu_osd_strobe => mcu_osd_strobe,
+      mcu_data  => mcu_data_out,
+
+      -- values that can be configure by the user via osd
+      system_wide_screen => system_wide_screen,
+      system_scanlines => system_scanlines,
+      system_volume => system_volume,
+
+      tmds_clk_n => tmds_clk_n,
+      tmds_clk_p => tmds_clk_p,
+      tmds_d_n   => tmds_d_n,
+      tmds_d_p   => tmds_d_p
+      );
+
+we <= ioctl_wr_d when (ioctl_download and load_mc) else (not mc_nvram_sel and extmem_sel and not mc_wr_n);
+oe <= '0' when (ioctl_download and load_mc) else ( not mc_nvram_sel and  extmem_sel and  mc_wr_n);
+din <= ioctl_data when (ioctl_download and load_mc) else vic_data;
+dram_addr <= ioctl_addr when (ioctl_download and load_mc) else mc_addr;
+--idle <= ioctl_wr when ioctl_download else p2_h;
+clkref <= ioctl_wr when ioctl_download else p2_h;
+
 dram_inst: entity work.sdram
      port map(
       -- SDRAM side interface
@@ -617,7 +639,7 @@ dram_inst: entity work.sdram
   -- dram        71250000    66250000
   -- core/pixel  35625000    33125000
 
-  pll_locked <= pll_locked_pal and pll_locked_ntsc;
+pll_locked <= pll_locked_pal and pll_locked_ntsc;
 dcsclksel <= "0001" when ntscMode = '0' else "0010";
 
 mainclock_pal: entity work.Gowin_PLL_pal
@@ -725,249 +747,231 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else
         joystick2_y_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
         x"ff";
-  process(clk32, system_reset(0))
-   variable mov_x: signed(6 downto 0);
-   variable mov_y: signed(6 downto 0);
-  begin
-    if  system_reset(0) = '1' then
-      mouse_x_pos <= (others => '0');
-      mouse_y_pos <= (others => '0');
-      joystick1_x_pos <= x"ff";
-      joystick1_y_pos <= x"ff";
-      joystick2_x_pos <= x"ff";
-      joystick2_y_pos <= x"ff";
+
+process(clk32, system_reset(0))
+ variable mov_x: signed(6 downto 0);
+ variable mov_y: signed(6 downto 0);
+begin
+  if  system_reset(0) = '1' then
+    mouse_x_pos <= (others => '0');
+    mouse_y_pos <= (others => '0');
+    joystick1_x_pos <= x"ff";
+    joystick1_y_pos <= x"ff";
+    joystick2_x_pos <= x"ff";
+    joystick2_y_pos <= x"ff";
     elsif rising_edge(clk32) then
-      if mouse_strobe = '1' then
-       -- due to limited resolution on the c64 side, limit the mouse movement speed
-       if mouse_x > 40 then mov_x:="0101000"; elsif mouse_x < -40 then mov_x:= "1011000"; else mov_x := mouse_x(6 downto 0); end if;
-       if mouse_y > 40 then mov_y:="0101000"; elsif mouse_y < -40 then mov_y:= "1011000"; else mov_y := mouse_y(6 downto 0); end if;
-       mouse_x_pos <= mouse_x_pos - mov_x;
-       mouse_y_pos <= mouse_y_pos + mov_y;
+    if mouse_strobe = '1' then
+     -- due to limited resolution on the c64 side, limit the mouse movement speed
+      if mouse_x > 40 then mov_x:="0101000"; elsif mouse_x < -40 then mov_x:= "1011000"; else mov_x := mouse_x(6 downto 0); end if;
+      if mouse_y > 40 then mov_y:="0101000"; elsif mouse_y < -40 then mov_y:= "1011000"; else mov_y := mouse_y(6 downto 0); end if;
+      mouse_x_pos <= mouse_x_pos - mov_x;
+      mouse_y_pos <= mouse_y_pos + mov_y;
      elsif joystick_strobe = '1' then
       joystick1_x_pos <= std_logic_vector(joystick0ax(7 downto 0));
       joystick1_y_pos <= std_logic_vector(joystick0ay(7 downto 0));
       joystick2_x_pos <= std_logic_vector(joystick1ax(7 downto 0));
       joystick2_y_pos <= std_logic_vector(joystick1ay(7 downto 0));
       end if;
-    end if;
-  end process;
-  
-  mcu_spi_inst: entity work.mcu_spi 
-  port map (
-    clk            => clk32,
-    reset          => not pll_locked,
-    -- SPI interface to BL616 MCU
-    spi_io_ss      => spi_io_ss,      -- SPI CSn
-    spi_io_clk     => spi_io_clk,     -- SPI SCLK
-    spi_io_din     => spi_io_din,     -- SPI MOSI
-    spi_io_dout    => spi_io_dout,    -- SPI MISO
-    -- byte interface to the various core components
-    mcu_sys_strobe => mcu_sys_strobe, -- byte strobe for system control target
-    mcu_hid_strobe => mcu_hid_strobe, -- byte strobe for HID target  
-    mcu_osd_strobe => mcu_osd_strobe, -- byte strobe for OSD target
-    mcu_sdc_strobe => mcu_sdc_strobe, -- byte strobe for SD card target
-    mcu_start      => mcu_start,
-    mcu_sys_din    => sys_data_out,
-    mcu_hid_din    => hid_data_out,
-    mcu_osd_din    => osd_data_out,
-    mcu_sdc_din    => sdc_data_out,
-    mcu_dout       => mcu_data_out
+  end if;
+end process;
+
+mcu_spi_inst: entity work.mcu_spi 
+port map (
+  clk            => clk32,
+  reset          => not pll_locked,
+  -- SPI interface to BL616 MCU
+  spi_io_ss      => spi_io_ss,      -- SPI CSn
+  spi_io_clk     => spi_io_clk,     -- SPI SCLK
+  spi_io_din     => spi_io_din,     -- SPI MOSI
+  spi_io_dout    => spi_io_dout,    -- SPI MISO
+  -- byte interface to the various core components
+  mcu_sys_strobe => mcu_sys_strobe, -- byte strobe for system control target
+  mcu_hid_strobe => mcu_hid_strobe, -- byte strobe for HID target  
+  mcu_osd_strobe => mcu_osd_strobe, -- byte strobe for OSD target
+  mcu_sdc_strobe => mcu_sdc_strobe, -- byte strobe for SD card target
+  mcu_start      => mcu_start,
+  mcu_sys_din    => sys_data_out,
+  mcu_hid_din    => hid_data_out,
+  mcu_osd_din    => osd_data_out,
+  mcu_sdc_din    => sdc_data_out,
+  mcu_dout       => mcu_data_out
+);
+
+-- decode SPI/MCU data received for human input devices (HID) 
+hid_inst: entity work.hid
+ port map 
+ (
+  clk             => clk32,
+  reset           => not pll_locked,
+  -- interface to receive user data from MCU (mouse, kbd, ...)
+  data_in_strobe  => mcu_hid_strobe,
+  data_in_start   => mcu_start,
+  data_in         => mcu_data_out,
+  data_out        => hid_data_out,
+
+  -- input local db9 port events to be sent to MCU
+  db9_port        => db9_joy,
+  irq             => hid_int,
+  iack            => int_ack(1),
+  -- output HID data received from USB
+  joystick0       => joystick1,
+  joystick1       => joystick2,
+  numpad          => numpad,
+  keyboard_matrix_out => keyboard_matrix_out,
+  keyboard_matrix_in  => keyboard_matrix_in,
+  key_restore     => freeze_key,
+  tape_play       => open,
+  mod_key         => open,
+  mouse_btns      => mouse_btns,
+  mouse_x         => mouse_x,
+  mouse_y         => mouse_y,
+  mouse_strobe    => mouse_strobe,
+  joystick0ax     => joystick0ax,
+  joystick0ay     => joystick0ay,
+  joystick1ax     => joystick1ax,
+  joystick1ay     => joystick1ay,
+  joystick_strobe => joystick_strobe,
+  extra_button0   => extra_button0,
+  extra_button1   => extra_button1
   );
-  
-  -- decode SPI/MCU data received for human input devices (HID) 
-  hid_inst: entity work.hid
-   port map 
-   (
-    clk             => clk32,
-    reset           => not pll_locked,
-    -- interface to receive user data from MCU (mouse, kbd, ...)
-    data_in_strobe  => mcu_hid_strobe,
-    data_in_start   => mcu_start,
-    data_in         => mcu_data_out,
-    data_out        => hid_data_out,
-  
-    -- input local db9 port events to be sent to MCU
-    db9_port        => db9_joy,
-    irq             => hid_int,
-    iack            => int_ack(1),
-    -- output HID data received from USB
-    joystick0       => joystick1,
-    joystick1       => joystick2,
-    numpad          => numpad,
+
+module_inst: entity work.sysctrl 
+ port map 
+ (
+  clk                 => clk32,
+  reset               => not pll_locked,
+--
+  data_in_strobe      => mcu_sys_strobe,
+  data_in_start       => mcu_start,
+  data_in             => mcu_data_out,
+  data_out            => sys_data_out,
+
+  -- values that can be configured by the user
+  system_chipset      => open,
+  system_memory       => open,
+  system_reset        => system_reset,
+  system_scanlines    => system_scanlines,
+  system_volume       => system_volume,
+  system_wide_screen  => system_wide_screen,
+  system_floppy_wprot => system_floppy_wprot,
+  system_port_1       => port_1_sel,
+  system_dos_sel      => dos_sel,
+  system_1541_reset   => c1541_osd_reset,
+  system_video_std    => ntscMode,
+  system_i_ram_ext0   => extram(0),
+  system_i_ram_ext1   => extram(1),
+  system_i_ram_ext2   => extram(2),
+  system_i_ram_ext3   => extram(3),
+  system_i_ram_ext4   => extram(4),
+  system_i_center     => i_center,
+  system_crt_write    => crt_writeable,
+  system_detach_reset => detach_reset,
+  cold_boot           => open,
+
+  int_out_n           => m0s(4),
+  int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
+  int_ack             => int_ack,
+
+  buttons             => unsigned'(reset & user), -- S0 and S1 buttons
+  leds                => system_leds,         -- two leds can be controlled from the MCU
+  color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
+);
+
+-- c1541 ROM's SPI Flash, offset in spi flash $200000
+flash_inst: entity work.flash 
+port map(
+    clk       => flash_clk,
+    resetn    => pll_locked,
+    ready     => open,
+    busy      => open,
+    address   => (x"2" & "000" & dos_sel & c1541rom_addr),
+    cs        => c1541rom_cs,
+    dout      => c1541rom_data,
+    mspi_cs   => mspi_cs,
+    mspi_di   => mspi_di,
+    mspi_hold => mspi_hold,
+    mspi_wp   => mspi_wp,
+    mspi_do   => mspi_do
+);
+
+ext_ro <=   (cart_blk(4) and not crt_writeable)
+          & (cart_blk(3) and not crt_writeable)
+          & (cart_blk(2) and not crt_writeable)
+          & (cart_blk(1) and not crt_writeable)
+          & (cart_blk(0) and not crt_writeable);
+
+i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
+i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
+
+resetvic20 <= not ram_ready or system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
+
+vic_inst: entity work.VIC20
+	port map(
+		--
+		i_sysclk      => clk32,
+		i_sysclk_en   => v20_en,
+		i_reset       => resetvic20,
+		o_p2h         => p2_h,
+
+		-- serial bus pins
+		atn_o         => iec_atn_o,
+		clk_o         => iec_clk_o,
+		clk_i         => iec_clk_i,
+		data_o        => iec_data_o,
+		data_i        => iec_data_i,
+		--
+		i_joy         => not joyA(3 downto 0), -- 0 up, 1 down, 2 left,  3 right
+		i_fire        => not joyA(4),          -- all low active
+		i_potx        => not pot1,
+		i_poty        => not pot2,
+
+		--
+		i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set
+		i_ram_ext     => i_ram_ext,    -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
+		--
+		i_extmem_en   => mc_loaded,
+		o_extmem_sel  => extmem_sel,
+		o_extmem_r_wn => vic_wr_n,
+		o_extmem_addr => vic_addr,
+		i_extmem_data => mc_data,
+		o_extmem_data => vic_data,
+		o_io2_sel     => vic_io2_sel,
+		o_io3_sel     => vic_io3_sel,
+		o_blk123_sel  => vic_blk123_sel,
+		o_blk5_sel    => vic_blk5_sel,
+		o_ram123_sel  => vic_ram123_sel,
+		--
+		o_ce_pix      => open,
+		o_video_r     => video_r,
+		o_video_g     => video_g,
+		o_video_b     => video_b,
+		o_hsync       => hsync,
+		o_vsync       => vsync,
+		o_hblank      => hblank,
+		o_vblank      => vblank,
+		i_center      => i_center,
+		i_pal         => not ntscMode,
+		i_wide        => '0',
+		--
+		ps2_key       => (others => '0'),
+  -- keyboard interface
     keyboard_matrix_out => keyboard_matrix_out,
     keyboard_matrix_in  => keyboard_matrix_in,
-    key_restore     => freeze_key,
-    tape_play       => open,
-    mod_key         => open,
-    mouse_btns      => mouse_btns,
-    mouse_x         => mouse_x,
-    mouse_y         => mouse_y,
-    mouse_strobe    => mouse_strobe,
-    joystick0ax     => joystick0ax,
-    joystick0ay     => joystick0ay,
-    joystick1ax     => joystick1ax,
-    joystick1ay     => joystick1ay,
-    joystick_strobe => joystick_strobe,
-    extra_button0   => extra_button0,
-    extra_button1   => extra_button1
-   );
-  
-  
-  module_inst: entity work.sysctrl 
-   port map 
-   (
-    clk                 => clk32,
-    reset               => not pll_locked,
-  --
-    data_in_strobe      => mcu_sys_strobe,
-    data_in_start       => mcu_start,
-    data_in             => mcu_data_out,
-    data_out            => sys_data_out,
-  
-    -- values that can be configured by the user
-    system_chipset      => open,
-    system_memory       => open,
-    system_reset        => system_reset,
-    system_scanlines    => system_scanlines,
-    system_volume       => system_volume,
-    system_wide_screen  => system_wide_screen,
-    system_floppy_wprot => system_floppy_wprot,
-    system_port_1       => port_1_sel,
-    system_dos_sel      => dos_sel,
-    system_1541_reset   => c1541_osd_reset,
-    system_video_std    => ntscMode,
-    system_i_ram_ext0   => extram(0),
-    system_i_ram_ext1   => extram(1),
-    system_i_ram_ext2   => extram(2),
-    system_i_ram_ext3   => extram(3),
-    system_i_ram_ext4   => extram(4),
-    system_i_center     => i_center,
-    system_crt_write    => crt_writeable,
-    system_detach_reset => detach_reset,
-    cold_boot           => open,
-    int_out_n           => m0s(4),
-    int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
-    int_ack             => int_ack,
-  
-    buttons             => unsigned'(reset & user), -- S0 and S1 buttons
-    leds                => system_leds,         -- two leds can be controlled from the MCU
-    color               => ws2812_color -- a 24bit color to e.g. be used to drive the ws2812
-  );
-  
-  process(clk32)
-  variable toX:	integer;
-  begin
-    if rising_edge(clk32) then
-      c64_iec_clk_old   <= iec_clk_i;
-      drive_iec_clk_old <= iec_clk_o;
-      drive_stb_i_old   <= pc2_n;
-      drive_stb_o_old   <= flag2_n;
-      if ( c64_iec_clk_old /= iec_clk_i or drive_iec_clk_old /= iec_clk_o or ((drive_stb_i_old /= pc2_n or drive_stb_o_old /= flag2_n) and ext_en = '1') ) then
-          disk_access <= '1';
-          toX := 16000000; -- 0.5s
-      elsif (toX /= 0) then
-        toX := toX - 1;
-      else  
-        disk_access <= '0';
-      end if;
-    end if;
-  end process;
-  
-  -- c1541 ROM's SPI Flash, offset in spi flash $200000
-  flash_inst: entity work.flash 
-  port map(
-      clk       => flash_clk,
-      resetn    => pll_locked,
-      ready     => open,
-      busy      => open,
-      address   => (x"2" & "000" & dos_sel & c1541rom_addr),
-      cs        => c1541rom_cs,
-      dout      => c1541rom_data,
-      mspi_cs   => mspi_cs,
-      mspi_di   => mspi_di,
-      mspi_hold => mspi_hold,
-      mspi_wp   => mspi_wp,
-      mspi_do   => mspi_do
-  );
-  
-ext_ro <=   (cart_blk(4) and not crt_writeable)
-  & (cart_blk(3) and not crt_writeable)
-  & (cart_blk(2) and not crt_writeable)
-  & (cart_blk(1) and not crt_writeable)
-  & (cart_blk(0) and not crt_writeable);
+		tape_play     => open,
+		--
+		o_audio       => vic_audio,
 
-i_ram_ext_ro <= ext_ro;
-i_ram_ext <= extram or cart_blk;
+		cass_write    => cass_write,
+		cass_read     => cass_read,
+		cass_motor    => cass_motor,
+		cass_sw       => cass_sense,
 
-resetvic20 <= system_reset(0) or not pll_locked or cart_reset or detach_reset;
-  
-  vic_inst: entity work.VIC20
-    port map(
-      --
-      i_sysclk      => clk32,
-      i_sysclk_en   => v20_en,
-      i_reset       => resetvic20,
-      o_p2h         => p2_h,
-  
-      -- serial bus pins
-      atn_o         => iec_atn_o,
-      clk_o         => iec_clk_o,
-      clk_i         => iec_clk_i,
-      data_o        => iec_data_o,
-      data_i        => iec_data_i,
-      --
-      i_joy         => not joyA(3 downto 0), -- 0 up, 1 down, 2 left,  3 right
-      i_fire        => not joyA(4),          -- all low active
-      i_potx        => not pot1,
-      i_poty        => not pot2,
-  
-      --
-      i_ram_ext_ro  => i_ram_ext_ro, -- read-only region if set
-      i_ram_ext     => i_ram_ext,    -- at $A000(8k),$6000(8k),$4000(8k),$2000(8k),$0400(3k)
-      --
-      i_extmem_en   => '0',
-      o_extmem_sel  => extmem_sel,
-      o_extmem_r_wn => vic_wr_n,
-      o_extmem_addr => vic_addr,
-      i_extmem_data => (others => '0'),
-      o_extmem_data => vic_data,
-      o_io2_sel     => vic_io2_sel,
-      o_io3_sel     => vic_io3_sel,
-      o_blk123_sel  => vic_blk123_sel,
-      o_blk5_sel    => vic_blk5_sel,
-      o_ram123_sel  => vic_ram123_sel,
-      --
-      o_ce_pix      => open,
-      o_video_r     => video_r,
-      o_video_g     => video_g,
-      o_video_b     => video_b,
-      o_hsync       => hsync,
-      o_vsync       => vsync,
-      o_hblank      => hblank,
-      o_vblank      => vblank,
-      i_center      => i_center,
-      i_pal         => not ntscMode,
-      i_wide        => '0',
-      --
-      ps2_key       => (others => '0'),
-    -- keyboard interface
-      keyboard_matrix_out => keyboard_matrix_out,
-      keyboard_matrix_in  => keyboard_matrix_in,
-      tape_play     => open,
-      --
-      o_audio       => vic_audio,
-  
-      cass_write    => cass_write,
-      cass_read     => cass_read,
-      cass_motor    => cass_motor,
-      cass_sw       => cass_sense,
-  
-      --configures "embedded" core memory
-      rom_std       => '1',
-      conf_clk      => clk32,
-      conf_wr       => dl_wr,
-      conf_ai       => dl_addr,
-      conf_di       => dl_data,
+		--configures "embedded" core memory
+		rom_std       => '1',
+		conf_clk      => clk32,
+		conf_wr       => dl_wr,
+		conf_ai       => dl_addr,
+		conf_di       => dl_data,
 
     -- user port RS232
     user_port_cb1_in  => user_port_cb1_in,
@@ -976,16 +980,16 @@ resetvic20 <= system_reset(0) or not pll_locked or cart_reset or detach_reset;
     user_port_cb2_out => user_port_cb2_out,
     user_port_in      => user_port_in,
     user_port_out     => user_port_out
-    );
+	);
 
   crt_inst : entity work.loader_sd_card
   port map (
     clk               => clk32,
-    system_reset      => system_reset,
+    reset             => system_reset(1),
   
     sd_lba            => loader_lba,
-    sd_rd             => sd_rd(4 downto 1),
-    sd_wr             => sd_wr(4 downto 1),
+    sd_rd             => sd_rd(5 downto 1),
+    sd_wr             => sd_wr(5 downto 1),
     sd_busy           => sd_busy,
     sd_done           => sd_done,
   
@@ -999,15 +1003,16 @@ resetvic20 <= system_reset(0) or not pll_locked or cart_reset or detach_reset;
     load_prg          => load_prg,
     load_rom          => load_rom,
     load_tap          => load_tap,
+    load_flt          => load_mc,
     sd_img_size       => sd_img_size,
     leds              => leds(5 downto 1),
-    img_select        => img_select,
+    img_select        => open,
   
     ioctl_download    => ioctl_download,
     ioctl_addr        => ioctl_addr,
     ioctl_data        => ioctl_data,
     ioctl_wr          => ioctl_wr,
-    ioctl_wait        => ioctl_wait
+    ioctl_wait        => ioctl_req_wr
   );
 
 process(clk32)
@@ -1016,6 +1021,12 @@ begin
     dl_wr <= '0';
     old_download <= ioctl_download;
     io_cycleD <= io_cycle;
+    ioctl_wr_d <= ioctl_wr;
+    system_reset_d <= system_reset(1);
+
+    if not system_reset_d and system_reset(1) then
+      ioctl_req_wr <= '0'; 
+    end if;
 
     if io_cycle = '0' and io_cycleD = '1' then
       io_cycle_ce <= '1';
@@ -1035,7 +1046,7 @@ begin
       io_cycle_we <= '0';
     end if;
 
-    if ioctl_wr = '1' and load_tap = '1' then
+    if ioctl_wr = '1' and ioctl_download = '1' and load_tap = '1' then
       state <= x"0";
       if ioctl_addr = 0  then ioctl_load_addr <= TAP_ADDR; end if;
       if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
@@ -1059,7 +1070,8 @@ begin
     end if;
 
     if old_download = '1' and ioctl_download = '0' and load_prg = '1' then
-        state <= x"1"; end if;
+        state <= x"1"; 
+    end if;
 
     if state /= x"0" then state <= state + 1; end if;
 
@@ -1078,9 +1090,11 @@ begin
     if ioctl_download and load_rom then
       state <= x"0";
       if ioctl_wr = '1' then
+        if ioctl_addr < x"2000" then
           dl_addr <= ioctl_addr(15 downto 0) or x"E000";
           dl_data <= ioctl_data;
           dl_wr <= '1';
+        end if;
       end if;
     end if;
 
@@ -1104,17 +1118,70 @@ begin
       end if;
     end if;
 
-    if old_download /= ioctl_download and (load_crt or load_rom) = '1' then
-        cart_reset <= ioctl_download;
-      end if;
+    if old_download /= ioctl_download and (load_crt or load_mc or load_rom) = '1' then
+      cart_reset <= ioctl_download;
+    elsif old_download /= ioctl_download and load_mc = '1' then
+      cart_blk <= (others => '0');
+    end if;
 
     if (system_reset(1) or detach_reset) = '1' then
       cart_reset <= '0';
       cart_blk <= (others => '0');
     end if;
-    
-   end if;
+
+    if (ioctl_download and load_crt) = '1' or detach_reset = '1' then
+      mc_loaded <= '0';
+    elsif ioctl_download and load_mc then 
+      mc_loaded <= '1';
+    end if;
+
+    end if;
 end process;
+
+mc_data <= mc_nvram_out when mc_nvram_sel = '1' else sdram_out;
+
+mc_inst: entity work.megacart
+port map 
+(
+	clk             => clk32,
+	reset_n         => mc_loaded and not system_reset(0) and not cart_reset,
+
+	vic_addr        => vic_addr,
+	vic_wr_n        => vic_wr_n,
+	vic_io2_sel     => vic_io2_sel,
+	vic_io3_sel     => vic_io3_sel,
+	vic_blk123_sel  => vic_blk123_sel,
+	vic_blk5_sel    => vic_blk5_sel,
+	vic_ram123_sel  => vic_ram123_sel,
+	vic_data        => vic_data,
+
+	mc_addr         => mc_addr,
+	mc_wr_n         => mc_wr_n,
+	mc_nvram_sel    => mc_nvram_sel,
+	mc_soft_reset   => mc_reset
+);
+
+-- 8k megacart NVRAM
+-- TM60k / TM138k
+--mc_nvram_inst: entity work.Gowin_DPB_8k
+--    port map (
+--        douta   => mc_nvram_out,
+--        doutb   => sd_buff_din(0),
+--        clka    => clk32,
+--        ocea    => '1',
+--        cea     => '1',
+--        reseta  => '0',
+--        wrea    => mc_nvram_sel and not mc_wr_n,
+--        clkb    => clk32,
+--        oceb    => '1',
+--        ceb     => '1',
+--        resetb  => '0',
+--        wreb    => insd_buff_wr and sd_ack(0),
+--        ada     => vic_addr,
+--        dina    => vic_data,
+--        adb     => sd_buff_addr,
+--        dinb    => sd_buff_dout
+-- );
 
 -------------- TAP -------------------
 timer_inst: entity work.core_timer
