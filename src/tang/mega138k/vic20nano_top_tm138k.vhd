@@ -47,6 +47,11 @@ entity VIC20_TOP_tm138k is
     ds_mosi         : out std_logic;
     ds_miso         : in std_logic;
     ds_cs           : out std_logic;
+    -- Gamepad DualShock P1
+    ds2_clk       : out std_logic;
+    ds2_mosi      : out std_logic;
+    ds2_miso      : in std_logic;
+    ds2_cs        : out std_logic;
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -221,6 +226,8 @@ signal vblank          : std_logic;
 
 signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
+signal paddle_3        : std_logic_vector(7 downto 0);
+signal paddle_4        : std_logic_vector(7 downto 0);
 signal key_r1          : std_logic;
 signal key_r2          : std_logic;
 signal key_l1          : std_logic;
@@ -235,6 +242,21 @@ signal key_left        : std_logic;
 signal key_right       : std_logic;
 signal key_start       : std_logic;
 signal key_select      : std_logic;
+signal key_r12         : std_logic;
+signal key_r22         : std_logic;
+signal key_l12         : std_logic;
+signal key_l22         : std_logic;
+signal key_triangle2   : std_logic;
+signal key_square2     : std_logic;
+signal key_circle2     : std_logic;
+signal key_cross2      : std_logic;
+signal key_up2         : std_logic;
+signal key_down2       : std_logic;
+signal key_left2       : std_logic;
+signal key_right2      : std_logic;
+signal key_start2      : std_logic;
+signal key_select2     : std_logic;
+
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
@@ -400,7 +422,7 @@ begin
 -- https://store.curiousinventor.com/guides/PS2/
 -- https://hackaday.io/project/170365-blueretro/log/186471-playstation-playstation-2-spi-interface
 
-gamepad: entity work.dualshock2
+gamepad_p1: entity work.dualshock2
     port map (
     clk           => clk32,
     rst           => resetvic20,
@@ -428,6 +450,40 @@ gamepad: entity work.dualshock2
     key_cross     => key_cross,
     key_start     => key_start,
     key_select    => key_select,
+    key_lstick    => open,
+    key_rstick    => open,
+    debug1        => open,
+    debug2        => open
+    );
+
+    gamepad_p2: entity work.dualshock2
+    port map (
+    clk           => clk32,
+    rst           => resetvic20,
+    vsync         => vsync,
+    ds2_dat       => ds2_miso,
+    ds2_cmd       => ds2_mosi,
+    ds2_att       => ds2_cs,
+    ds2_clk       => ds2_clk,
+    ds2_ack       => '0',
+    stick_lx      => paddle_3,
+    stick_ly      => paddle_4,
+    stick_rx      => open,
+    stick_ry      => open,
+    key_up        => key_up2,
+    key_down      => key_down2,
+    key_left      => key_left2,
+    key_right     => key_right2,
+    key_l1        => key_l12,
+    key_l2        => key_l22,
+    key_r1        => key_r12,
+    key_r2        => key_r22,
+    key_triangle  => key_triangle2,
+    key_square    => key_square2,
+    key_circle    => key_circle2,
+    key_cross     => key_cross2,
+    key_start     => key_start2,
+    key_select    => key_select2,
     key_lstick    => open,
     key_rstick    => open,
     debug1        => open,
@@ -670,7 +726,7 @@ dram_addr <= ioctl_addr when (ioctl_download and load_mc) else mc_addr;
 clkref <= ioctl_wr when ioctl_download else p2_h;
 
 -- TM60k / 138k swap DRAM / DDR3
-
+  
 dram_inst: entity work.sdram
      port map(
       -- SDRAM side interface
@@ -778,12 +834,14 @@ leds(0) <= led1541;
 --                    6   5  4  3  2  1  0
 --                  TR3 TR2 TR RI LE DN UP digital c64 
 joyDS2_p1  <= key_circle  & key_cross  & key_square  & key_right  & key_left  & key_down  & key_up;
+joyDS2_p2  <= key_circle2 & key_cross2 & key_square2 & key_right2 & key_left2 & key_down2 & key_up2;
 joyDigital <= not('1' & io(5) & io(0) & io(3) & io(4) & io(1) & io(2));
 joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3);
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
 joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00"; -- DS2 left stick
+joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00"; 
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
@@ -803,20 +861,24 @@ begin
       when "0110"  => joyA <= joyDS2A_p1;
       when "0111"  => joyA <= joyUsb1A;
       when "1000"  => joyA <= joyUsb2A;
-      when "1001"  => joyA <= (others => '0');
+      when "1001"  => joyA <= (others => '0');--9
+      when "1010"  => joyA <= joyDS2_p2;   -- 10
+      when "1011"  => joyA <= joyDS2A_p2;  -- 11
       when others  => joyA <= (others => '0');
-    end case;
+      end case;
   end if;
 end process;
 
 -- paddle pins - mouse
 pot1 <= not paddle_1 when port_1_sel = "0110" else 
+        not paddle_3 when port_1_sel = "1011" else
         joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else
         joystick2_x_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
         x"ff";
 
-pot2 <= not paddle_2 when port_1_sel = "0110" else 
+pot2 <= not paddle_2 when port_1_sel = "0110" else
+        not paddle_4 when port_1_sel = "1011" else
         joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else 
         joystick2_y_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
