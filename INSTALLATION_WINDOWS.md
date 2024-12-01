@@ -8,10 +8,10 @@ This has been tested on Windows 11. It should work on older versions too.
 
 Software needed:
 
-  - [Gowin V1.9.10](https://www.gowinsemi.com/en/support/home/) **to synthesize the core**
+  - [Gowin V1.9.10.03](https://www.gowinsemi.com/en/support/home/) **to synthesize the core**
   - [BouffaloLabDevCube](https://dev.bouffalolab.com/download) **to flash the BL616**
   - [Latest release](https://github.com/vossstef/vic20nano/releases/latest) of VIC20Nano **FPGA** bitstream
-  - [Latest release](https://github.com/harbaum/MiSTeryNano/releases/latest) of MiSTeryNano **BL616 µC firmware** (if not otherwise stated in the release note.)
+  - [Latest release](http://github.com/harbaum/FPGA-Companion) of FPGA-Companion **BL616 µC firmware** (if not otherwise stated in the release note.)
 
 In order to use the SD card for disks:
 
@@ -33,6 +33,10 @@ on your desktop or in your start menu.
  - Press the ```S2``` button on the Tang Nano 20K and keep it pressed
  - Connect the Tang Nano 20k to the USB on your computer. You should hear the connecting sound of Windows.
  - Release the ```S2``` button
+
+> [!CAUTION]
+A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
+
  - Start Gowin. **You should see the following screen**
 
 Explanation: The VIC20Nano core makes use of the flash memory of the
@@ -71,48 +75,50 @@ addresses:
   - ```c1541 DOS Jiffy``` is written to address 0x21C000
 
 These DOS for the c1541 emulation can later be selected from the on-screen-display (OSD).
-  - For the FS file please choose the ```vic20nano.fs``` you just downloaded
+  - For the FS file please choose the ```vic20nano_tn20k.fs``` you just downloaded
   - User Code and IDCODE can be ignored
   - Mark each of your configs and press the little icon with the green play
     button. You should see a progress bar and then:
 
 ![](https://github.com/vossstef/vic20nano/blob/main/.assets/c64_flash.png)
 **At a glance the memory layout of the SPI Flash:**
-|                           | |          |          |         | | |
-|-                          |-         |-         |-         |-        |-|-|
-| Type                      | TN20k    | TP20k    |TP25k     | TM138k  |TN9k | |
-| FPGA bitstream            | 0x000000 | 0x000000 | 0x000000 | 0x000000 |-|ROM size |
-| reserved for Atari ST ROM | 0x100000 | 0x100000 | 0x100000 | 0x900000 |-| - |
-| c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0x200000 | 0xA00000 |-|32k|
-| c1541 CBM DOS 2.6         | 0x20C000 | 0x20C000 | 0x20C000 | 0xA0C000 |-|16k|
-| c1541 Speed DOS Plus      | 0x214000 | 0x214000 | 0x214000 | 0xA14000 |-|16k|
-| c1541 Jiffy DOS           | 0x21C000 | 0x21C000 | 0x21C000 | 0xA1C000 |-|16k|
-| VIC20 KERNAL+BASIC ROM    | - | - | - | - |0x000000 |16k|
-
+|                           |          |          |          |        |          |        |        |
+|-                          |-         |-         |-         | -      |-         |-       | -      |
+| Type                      | TN20k    | TP20k    |TP25k     |TM60k   |TM138k Pro|  TN9k  |        |
+| FPGA bitstream            | 0x000000 | 0x000000 | 0x000000 |0x000000| 0x000000 |  -     |ROM size|
+| reserved for Atari ST ROM | 0x100000 | 0x100000 | 0x100000 | -      | 0x900000 |  -     | -      |
+| c1541 Dolphin DOS 2       | 0x200000 | 0x200000 | 0x200000 |0x700000| 0xA00000 |  -     |32k     |
+| c1541 CBM DOS 2.6         | 0x20C000 | 0x20C000 | 0x20C000 |0x70C000| 0xA0C000 |  -     |16k     |
+| c1541 Speed DOS Plus      | 0x214000 | 0x214000 | 0x214000 |0x714000| 0xA14000 |  -     |16k     |
+| c1541 Jiffy DOS           | 0x21C000 | 0x21C000 | 0x21C000 |0x71C000| 0xA1C000 |  -     |16k     |
+| VIC20 KERNAL+BASIC ROM    |      -   |   -      | -        | -      | -        |0x000000|32k     |
 
 **shell / command line Programming alternative**
-
 Windows shell and Gowin Programmer<br>
-```programmer_cli  -r 36 --fsFile vic20nano.fs --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
-```programmer_cli  -r 36 --fsFile vic20nano_tp20k.fs --spiaddr 0x000000 --cable-index 1 --d GW2A-18C```<br>
-```programmer_cli  -r 36 --fsFile vic20nano_25k.fs --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
-```programmer_cli  -r 36 --fsFile vic20nano_138k.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
-```programmer_cli  -r 36 --fsFile vic20nano_9k.fs --cable-index 1 --d GW1NR-9C```<br>
+```programmer_cli  -r 36 --fsFile vic20nano_tn20k.fs  --spiaddr 0x000000 --cable-index 1 --d GW2ANR-18C```<br>
+```programmer_cli  -r 36 --fsFile vic20nano_tp20k.fs  --spiaddr 0x000000 --cable-index 1 --d GW2A-18C```<br>
+```programmer_cli  -r 36 --fsFile vic20nano_tp25k.fs  --spiaddr 0x000000 --cable-index 1 --d GW5A-25A```<br>
+```programmer_cli  -r 36 --fsFile vic20nano_tm60k.fs  --spiaddr 0x000000 --cable-index 1 --d GW5AT-60B```<br>
+```programmer_cli  -r 36 --fsFile vic20nano_tm138k.fs --spiaddr 0x000000 --cable-index 1 --d GW5AST-138B```<br>
+```programmer_cli  -r 36 --fsFile vic20nano_tn9k.fs   --cable-index 1 --d GW1NR-9C```<br>
 
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2ANR-18C```<br>
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW2A-18C```<br>
 ```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x200000 --cable-index 1 --d GW5A-25A```<br>
-```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br><br>
+```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0x700000 --cable-index 1 --d GW5AT-60B```<br>
+```programmer_cli -r 38 --mcuFile 2dosa_c.bin --spiaddr 0xA00000 --cable-index 1 --d GW5AST-138B```<br>
+```programmer_cli -r 38 --mcuFile 32k.bin     --spiaddr 0x000000 --cable-index 1 --d GW1NR-9C```<br>
+
 Linux shell and [openFPGAloader](https://github.com/trabucayre/openFPGALoader).<br>
 [Please read here if you run into trouble when using openFPGAloader under Linux](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-Doc/flash-in-linux.html).<br>
 ```openFPGALoader -b tangnano20k --external-flash -o 0x200000  2dosa_c.bin```<br>
-```openFPGALoader -b tangnano20k -f vic20nano.fs```<br>
-```openFPGALoader -b tangnano9k -f vic20nano_9k.fs```<br>
+```openFPGALoader -b tangnano20k -f vic20nano_tn20k.fs```<br>
+```openFPGALoader -b tangnano9k -f vic20nano_tn9k.fs```<br>
 <br>
-```openFPGALoader -b tangprimer20k --external-flash -o 0x200000  2dosa_c.bin```<br>
-```openFPGALoader -b tangprimer25k --external-flash -o 0x200000  2dosa_c.bin```<br>
-```openFPGALoader -b tangmega138k --external-flash -o 0xA00000  2dosa_c.bin```<br>
-```openFPGALoader -b tangnano9k --external-flash -o 0x000000 32k.bin```<br>
+```openFPGALoader -b tangprimer20k --external-flash -o 0x200000 2dosa_c.bin```<br>
+```openFPGALoader -b tangprimer25k --external-flash -o 0x200000 2dosa_c.bin```<br>
+```openFPGALoader -b tangmega138k  --external-flash -o 0xA00000 2dosa_c.bin```<br>
+```openFPGALoader -b tangnano9k    --external-flash -o 0x000000 32k.bin```<br>
 
 
 **c1541 DOS ROM binaries** <br>
@@ -161,7 +167,7 @@ the Tang Nano 20K. Using an external M0S is nevertheless recommended.
   device with a COM port. If not take a look in the device manager to check for
   the correct device detection.
 - On the top click on MCU and browse to the firmware image file named
-  ```misterynano_fw_bl616.bin``` (contains a unified firmware both for Atari ST and C64Nano and VIC20Nano)
+  ```fpga_companion_bl616.bin``` (contains a unified firmware both for Atari ST and C64Nano and VIC20Nano)
 - Choose “Open Uart” and than press “Create & Download”. The firmware should now be
   flashed
 
