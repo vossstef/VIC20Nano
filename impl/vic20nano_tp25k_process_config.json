@@ -1,6 +1,6 @@
 {
  "BACKGROUND_PROGRAMMING" : "off",
- "COMPRESS" : false,
+ "COMPRESS" : true,
  "CPU" : true,
  "CRC_CHECK" : true,
  "Clock_Route_Order" : 0,
@@ -32,6 +32,8 @@
  "HOTBOOT" : false,
  "I2C" : true,
  "I2C_SLAVE_ADDR" : "00",
+ "INCREMENTAL_PLACE_AND_ROUTING" : "0",
+ "INCREMENTAL_PLACE_ONLY" : "0",
  "IncludePath" : [
 
  ],
@@ -47,8 +49,8 @@
  "MULTIJUMP_ADDRESS_WIDTH" : "24",
  "MULTIJUMP_MODE" : "Normal",
  "MULTIJUMP_SPI_FLASH_ADDRESS" : "000000",
- "Multi_Boot" : true,
- "OUTPUT_BASE_NAME" : "vic20nano_tn20k",
+ "Multi_Boot" : false,
+ "OUTPUT_BASE_NAME" : "vic20nano_tp25k",
  "POWER_ON_RESET_MONITOR" : true,
  "PRINT_BSRAM_VALUE" : true,
  "PROGRAM_DONE_BYPASS" : false,
@@ -77,7 +79,7 @@
  "Synthesize_tool" : "GowinSyn",
  "TclPre" : "",
  "TopModule" : "VIC20Nano_top_tp25k",
- "USERCODE" : "default",
+ "USERCODE" : "00000001",
  "Unused_Pin" : "As_input_tri_stated_with_pull_up",
  "VCC" : "0.9",
  "VCCAUX" : 3.3,

@@ -61,6 +61,7 @@ add_file src/loader_sd_card.sv
 add_file src/c1530.vhd
 add_file src/fifo_sc_hs/fifo_sc_hs.vhd
 add_file src/core_timer.vhd
+add_file src/megacart.v
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name vic20nano_tn20k
@@ -69,10 +70,8 @@ set_option -vhdl_std vhd2008
 set_option -top_module VIC20_TOP
 set_option -use_mspi_as_gpio 1
 set_option -use_sspi_as_gpio 1
-set_option -print_all_synthesis_warning 1
 set_option -rw_check_on_ram 0
 set_option -user_code 00000001
-set_option -bit_security 0
 
 #run syn
 run all
