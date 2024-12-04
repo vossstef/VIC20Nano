@@ -59,7 +59,6 @@ add_file src/tang/primer20k/vic20nano_top_tp20k.sdc
 add_file src/loader_sd_card.sv
 add_file src/c1530.vhd
 add_file src/fifo_sc_hs/fifo_sc_hs.vhd
-add_file src/core_timer.vhd
 add_file src/tang/primer20k/memtest.sv
 add_file src/tang/primer20k/memory_controller.v
 add_file src/tang/primer20k/ddr3_controller.v

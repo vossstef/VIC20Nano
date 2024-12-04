@@ -25,7 +25,7 @@ add_file src/misc/sdcmd_ctrl.v
 add_file src/misc/sysctrl.v
 add_file src/misc/video.v
 add_file src/misc/video_analyzer.v
-add_file src/sdram.v
+add_file src/sdram.sv
 add_file src/c1541/c1541_logic.vhd
 add_file src/c1541/c1541_sd.vhd
 add_file src/c1541/gcr_floppy.vhd
@@ -61,7 +61,6 @@ add_file src/tang/primer25k/vic20nano_top_tp25k.sdc
 add_file src/loader_sd_card.sv
 add_file src/c1530.vhd
 add_file src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd
-add_file src/core_timer.vhd
 add_file src/megacart.v
 
 set_option -synthesis_tool gowinsynthesis

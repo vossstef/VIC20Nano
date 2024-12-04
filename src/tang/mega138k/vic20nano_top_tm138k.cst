@@ -1,3 +1,9 @@
+// external UART hw pin
+IO_PORT "uart_ext_rx" PULL_MODE=UP IO_TYPE=LVCMOS33; // UART RX
+IO_LOC "uart_ext_rx" H15;
+IO_PORT "uart_ext_tx" PULL_MODE=NONE IO_TYPE=LVCMOS33; // UART TX
+IO_LOC "uart_ext_tx" H14;
+
 // UART through USB-C port
 IO_LOC "uart_rx" N16;
 IO_LOC "uart_tx" P15;

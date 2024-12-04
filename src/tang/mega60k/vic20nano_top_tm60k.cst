@@ -1,3 +1,10 @@
+// external UART hw pin
+// UART ext RX
+IO_LOC  "uart_ext_rx" AB20;
+IO_PORT "uart_ext_rx" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+// UART ext TX
+IO_LOC  "uart_ext_tx" AA19;
+IO_PORT "uart_ext_tx" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3;
 
 // 50MHz XO
 IO_LOC "clk" V22;

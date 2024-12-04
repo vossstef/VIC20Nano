@@ -20,6 +20,9 @@ entity VIC20_TOP is
     -- USB-C BL616 UART
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
+    -- external hw pin UART
+ --   uart_ext_rx : in std_logic;
+ --   uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
     --
@@ -74,20 +77,14 @@ signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
 
 -- external memory
-signal c64_addr     : unsigned(15 downto 0);
-signal c64_data_out : unsigned(7 downto 0);
 signal sdram_data   : unsigned(7 downto 0);
 signal dout         : std_logic_vector(7 downto 0);
 signal dout16       : std_logic_vector(15 downto 0);
---signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(22 downto 0);
 signal ram_ready    : std_logic;
-signal cb_D         : std_logic;
 signal cs           : std_logic;
 signal we           : std_logic;
 signal din          : std_logic_vector(7 downto 0);
-signal ds           : std_logic_vector(1 downto 0);
-
 -- IEC
 signal iec_data_o  : std_logic;
 signal iec_data_i  : std_logic;
@@ -299,29 +296,17 @@ signal tap_download   : std_logic;
 signal tap_reset      : std_logic;
 signal tap_loaded     : std_logic;
 signal tap_play_btn   : std_logic;
-signal tap_wrreq      : std_logic_vector(1 downto 0);
+signal tap_wrreq      : std_logic;
 signal tap_wrfull     : std_logic;
-signal tap_start      : std_logic;
-signal read_cyc       : std_logic := '0';
-signal tap_rd         : std_logic := '0';
-signal tap_data_ready : std_logic := '1';
+signal tap_autoplay   : std_logic;
+signal tap_sdram_oe   : std_logic := '0';
 signal tap_wr         : std_logic := '0';
 signal cass_aud       : std_logic;
 signal audio_l        : std_logic_vector(17 downto 0);
 signal audio_r        : std_logic_vector(17 downto 0);
-
-signal io_cycle        : std_logic;
-signal io_cycleD       : std_logic;
-signal io_cycle_rD     : std_logic;
-signal io_cycle_ce     : std_logic;
-signal io_cycle_we     : std_logic;
-signal io_cycle_addr   : std_logic_vector(22 downto 0);
-signal io_cycle_data   : std_logic_vector(7 downto 0);
-signal ioctl_req_wr    : std_logic := '0';
 signal img_present     : std_logic := '0';
 signal c1541_sd_rd     : std_logic;
 signal c1541_sd_wr     : std_logic;
-
 signal mspi_hold       : std_logic;
 signal mspi_wp         : std_logic;
 signal c1541_osd_reset_d  : std_logic;
@@ -330,9 +315,7 @@ signal rd_data_valid   : std_logic;
 signal rd_data         : std_logic_vector(63 downto 0) ;
 attribute syn_keep of rd_data : signal is 1;
 attribute syn_keep of rd_data_valid : signal is 1;
-signal tap_cycle       : std_logic;
-signal tap_autoplay, wait_psram, wait_psram_rd,tap_wr_d,tap_rd_d  : std_logic;
-signal psaddr          : std_logic_vector(21 downto 0);
+signal wait_psram, wait_psram_rd,tap_wr_d,tap_rd_d  : std_logic;
 signal joystick0ax     : std_logic_vector(7 downto 0);
 signal joystick0ay     : std_logic_vector(7 downto 0);
 signal joystick1ax     : std_logic_vector(7 downto 0);
@@ -357,6 +340,12 @@ signal clkref            : std_logic;
 signal oe                : std_logic;
 signal system_reset_d    : std_logic;
 signal disk_pause        : std_logic;
+signal tap_data_in       : std_logic_vector(7 downto 0);
+signal p2_hD             : std_logic;
+signal system_uart       : std_logic_vector(1 downto 0);
+signal uart_rx_muxed     : std_logic;
+signal uart_ext_rx       : std_logic;
+signal uart_ext_tx       : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -552,41 +541,39 @@ port map(
       tmds_d_p   => tmds_d_p
       );
 
-we <= ioctl_wr_d when (ioctl_download and load_mc) else (not mc_nvram_sel and extmem_sel and not mc_wr_n);
-oe <= '0' when (ioctl_download and load_mc) else ( not mc_nvram_sel and  extmem_sel and  mc_wr_n);
-din <= ioctl_data when (ioctl_download and load_mc) else vic_data;
-dram_addr <= ioctl_addr when (ioctl_download and load_mc) else mc_addr;
---idle <= ioctl_wr when ioctl_download else p2_h;
+-- MegaCart and Tape
+we <= ioctl_wr_d when (ioctl_download and (load_mc or load_tap)) else (not mc_nvram_sel and extmem_sel and not mc_wr_n);
+oe <= '0' when (ioctl_download and load_mc ) else '1' when tap_sdram_oe else (not mc_nvram_sel and extmem_sel and mc_wr_n);
+din <= ioctl_data when (ioctl_download and (load_mc or load_tap)) else vic_data;
+dram_addr <= ioctl_addr when (ioctl_download and (load_mc or load_tap)) else mc_addr when mc_loaded = '1' else tap_play_addr;
 clkref <= ioctl_wr when ioctl_download else p2_h;
 
+O_psram_reset_n <= pll_locked & pll_locked;
+sdram_out <= dout16(7 downto 0);
 
-      O_psram_reset_n <= pll_locked & pll_locked;
-      sdram_out <= dout16(7 downto 0);
-      psaddr <= ioctl_addr(21 downto 0) when tap_download = '1' else tap_play_addr(21 downto 0);
-
-      dram_inst: entity work.PsramController
-        generic map (
-          LATENCY  => 3,
-          FREQ     => 71550000,
-          CS_DELAY => false )
-        port map
-        (
-          clk           => clk64, 
-          clk_p         => clk64_90,
-          resetn        => pll_locked,
-          read          => tap_rd,
-          write         => tap_wr,
-          byte_write    => '0',
-          addr          => psaddr,
-          din           => ioctl_data & ioctl_data,
-          dout          => dout16,
-          busy          => drambusy,
-          O_psram_ck    => O_psram_ck,
-          O_psram_ck_n  => O_psram_ck_n,
-          IO_psram_rwds => IO_psram_rwds,
-          IO_psram_dq   => IO_psram_dq,
-          O_psram_cs_n  => O_psram_cs_n
-    );
+  dram_inst: entity work.PsramController
+    generic map (
+      LATENCY  => 3,
+      FREQ     => 71550000,
+      CS_DELAY => false )
+    port map
+    (
+      clk           => clk64, 
+      clk_p         => clk64_90,
+      resetn        => pll_locked,
+      read          => oe,
+      write         => we,
+      byte_write    => '0',
+      addr          => dram_addr(20 downto 0) & '0',
+      din           => din & din,
+      dout          => dout16,
+      busy          => drambusy,
+      O_psram_ck    => O_psram_ck,
+      O_psram_ck_n  => O_psram_ck_n,
+      IO_psram_rwds => IO_psram_rwds,
+      IO_psram_dq   => IO_psram_dq,
+      O_psram_cs_n  => O_psram_cs_n
+);
 
 -- Clock tree and all frequencies in Hz
 -- TN20k VIC20
@@ -917,6 +904,7 @@ module_inst: entity work.sysctrl
   system_crt_write    => crt_writeable,
   system_detach_reset => detach_reset,
   cold_boot           => open,
+  system_uart         => system_uart,
 
   int_out_n           => m0s(4),
   int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
@@ -937,7 +925,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= not ram_ready or system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1052,7 +1040,7 @@ vic_inst: entity work.VIC20
     ioctl_addr        => ioctl_addr,
     ioctl_data        => ioctl_data,
     ioctl_wr          => ioctl_wr,
-    ioctl_wait        => ioctl_wait
+    ioctl_wait        => '0'
   );
 
 process(clk32)
@@ -1060,8 +1048,15 @@ begin
   if rising_edge(clk32) then
     dl_wr <= '0';
     old_download <= ioctl_download;
-    io_cycleD <= io_cycle;
     ioctl_wr_d <= ioctl_wr;
+    system_reset_d <= system_reset(1);
+
+    tap_wr <= '0';
+    if (ioctl_wr and ioctl_download and load_tap) = '1' then
+      state <= x"0";
+      if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
+      tap_wr <= '1';
+    end if;
 
     if ioctl_download and load_prg then
       state <= x"0";
@@ -1141,7 +1136,7 @@ begin
 
     if (ioctl_download and load_crt) = '1' or detach_reset = '1' then
       mc_loaded <= '0';
-    elsif ioctl_download and load_mc then 
+    elsif (ioctl_download and load_mc) = '1' then 
       mc_loaded <= '1';
     end if;
 
@@ -1195,29 +1190,9 @@ port map
 
 -------------- TAP -------------------
 
-process(clk32)
-begin
-  if rising_edge(clk32) then
-    old_reset <= resetvic20;
-    tap_wr <= '0';
-
-    if old_reset = '0' and resetvic20 = '1' then 
-      ioctl_wait <= '0'; 
-    end if;
-
-    if ioctl_wr = '1' and load_tap = '1' and drambusy = '0' then
-      ioctl_wait <= '1';
-      tap_wr <= '1';
-      if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
-    elsif tap_wr = '0' then
-      ioctl_wait <= '0';
-    end if;
-  end if;
-end process;
-
 tap_download <= ioctl_download and load_tap;
-tap_reset <= '1' when resetvic20 = '1' or tap_download = '1'or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
-tap_loaded <= '1' when (tap_play_addr < tap_last_addr) else '0';
+tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
+tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
@@ -1225,29 +1200,28 @@ begin
       if tap_reset = '1' then
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
-        tap_rd <= '0';
-        tap_cycle <= '0';
+        tap_sdram_oe <= '0';
         tap_autoplay <= tap_download;
       else
-        tap_rd <= '0';
-        tap_wrreq(0) <= '0';
         tap_autoplay <= '0';
+        p2_hD <= p2_h;
+        tap_wrreq <= '0';
 
-        if tap_rd = '0' and tap_wrreq(0) = '0' then
-          if tap_cycle = '1' then
-            if drambusy = '0' then
-              tap_play_addr <= tap_play_addr + 1;
-              tap_cycle <= '0';
-              tap_wrreq(0) <= '1';
-            end if;  -- rd_data_valid
-          elsif tap_wrfull = '0' and tap_loaded = '1' and drambusy = '0' then
-            tap_rd <= '1';
-            tap_cycle <= '1';
-          end if;
+        if p2_hD and not p2_h and not tap_download and tap_loaded and not tap_wrfull then 
+          tap_sdram_oe <= '1'; 
         end if;
 
-        end if; --tap_reset
-  end if; -- rising_edge
+        if not p2_h and tap_sdram_oe then 
+          tap_data_in <= sdram_out; 
+        end if;
+
+        if p2_h and not p2_hD and tap_sdram_oe then
+              tap_play_addr <= tap_play_addr + 1;
+          tap_sdram_oe <= '0';
+          tap_wrreq <= '1';
+          end if;
+        end if;
+    end if;
 end process;
 
 c1530_inst: entity work.c1530
@@ -1256,8 +1230,8 @@ port map (
   restart_tape    => tap_reset,
   wav_mode        => '0',
   tap_version     => tap_version,
-  host_tap_in     => sdram_out,
-  host_tap_wrreq  => tap_wrreq(0),
+  host_tap_in     => tap_data_in,
+  host_tap_wrreq  => tap_wrreq,
   tap_fifo_wrfull => tap_wrfull,
   tap_fifo_error  => cass_finish,
   cass_read       => cass_read,
@@ -1269,11 +1243,15 @@ port map (
   ear_input       => '0'
 );
 
+-- external HW pin UART interface
+uart_rx_muxed <= uart_rx when system_uart = "00" else uart_ext_rx when system_uart = "01" else '1';
+uart_ext_tx <= uart_tx;
+
 -- UART_RX synchronizer
 process(clk32)
 begin
     if rising_edge(clk32) then
-      uart_rxD(0) <= uart_rx;
+      uart_rxD(0) <= uart_rx_muxed;
       uart_rxD(1) <= uart_rxD(0);
       if uart_rxD(0) = uart_rxD(1) then
         uart_rx_filtered <= uart_rxD(1);
