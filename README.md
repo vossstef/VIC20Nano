@@ -5,7 +5,7 @@ The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/
 
 | Board      | FPGA       | support |Note|
 | ---        |        -   | -     |-|
-| [Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html)       | [GW1NR](https://www.gowinsemi.com/en/product/detail/38/)  |X |no C1541, no Tape, 8k or 16k memory expansion<br> micro SD card [HW modification](TANG_NANO_9K.md#hw-modification) ! needed|
+| [Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html)       | [GW1NR](https://www.gowinsemi.com/en/product/detail/38/)  |X |no C1541, Tape, Mega-Cart <br> 8k or 16k memory expansion<br> micro SD card [HW modification](TANG_NANO_9K.md#hw-modification) needed|
 | [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | X |- |
 | [Tang Primer 20K Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html)| [GW2A](https://www.gowinsemi.com/en/product/detail/46/)| X |- |
 | [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | X |no Dualshock, no Retro D9 Joystick |
