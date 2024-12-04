@@ -60,7 +60,6 @@ add_file src/vic20nano_top_tn20k.sdc
 add_file src/loader_sd_card.sv
 add_file src/c1530.vhd
 add_file src/fifo_sc_hs/fifo_sc_hs.vhd
-add_file src/core_timer.vhd
 add_file src/megacart.v
 
 set_option -synthesis_tool gowinsynthesis

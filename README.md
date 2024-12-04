@@ -7,10 +7,10 @@ The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/
 | ---        |        -   | -     |-|
 | [Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html)       | [GW1NR](https://www.gowinsemi.com/en/product/detail/38/)  |X |no C1541, no Tape, 8k or 16k memory expansion<br> micro SD card [HW modification](TANG_NANO_9K.md#hw-modification) ! needed|
 | [Tang Nano 20k](https://wiki.sipeed.com/nano20k)     | [GW2AR](https://www.gowinsemi.com/en/product/detail/38/)  | X |- |
-| [Tang Primer 20K with Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html)| [GW2A](https://www.gowinsemi.com/en/product/detail/46/)| X |- |
-| [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | X |no Dualshock 2, no Retro DB9 Joystick |
-| [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| X |dual Dualshock, selectable |
-| [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | X |dual Dualshock, selectable |
+| [Tang Primer 20K Dock ext Board](https://wiki.sipeed.com/hardware/en/tang/tang-primer-20k/primer-20k.html)| [GW2A](https://www.gowinsemi.com/en/product/detail/46/)| X |- |
+| [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  | X |no Dualshock, no Retro D9 Joystick |
+| [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)| X |two Dualshock, selectable |
+| [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) | X |two Dualshock, selectable |
 
 <br>
 
@@ -37,10 +37,11 @@ Features:
 * Direct BASIC program file (*.PRG) injection loader
 * Tape (*.TAP) image loader [C1530 Datasette](https://en.wikipedia.org/wiki/Commodore_Datasette)
 * Loadable 8K Kernal ROM (*.BIN)
+* Mega-Cart (*.ROM) loader
 * On Screen Display (OSD) for configuration and D64 image selection<br>
 * 3K, 8K, 16K, 24K, 32K RAM Expansion (35k with cardtridge RAM)<br>
 * 8K RAM at $A000 as loadable Cartridge Slot<br>
-* RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) to Tang onboard USB-C serial port.
+* RS232 Serial Interface [VIC-1011](http://www.zimmers.net/cbmpics/xother.html) to Tang onboard USB-C serial port or external hw pin.
 <br>
 <img src="./.assets/vic20nano.png" alt="image" width="80%" height="auto">
 <br>
@@ -86,14 +87,14 @@ JiffyDOS can be used as well known Speedloader. Change in OSD the c1541 DOS to J
 ## RAM Expansion
 Size and Region can be activated in several steps. A change takes effect immediately.<br>
 Take care to activate the correct size of needed expansion before you load *.PRG and *.TAP !
-|Expansion| $0400 3k | $2000 8k |$4000 8k |$6000 8k |
-| - | - | - |- |- |
-| Block | 0 | 1 |2 |3 |
-| 3k | x | - |- |- |
-| 8k | -  | x  |- |- |
-| 16k | -  | x |x |- |
-| 24k | -  | x  |x |x |
-| 32k(35k) | x  | x  |x |x |
+|Expansion| $0400 3k | $2000 8k |$4000 8k |$6000 8k |$A000 8k |
+| - | - | - |- |- |- |
+| Block | 0 | 1 |2 |3 |Cartridge|
+| 3k | x | - |- |- | |
+| 8k | -  | x  |- |- | |
+| 16k | -  | x |x |- | |
+| 24k | -  | x  |x |x | |
+| 35k | x  | x  |x |x |x|
 
 ## Cartridge ROM Loader (.PRG/.CRT)
 Cartrige ROM can be loaded via OSD file selection.<br>
@@ -102,7 +103,9 @@ Typical VIC20 Cartridge ROMS with ending .PRG have a two byte header indicating 
 8k Cartridges to be loadeded directly as such. 16k or larger Cartridges have to be loaded in several steps and the file with ending xyz-a000.prg have to be loaded last. First load xyz-2000.prg, xyz-4000.prg or xyz-6000.prg and then xyz-a000.prg at last. The Cartridge will start after that last step automatically.<br>
 Copy a 8K xyz-a000.prg ROM to your sdcard and rename it to **vic20crt.crt** as default boot cartridge.<br>
 > [!TIP]
-**Detach Cartridge** by OSD CRT selection **No Disk** and System **Cold Boot**.<br>
+**Detach Cartridge** by OSD :<br>
+```temporary``` **Cartridge unload & Reset**  
+```permanent``` **No Disk**, **Save settings** and System **Cold Boot**.<br>
 
 ## BASIC Program Loader (.PRG)
 A BASIC Program *.PRG file can be loaded via OSD file selection.<br>
@@ -157,6 +160,11 @@ Save setting and do a Cold Boot Reset.<br>
 ``` LOAD "xyz.A00",8,1```   (Block 5)<br>
 Start Game by command: SYS40960 (general start Address for Cartridge Slot)<br> or better perform a Reset via OSD.<br>
 There are also some cartridge games on D64 Image with a loader that themselves further reload the needed RAM regions and autostart (you have to activate RAM regions beforhand).<br> A loaded Cartridge can be exited by disabling memory region $A000 + Cold Reset via OSD. In order to trial another game just activate again (after reset !) the $A000 memory and load another game.
+
+## Mega-Cart (.ROM)
+The 2MB [Mega-Cart](https://www.retroisle.com/commodore/vic20/Articles/megacart.php) *.ROM can be loaded via OSD file selection. <br>
+If the Mega-Cart is used, then managing the RAM expansion configuration is done in its menu. NVRAM is not supported.
+
 ## Core Loader Sequencing
 The core will after power cycle/ cold-boot start downloading the images on the sdcard in the following order:
 > [!NOTE] 
@@ -188,7 +196,8 @@ invoke by F12 keypress<br>
 * c1541 Disk write protetcion<br>
 * c1541 Reset<br>
 * c1541 DOS ROM selection<br>
-* Loader (CRT/PRG/BIN) file selection<br>
+* Loader (CRT/PRG/BIN/TAP/ROM) file selection<br>
+* Cartridge unload
 
 ## Gamecontrol support
 legacy single D9 Digital Joystick. OSD: **Retro D9**<br>
@@ -228,14 +237,14 @@ Button **1 / 2** as Trigger<br>
 
 ## LED UI
 
-| LED | function        | TN20K | TP20K | TP25K |TM60k |TM138K |TN9k|
-| --- |        -        | -     |-      | -     |x done |-      |-|
-| 0   | c1541 activity  | x     |x      |  x    |x ready |x      |N/A|
-| 1   | D64 selected    | x     |x      | -     |- |x      |x|
-| 2   | CRT seleced     | x     |x      | -     |- |x      |x|
-| 3   | PRG selected    | x     |x      | -     |- |x      |x|
-| 4   | Kernal selected |x      |x      | -     |- |x      |x|
-| 5   | TAP selected    | x     |x      | -     |- |x      |N/A|
+| LED | function        | TN20K | TP20K | TP25K |TM60k     |TM138K Pro |TN9k|
+| -   |        -        | -     |-      | -     |-         |-          |-   |
+| 0   | c1541 activity  | x     |x      |  x    |x (done)  |x          |N/A |
+| 1   | D64 selected    | x     |x      |  x    |x (ready) |x          |N/A |
+| 2   | CRT seleced     | x     |x      | -     |-         |x          |x   |
+| 3   | PRG selected    | x     |x      | -     |-         |x          |x   |
+| 4   | Kernal selected | x     |x      | -     |-         |x          |x   |
+| 5   | TAP selected    | x     |x      | -     |-         |x          |N/A |
 
 Solid **<font color="red">red</font>** of the c1541 led after power-up indicates a missing DOS in Flash<br>
 
@@ -248,6 +257,16 @@ Solid **<font color="red">red</font>** of the c1541 led after power-up indicates
 ## RS232 Serial Interface 
 The Tang onboard USB-C serial port can be used for communication with the Userport Serial port [VIC-1011](http://www.zimmers.net/cbmpics/xother.html).<br>
 Terminal programs need the Kernal serial routines therefore select via OSD the CBM Kernal.<br> For a first start use 1200Baud and a Terminal program like [VIC term](https://github.com/sblendorio/victerm300) and on the PC side [Putty](https://www.putty.org).<br>
+OSD selection allows to change in between TANG USB-C port or external HW pin interface.<br>
+
+| Board      |RX (I) FPGA |TX (O) FPGA|Note|
+|  -         |   -    |   -  | -   |
+| TN20k      |31      | 77   |[pinmap](https://wiki.sipeed.com/hardware/en/tang/tang-nano-20k/nano-20k.html#Pin-diagram), misterynano io(6) / io(7)|
+| TP25k      |K5      | L5   | J4-6  J4-5, share M0S Dock PMOD|
+| TM60k NEO  |AB20    | AA19 | J24-6 J24-5, share M0S Dock PMOD |
+| TM138k Pro |H15     | H14  | J24-6 J24-5, share M0S Dock PMOD |
+
+Remember that in + out to be crossed to connect to external device. Level are 3V3 tolerant.
 
 ## Powering
 Prototype circuit with Keyboard can be powered by Tang USB-C connector from PC or a Power Supply Adapter. 

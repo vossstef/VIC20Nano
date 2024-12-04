@@ -30,7 +30,6 @@ entity VIC20_TOP_tp20k is
     sd_clk      : out std_logic;
     sd_cmd      : inout std_logic;
     sd_dat      : inout std_logic_vector(3 downto 0);
-    sd_det      : in std_logic;
     ws2812      : out std_logic;
       -- onboard DDR3
     DDR3_nCS    : out std_logic;
@@ -52,6 +51,11 @@ entity VIC20_TOP_tp20k is
     ds_mosi         : out std_logic;
     ds_miso         : in std_logic;
     ds_cs           : out std_logic;
+    -- Gamepad DualShock P1
+    ds2_clk       : out std_logic;
+    ds2_mosi      : out std_logic;
+    ds2_miso      : in std_logic;
+    ds2_cs        : out std_logic;
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -87,20 +91,14 @@ signal audio_data_l  : std_logic_vector(17 downto 0);
 signal audio_data_r  : std_logic_vector(17 downto 0);
 
 -- external memory
-signal c64_addr     : unsigned(15 downto 0);
-signal c64_data_out : unsigned(7 downto 0);
 signal sdram_data   : unsigned(7 downto 0);
 signal dout         : std_logic_vector(7 downto 0);
 signal idle         : std_logic;
 signal dram_addr    : std_logic_vector(22 downto 0);
 signal ram_ready    : std_logic := '1';
-signal cb_D         : std_logic;
---signal addr         : std_logic_vector(22 downto 0);
 signal cs           : std_logic;
 signal we           : std_logic;
 signal din          : std_logic_vector(7 downto 0);
-signal ds           : std_logic_vector(1 downto 0);
-
 -- IEC
 signal iec_data_o  : std_logic;
 signal iec_data_i  : std_logic;
@@ -222,6 +220,8 @@ signal vblank          : std_logic;
 
 signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
+signal paddle_3        : std_logic_vector(7 downto 0);
+signal paddle_4        : std_logic_vector(7 downto 0);
 signal key_r1          : std_logic;
 signal key_r2          : std_logic;
 signal key_l1          : std_logic;
@@ -237,6 +237,21 @@ signal key_right       : std_logic;
 signal key_start       : std_logic;
 signal key_select      : std_logic;
 signal ntscModeD       : std_logic;
+signal key_r12         : std_logic;
+signal key_r22         : std_logic;
+signal key_l12         : std_logic;
+signal key_l22         : std_logic;
+signal key_triangle2   : std_logic;
+signal key_square2     : std_logic;
+signal key_circle2     : std_logic;
+signal key_cross2      : std_logic;
+signal key_up2         : std_logic;
+signal key_down2       : std_logic;
+signal key_left2       : std_logic;
+signal key_right2      : std_logic;
+signal key_start2      : std_logic;
+signal key_select2     : std_logic;
+
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
@@ -314,25 +329,14 @@ signal tap_download   : std_logic;
 signal tap_reset      : std_logic;
 signal tap_loaded     : std_logic;
 signal tap_play_btn   : std_logic;
-signal tap_wrreq      : std_logic_vector(1 downto 0);
+signal tap_wrreq      : std_logic;
 signal tap_wrfull     : std_logic;
-signal tap_start      : std_logic;
-signal read_cyc       : std_logic := '0';
-signal tap_rd         : std_logic := '0';
-signal tap_data_ready : std_logic := '1';
+signal tap_autoplay   : std_logic;
+signal tap_sdram_oe   : std_logic := '0';
 signal tap_wr         : std_logic := '0';
 signal cass_aud       : std_logic;
 signal audio_l        : std_logic_vector(17 downto 0);
 signal audio_r        : std_logic_vector(17 downto 0);
-
-signal io_cycle        : std_logic;
-signal io_cycleD       : std_logic;
-signal io_cycle_rD     : std_logic;
-signal io_cycle_ce     : std_logic;
-signal io_cycle_we     : std_logic;
-signal io_cycle_addr   : std_logic_vector(22 downto 0);
-signal io_cycle_data   : std_logic_vector(7 downto 0);
-signal ioctl_req_wr    : std_logic := '0';
 signal img_present     : std_logic := '0';
 signal c1541_sd_rd     : std_logic;
 signal c1541_sd_wr     : std_logic;
@@ -346,7 +350,6 @@ signal meminit_check   : std_logic;
 signal ddr_busy        : std_logic; 
 signal testing         : std_logic; 
 signal uart_rx_d       : std_logic := '0';
-signal sd_det_a_d      : std_logic := '0';
 signal joystick0ax     : std_logic_vector(7 downto 0);
 signal joystick0ay     : std_logic_vector(7 downto 0);
 signal joystick1ax     : std_logic_vector(7 downto 0);
@@ -371,6 +374,8 @@ signal clkref            : std_logic;
 signal oe                : std_logic;
 signal system_reset_d    : std_logic;
 signal disk_pause        : std_logic;
+signal tap_data_in       : std_logic_vector(7 downto 0);
+signal p2_hD             : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -490,7 +495,7 @@ begin
 -- https://store.curiousinventor.com/guides/PS2/
 -- https://hackaday.io/project/170365-blueretro/log/186471-playstation-playstation-2-spi-interface
 
-gamepad: entity work.dualshock2
+gamepad_p1: entity work.dualshock2
     port map (
     clk           => clk32,
     rst           => resetvic20,
@@ -518,6 +523,40 @@ gamepad: entity work.dualshock2
     key_cross     => key_cross,
     key_start     => key_start,
     key_select    => key_select,
+    key_lstick    => open,
+    key_rstick    => open,
+    debug1        => open,
+    debug2        => open
+    );
+
+    gamepad_p2: entity work.dualshock2
+    port map (
+    clk           => clk32,
+    rst           => resetvic20,
+    vsync         => vsync,
+    ds2_dat       => ds2_miso,
+    ds2_cmd       => ds2_mosi,
+    ds2_att       => ds2_cs,
+    ds2_clk       => ds2_clk,
+    ds2_ack       => '0',
+    stick_lx      => paddle_3,
+    stick_ly      => paddle_4,
+    stick_rx      => open,
+    stick_ry      => open,
+    key_up        => key_up2,
+    key_down      => key_down2,
+    key_left      => key_left2,
+    key_right     => key_right2,
+    key_l1        => key_l12,
+    key_l2        => key_l22,
+    key_r1        => key_r12,
+    key_r2        => key_r22,
+    key_triangle  => key_triangle2,
+    key_square    => key_square2,
+    key_circle    => key_circle2,
+    key_cross     => key_cross2,
+    key_start     => key_start2,
+    key_select    => key_select2,
     key_lstick    => open,
     key_rstick    => open,
     debug1        => open,
@@ -752,6 +791,13 @@ port map(
       tmds_d_p   => tmds_d_p
       );
 
+-- MegaCart and Tape
+we <= ioctl_wr_d when (ioctl_download and (load_mc or load_tap)) else (not mc_nvram_sel and extmem_sel and not mc_wr_n);
+oe <= '0' when (ioctl_download and load_mc ) else '1' when tap_sdram_oe else (not mc_nvram_sel and extmem_sel and mc_wr_n);
+din <= ioctl_data when (ioctl_download and (load_mc or load_tap)) else vic_data;
+dram_addr <= ioctl_addr when (ioctl_download and (load_mc or load_tap)) else mc_addr when mc_loaded = '1' else tap_play_addr;
+clkref <= ioctl_wr when ioctl_download else p2_h;
+
 -- ddr3 Memory initialization control
 memtest_inst : entity work.memtest
 port map(
@@ -776,10 +822,10 @@ port map(
   ck         => clk_pixel_x10_90, -- 90-degree shifted fclk for memory clock
   resetn     => mem_resetn,
   refresh    => idle, 
-  read       => io_cycle_ce,
-  write      => io_cycle_we,
-  addr       => io_cycle_addr(21 downto 0),
-  din        => io_cycle_data,
+  read       => oe,
+  write      => we,
+  addr       => dram_addr(21 downto 0),
+  din        => din,
   dout       => sdram_out,
 
   busy       => ddr_busy,
@@ -988,12 +1034,14 @@ leds(0) <= led1541;
 --                    6   5  4  3  2  1  0
 --                  TR3 TR2 TR RI LE DN UP digital c64 
 joyDS2_p1  <= key_circle  & key_cross  & key_square  & key_right  & key_left  & key_down  & key_up;
+joyDS2_p2  <= key_circle2 & key_cross2 & key_square2 & key_right2 & key_left2 & key_down2 & key_up2;
 joyDigital <= not('1' & '1' & io(0) & io(3) & io(4) & io(1) & io(2));
 joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3);
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
 joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00"; -- DS2 left stick
+joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00"; 
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
@@ -1013,20 +1061,24 @@ begin
       when "0110"  => joyA <= joyDS2A_p1;
       when "0111"  => joyA <= joyUsb1A;
       when "1000"  => joyA <= joyUsb2A;
-      when "1001"  => joyA <= (others => '0');
+      when "1001"  => joyA <= (others => '0');--9
+      when "1010"  => joyA <= joyDS2_p2;   -- 10
+      when "1011"  => joyA <= joyDS2A_p2;  -- 11
       when others  => joyA <= (others => '0');
-    end case;
+      end case;
   end if;
 end process;
 
 -- paddle pins - mouse
 pot1 <= not paddle_1 when port_1_sel = "0110" else 
+        not paddle_3 when port_1_sel = "1011" else
         joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else
         joystick2_x_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
         x"ff";
 
-pot2 <= not paddle_2 when port_1_sel = "0110" else 
+pot2 <= not paddle_2 when port_1_sel = "0110" else
+        not paddle_4 when port_1_sel = "1011" else
         joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else 
         joystick2_y_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
@@ -1195,7 +1247,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= not ram_ready or system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1304,7 +1356,7 @@ vic_inst: entity work.VIC20
     ioctl_addr        => ioctl_addr,
     ioctl_data        => ioctl_data,
     ioctl_wr          => ioctl_wr,
-    ioctl_wait        => ioctl_req_wr
+    ioctl_wait        => '0'
   );
 
 process(clk32)
@@ -1312,38 +1364,14 @@ begin
   if rising_edge(clk32) then
     dl_wr <= '0';
     old_download <= ioctl_download;
-    io_cycleD <= io_cycle;
     ioctl_wr_d <= ioctl_wr;
     system_reset_d <= system_reset(1);
 
-    if not system_reset_d and system_reset(1) then
-      ioctl_req_wr <= '0'; 
-    end if;
-
-    if io_cycle = '0' and io_cycleD = '1' and ddr_busy = '0' then
-      io_cycle_ce <= '1';
-      io_cycle_we <= '0';
-      io_cycle_addr <= tap_play_addr + TAP_ADDR;
-      if ioctl_req_wr = '1' and ddr_busy = '0' then
-         ioctl_req_wr <= '0';
-         io_cycle_ce <= '0'; -- DDR3 memory controller needed
-         io_cycle_we <= '1';
-         io_cycle_addr <= ioctl_load_addr;
-         ioctl_load_addr <= ioctl_load_addr + 1;
-         io_cycle_data <= ioctl_data;
-        end if;
-       end if;
-
-    if io_cycle = '1' and io_cycleD = '1' then
-      io_cycle_ce <= '0';
-      io_cycle_we <= '0';
-    end if;
-
-    if ioctl_wr = '1' and ioctl_download = '1' and load_tap = '1' then
+    tap_wr <= '0';
+    if (ioctl_wr and ioctl_download and load_tap) = '1' then
       state <= x"0";
-      if ioctl_addr = 0  then ioctl_load_addr <= TAP_ADDR; end if;
       if ioctl_addr = 12 then tap_version <= ioctl_data(1 downto 0); end if;
-      ioctl_req_wr <= '1';
+      tap_wr <= '1';
     end if;
 
     if ioctl_download and load_prg then
@@ -1424,7 +1452,7 @@ begin
 
     if (ioctl_download and load_crt) = '1' or detach_reset = '1' then
       mc_loaded <= '0';
-    elsif ioctl_download and load_mc then 
+    elsif (ioctl_download and load_mc) = '1' then 
       mc_loaded <= '1';
     end if;
 
@@ -1477,40 +1505,39 @@ port map
 -- );
 
 -------------- TAP -------------------
-timer_inst: entity work.core_timer
-port map (
-  clk32       => clk32,
-
-	io_cycle    => io_cycle,
-	refresh     => idle
-);
 
 tap_download <= ioctl_download and load_tap;
-tap_reset <= '1' when resetvic20 = '1' or tap_download = '1'or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
+tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
 tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
-  if rising_edge(clk32) then
-      io_cycle_rD <= io_cycle;
-      tap_wrreq(0) <= '0';
+if rising_edge(clk32) then
       if tap_reset = '1' then
-        read_cyc <= '0';
         tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
         tap_play_addr <= (others => '0');
-        tap_start <= tap_download;
-      else
-        tap_start <= '0';
-        if io_cycle = '0' and io_cycle_rD = '1' and tap_wrfull = '0' and tap_loaded = '1' then
-            read_cyc <= '1';
-          end if;
-        if io_cycle = '1' and io_cycle_rD = '1' and read_cyc = '1' then
-            tap_play_addr <= tap_play_addr + 1;
-            read_cyc <= '0';
-            tap_wrreq(0) <= '1';
-          end if;
-      end if;
-  end if;
+        tap_sdram_oe <= '0';
+        tap_autoplay <= tap_download;
+    else
+        tap_autoplay <= '0';
+        p2_hD <= p2_h;
+        tap_wrreq <= '0';
+
+        if p2_hD and not p2_h and not tap_download and tap_loaded and not tap_wrfull then 
+          tap_sdram_oe <= '1'; 
+        end if;
+
+        if tap_sdram_oe then 
+          tap_data_in <= sdram_out;
+        end if;
+
+        if p2_h and not p2_hD and tap_sdram_oe then
+          tap_play_addr <= tap_play_addr + 1;
+          tap_sdram_oe <= '0';
+          tap_wrreq <= '1';
+        end if;
+        end if;
+    end if;
 end process;
 
 c1530_inst: entity work.c1530
@@ -1519,8 +1546,8 @@ port map (
   restart_tape    => tap_reset,
   wav_mode        => '0',
   tap_version     => tap_version,
-  host_tap_in     => sdram_out,
-  host_tap_wrreq  => tap_wrreq(0),
+  host_tap_in     => tap_data_in,
+  host_tap_wrreq  => tap_wrreq,
   tap_fifo_wrfull => tap_wrfull,
   tap_fifo_error  => cass_finish,
   cass_read       => cass_read,
@@ -1528,7 +1555,7 @@ port map (
   cass_motor      => cass_motor,
   cass_sense      => cass_sense,
   cass_run        => cass_run,
-  osd_play_stop_toggle => tap_start,
+  osd_play_stop_toggle => tap_autoplay,
   ear_input       => '0'
 );
 

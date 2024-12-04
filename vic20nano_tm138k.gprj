@@ -34,13 +34,12 @@
         <File path="src/misc/video.v" type="file.verilog" enable="1"/>
         <File path="src/misc/video_analyzer.v" type="file.verilog" enable="1"/>
         <File path="src/misc/ws2812.v" type="file.verilog" enable="1"/>
-        <File path="src/sdram.v" type="file.verilog" enable="1"/>
+        <File path="src/sdram.sv" type="file.verilog" enable="1"/>
         <File path="src/c1530.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_logic.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_sd.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/gcr_floppy.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/via6522.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/core_timer.vhd" type="file.vhdl" enable="1"/>
         <File path="src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_dpb/gowin_dpb_1k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/gowin_dpb/gowin_dpb_1k_x4.vhd" type="file.vhdl" enable="1"/>

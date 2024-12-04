@@ -20,7 +20,8 @@ In order to use the SD card for disks:
   - BASIC Program files in .PRG format
   - Tape images in .TAP format
   - VIC20 Kernal files (8K) in .BIN format
-
+  - Mega-Cart file (2MB) in .ROM format
+  
 # Flashing the Tang Nano 20k
 
 First download the Gowin IDE. The Education version is sufficient and
@@ -183,5 +184,6 @@ Copy a *.D64 Disk image to your sdcard and rename it to disk8.d64 as default c15
 Copy a 8K xyz-a000.prg Cartridge ROM to your sdcard and rename it to vic20crt.crt as default Cartridge boot image.  
 Copy a *.PRG BASIC file to your sdcard and rename it to vic20prg.prg as default Program boot image.  
 Copy a 8k Byte VIC20 Kernal ROM file *.BIN to your sdcard and rename it to vic20kernal.bin as default Kernal boot image.
-Copy a *.TAP Type image to your sdcard and rename it to vic20tap.tap as default tape boot image. 
+Copy a *.TAP Type image to your sdcard.
+Copy a *.ROM (Mega-Cart) image to your sdcard.
 That´s it for now. Have fun using the VIC20Nano
