@@ -19,6 +19,9 @@ entity VIC20_TOP_tp20k is
     io          : in std_logic_vector(4 downto 0);
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
+    -- external hw pin UART
+ --   uart_ext_rx : in std_logic;
+ --   uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
     --
@@ -376,6 +379,10 @@ signal system_reset_d    : std_logic;
 signal disk_pause        : std_logic;
 signal tap_data_in       : std_logic_vector(7 downto 0);
 signal p2_hD             : std_logic;
+signal system_uart       : std_logic_vector(1 downto 0);
+signal uart_rx_muxed     : std_logic;
+signal uart_ext_rx       : std_logic;
+signal uart_ext_tx       : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -1203,6 +1210,7 @@ module_inst: entity work.sysctrl
   system_crt_write    => crt_writeable,
   system_detach_reset => detach_reset,
   cold_boot           => open,
+  system_uart         => system_uart,
 
   int_out_n           => m0s(4),
   int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
@@ -1559,11 +1567,15 @@ port map (
   ear_input       => '0'
 );
 
+-- external HW pin UART interface
+uart_rx_muxed <= uart_rx when system_uart = "00" else uart_ext_rx when system_uart = "01" else '1';
+uart_ext_tx <= uart_tx;
+
 -- UART_RX synchronizer
 process(clk32)
 begin
     if rising_edge(clk32) then
-      uart_rxD(0) <= uart_rx;
+      uart_rxD(0) <= uart_rx_muxed;
       uart_rxD(1) <= uart_rxD(0);
       if uart_rxD(0) = uart_rxD(1) then
         uart_rx_filtered <= uart_rxD(1);

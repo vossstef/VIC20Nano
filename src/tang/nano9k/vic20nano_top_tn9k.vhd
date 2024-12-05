@@ -549,7 +549,7 @@ dram_addr <= ioctl_addr when (ioctl_download and (load_mc or load_tap)) else mc_
 clkref <= ioctl_wr when ioctl_download else p2_h;
 
 O_psram_reset_n <= pll_locked & pll_locked;
-sdram_out <= dout16(7 downto 0);
+sdram_out <= dout16( 7 downto 0) when dram_addr(0) = '0' else dout16(15 downto 8);
 
   dram_inst: entity work.PsramController
     generic map (
@@ -563,8 +563,8 @@ sdram_out <= dout16(7 downto 0);
       resetn        => pll_locked,
       read          => oe,
       write         => we,
-      byte_write    => '0',
-      addr          => dram_addr(20 downto 0) & '0',
+      byte_write    => '1',
+      addr          => dram_addr(21 downto 0),
       din           => din & din,
       dout          => dout16,
       busy          => drambusy,
