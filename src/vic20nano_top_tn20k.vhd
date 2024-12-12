@@ -678,7 +678,7 @@ port map(
 we <= ioctl_wr_d when (ioctl_download and (load_mc or load_tap)) else (not mc_nvram_sel and extmem_sel and not mc_wr_n);
 oe <= '0' when (ioctl_download and load_mc ) else '1' when tap_sdram_oe else (not mc_nvram_sel and extmem_sel and mc_wr_n);
 din <= ioctl_data when (ioctl_download and (load_mc or load_tap)) else vic_data;
-dram_addr <= ioctl_addr when (ioctl_download and (load_mc or load_tap)) else mc_addr when mc_loaded = '1' else tap_play_addr;
+dram_addr <= ioctl_addr when (ioctl_download and load_mc) else ioctl_addr + TAP_ADDR when (ioctl_download and load_tap) else mc_addr when mc_loaded = '1' else tap_play_addr;
 clkref <= ioctl_wr when ioctl_download else p2_h;
 
 -- TM60k / 138k swap DRAM / DDR3
@@ -1066,7 +1066,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= system_reset(0) or not pll_locked or detach_reset or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1301,40 +1301,43 @@ port map
 	mc_soft_reset   => mc_reset
 );
 
--- 8k megacart NVRAM
--- TM60k / TM138k
---mc_nvram_inst: entity work.Gowin_DPB_8k
+--mc_nvram_inst: entity work.megacart_nvram
 --    port map (
---        douta   => mc_nvram_out,
---        doutb   => sd_buff_din(0),
---        clka    => clk32,
---        ocea    => '1',
---        cea     => '1',
---        reseta  => '0',
---        wrea    => mc_nvram_sel and not mc_wr_n,
---        clkb    => clk32,
---        oceb    => '1',
---        ceb     => '1',
---        resetb  => '0',
---        wreb    => insd_buff_wr and sd_ack(0),
---        ada     => vic_addr,
---        dina    => vic_data,
---        adb     => sd_buff_addr,
---        dinb    => sd_buff_dout
--- );
+--	clk_a          => clk32,
+--	reset_n        => pll_locked and not st_cart_unload,
+--	a_a            => sdram_vic20_a,
+--	d_a            => from_vic,
+--	q_a            => mc_nvram_out,
+--	we_a           => mc_nvram_sel and  not mc_sdram_wr_n,
+-- UserIO interface
+--	clk_b          => clk32,
+--	readnv         => img_mounted(1),
+--	writenv        => st_writenv,
+--	uio_busy       => sd_busy_1541,
+--	nvram_sel      => uio_sel_nvram,
+--	sd_lba         => sd_lba_nvram,
+--	sd_rd          => sd_rd_nvram,
+--	sd_wr          => sd_wr_nvram,
+--	sd_ack         => sd_ack_nvram,
+--	sd_buff_din    => sd_din_nvram,
+--	sd_buff_dout   => sd_dout,
+--	sd_buff_wr     => sd_strobe_nvram,
+--	sd_buff_addr   => sd_buff_addr,
+--	img_size       => img_size
+--);
 
 -------------- TAP -------------------
 
 tap_download <= ioctl_download and load_tap;
-tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
+tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = TAP_ADDR or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
 tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
 if rising_edge(clk32) then
       if tap_reset = '1' then
-        tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
-        tap_play_addr <= (others => '0');
+        tap_last_addr <= ioctl_addr + 2 + TAP_ADDR when tap_download = '1' else TAP_ADDR;
+        tap_play_addr <= TAP_ADDR;
         tap_sdram_oe <= '0';
         tap_autoplay <= tap_download;
     else

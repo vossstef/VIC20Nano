@@ -107,8 +107,10 @@ signal joyDigital   : std_logic_vector(6 downto 0);
 signal joyNumpad    : std_logic_vector(6 downto 0);
 signal joyMouse     : std_logic_vector(6 downto 0);
 signal joyDS2A_p1   : std_logic_vector(6 downto 0); 
+signal joyDS2A_p2   : std_logic_vector(6 downto 0); 
 signal numpad       : std_logic_vector(7 downto 0);
 signal joyDS2_p1    : std_logic_vector(6 downto 0);
+signal joyDS2_p2    : std_logic_vector(6 downto 0);
 -- joystick interface
 signal joyA        : std_logic_vector(6 downto 0);
 signal port_1_sel  : std_logic_vector(3 downto 0);
@@ -207,6 +209,8 @@ signal vblank          : std_logic;
 
 signal paddle_1        : std_logic_vector(7 downto 0);
 signal paddle_2        : std_logic_vector(7 downto 0);
+signal paddle_3        : std_logic_vector(7 downto 0);
+signal paddle_4        : std_logic_vector(7 downto 0);
 signal key_r1          : std_logic;
 signal key_r2          : std_logic;
 signal key_l1          : std_logic;
@@ -587,7 +591,7 @@ port map(
 we <= ioctl_wr_d when (ioctl_download and (load_mc or load_tap)) else (not mc_nvram_sel and extmem_sel and not mc_wr_n);
 oe <= '0' when (ioctl_download and load_mc ) else '1' when tap_sdram_oe else (not mc_nvram_sel and extmem_sel and mc_wr_n);
 din <= ioctl_data when (ioctl_download and (load_mc or load_tap)) else vic_data;
-dram_addr <= ioctl_addr when (ioctl_download and (load_mc or load_tap)) else mc_addr when mc_loaded = '1' else tap_play_addr;
+dram_addr <= ioctl_addr when (ioctl_download and load_mc) else ioctl_addr + TAP_ADDR when (ioctl_download and load_tap) else mc_addr when mc_loaded = '1' else tap_play_addr;
 clkref <= ioctl_wr when ioctl_download else p2_h;
 
 dram_inst_mist: entity work.sdram
@@ -720,20 +724,24 @@ begin
       when "0110"  => joyA <= joyDS2A_p1;
       when "0111"  => joyA <= joyUsb1A;
       when "1000"  => joyA <= joyUsb2A;
-      when "1001"  => joyA <= (others => '0');
+      when "1001"  => joyA <= (others => '0');--9
+      when "1010"  => joyA <= joyDS2_p2;   -- 10
+      when "1011"  => joyA <= joyDS2A_p2;  -- 11
       when others  => joyA <= (others => '0');
-    end case;
+      end case;
   end if;
 end process;
 
 -- paddle pins - mouse
 pot1 <= not paddle_1 when port_1_sel = "0110" else 
+        not paddle_3 when port_1_sel = "1011" else
         joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else
         joystick2_x_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
         x"ff";
 
-pot2 <= not paddle_2 when port_1_sel = "0110" else 
+pot2 <= not paddle_2 when port_1_sel = "0110" else
+        not paddle_4 when port_1_sel = "1011" else
         joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else 
         joystick2_y_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
@@ -1130,40 +1138,43 @@ port map
 	mc_soft_reset   => mc_reset
 );
 
--- 8k megacart NVRAM
--- TM60k / TM138k
 --mc_nvram_inst: entity work.Gowin_DPB_8k
 --    port map (
---        douta   => mc_nvram_out,
---        doutb   => sd_buff_din(0),
---        clka    => clk32,
---        ocea    => '1',
---        cea     => '1',
---        reseta  => '0',
---        wrea    => mc_nvram_sel and not mc_wr_n,
---        clkb    => clk32,
---        oceb    => '1',
---        ceb     => '1',
---        resetb  => '0',
---        wreb    => insd_buff_wr and sd_ack(0),
---        ada     => vic_addr,
---        dina    => vic_data,
---        adb     => sd_buff_addr,
---        dinb    => sd_buff_dout
--- );
+--	clk_a          => clk32,
+--	reset_n        => pll_locked and not st_cart_unload,
+--	a_a            => sdram_vic20_a,
+--	d_a            => from_vic,
+--	q_a            => mc_nvram_out,
+--	we_a           => mc_nvram_sel and  not mc_sdram_wr_n,
+-- UserIO interface
+--	clk_b          => clk32,
+--	readnv         => img_mounted(1),
+--	writenv        => st_writenv,
+--	uio_busy       => sd_busy_1541,
+--	nvram_sel      => uio_sel_nvram,
+--	sd_lba         => sd_lba_nvram,
+--	sd_rd          => sd_rd_nvram,
+--	sd_wr          => sd_wr_nvram,
+--	sd_ack         => sd_ack_nvram,
+--	sd_buff_din    => sd_din_nvram,
+--	sd_buff_dout   => sd_dout,
+--	sd_buff_wr     => sd_strobe_nvram,
+--	sd_buff_addr   => sd_buff_addr,
+--	img_size       => img_size
+--);
 
 -------------- TAP -------------------
 
 tap_download <= ioctl_download and load_tap;
-tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
+tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = TAP_ADDR or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
 tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
-  if rising_edge(clk32) then
-    if tap_reset = '1' then
-        tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
-        tap_play_addr <= (others => '0');
+if rising_edge(clk32) then
+      if tap_reset = '1' then
+        tap_last_addr <= ioctl_addr + 2 + TAP_ADDR when tap_download = '1' else TAP_ADDR;
+        tap_play_addr <= TAP_ADDR;
         tap_sdram_oe <= '0';
         tap_autoplay <= tap_download;
     else
@@ -1184,8 +1195,8 @@ begin
           tap_sdram_oe <= '0';
           tap_wrreq <= '1';
         end if;
+        end if;
     end if;
-  end if;
 end process;
 
 c1530_inst: entity work.c1530
