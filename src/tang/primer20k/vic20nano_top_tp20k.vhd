@@ -800,7 +800,7 @@ port map(
 we <= ioctl_wr_d when (ioctl_download and (load_mc or load_tap)) else (not mc_nvram_sel and extmem_sel and not mc_wr_n);
 oe <= '0' when (ioctl_download and load_mc ) else '1' when tap_sdram_oe else (not mc_nvram_sel and extmem_sel and mc_wr_n);
 din <= ioctl_data when (ioctl_download and (load_mc or load_tap)) else vic_data;
-dram_addr <= ioctl_addr when (ioctl_download and load_mc) else ioctl_addr + TAP_ADDR when (ioctl_download and load_tap) else mc_addr when mc_loaded = '1' else tap_play_addr;
+dram_addr <= ioctl_addr when (ioctl_download and (load_mc or load_tap)) else mc_addr when mc_loaded = '1' else tap_play_addr;
 clkref <= ioctl_wr when ioctl_download else p2_h;
 
 -- ddr3 Memory initialization control
@@ -1488,43 +1488,44 @@ port map
 	mc_soft_reset   => mc_reset
 );
 
---mc_nvram_inst: entity work.megacart_nvram
---    port map (
---	clk_a          => clk32,
---	reset_n        => pll_locked and not st_cart_unload,
---	a_a            => sdram_vic20_a,
---	d_a            => from_vic,
---	q_a            => mc_nvram_out,
---	we_a           => mc_nvram_sel and  not mc_sdram_wr_n,
+mc_nvram_inst: entity work.megacart_nvram
+   port map (
+	clk_a          => clk32,
+	a_a            => vic_addr(12 downto 0), -- sdram_vic20_a,
+	d_a            => vic_data,
+	q_a            => mc_nvram_out,
+	we_a           => mc_nvram_sel and not mc_wr_n,
+
 -- UserIO interface
---	clk_b          => clk32,
---	readnv         => img_mounted(1),
---	writenv        => st_writenv,
---	uio_busy       => sd_busy_1541,
---	nvram_sel      => uio_sel_nvram,
---	sd_lba         => sd_lba_nvram,
---	sd_rd          => sd_rd_nvram,
---	sd_wr          => sd_wr_nvram,
---	sd_ack         => sd_ack_nvram,
---	sd_buff_din    => sd_din_nvram,
---	sd_buff_dout   => sd_dout,
---	sd_buff_wr     => sd_strobe_nvram,
---	sd_buff_addr   => sd_buff_addr,
---	img_size       => img_size
---);
+	clk_b          => clk32,
+	reset_n        => pll_locked,
+	readnv         => '0', -- img_mounted(1),
+	writenv        => '0', -- st_writenv,
+	uio_busy       => '0' ,-- sd_busy_1541,
+	nvram_sel      => open, -- uio_sel_nvram,
+	sd_lba         => open, -- sd_lba_nvram,
+	sd_rd          => open, -- sd_rd_nvram,
+	sd_wr          => open, -- sd_wr_nvram,
+	sd_ack         => '0', -- sd_ack_nvram,
+	sd_buff_din    => open, -- sd_din_nvram,
+	sd_buff_dout   => (others => '0'), -- sd_dout,
+	sd_buff_wr     => '0', --sd_strobe_nvram,
+	sd_buff_addr   => (others => '0'), -- sd_buff_addr,
+	img_size       => (others => '0') --img_size
+);
 
 -------------- TAP -------------------
 
 tap_download <= ioctl_download and load_tap;
-tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = TAP_ADDR or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
+tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
 tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
-if rising_edge(clk32) then
+ if rising_edge(clk32) then
       if tap_reset = '1' then
-        tap_last_addr <= ioctl_addr + 2 + TAP_ADDR when tap_download = '1' else TAP_ADDR;
-        tap_play_addr <= TAP_ADDR;
+        tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
+        tap_play_addr <= (others => '0');
         tap_sdram_oe <= '0';
         tap_autoplay <= tap_download;
     else
@@ -1534,19 +1535,19 @@ if rising_edge(clk32) then
 
         if p2_hD and not p2_h and not tap_download and tap_loaded and not tap_wrfull then 
           tap_sdram_oe <= '1'; 
-        end if;
+      end if;
 
         if tap_sdram_oe then 
           tap_data_in <= sdram_out;
-        end if;
+      end if;
 
-        if p2_h and not p2_hD and tap_sdram_oe then
+      if p2_h and not p2_hD and tap_sdram_oe then
           tap_play_addr <= tap_play_addr + 1;
           tap_sdram_oe <= '0';
           tap_wrreq <= '1';
-        end if;
-        end if;
+      end if;
     end if;
+ end if;
 end process;
 
 c1530_inst: entity work.c1530
