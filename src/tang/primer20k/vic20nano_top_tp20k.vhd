@@ -20,8 +20,8 @@ entity VIC20_TOP_tp20k is
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
     -- external hw pin UART
-    uart_ext_rx : in std_logic;
-    uart_ext_tx : out std_logic;
+ --   uart_ext_rx : in std_logic;
+ --   uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
     --
@@ -379,8 +379,10 @@ signal system_reset_d    : std_logic;
 signal disk_pause        : std_logic;
 signal tap_data_in       : std_logic_vector(7 downto 0);
 signal p2_hD             : std_logic;
-signal system_uart     : std_logic_vector(1 downto 0);
-signal uart_rx_muxed   : std_logic;
+signal system_uart       : std_logic_vector(1 downto 0);
+signal uart_rx_muxed     : std_logic;
+signal uart_ext_rx       : std_logic;
+signal uart_ext_tx       : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -1231,7 +1233,7 @@ module_inst: entity work.sysctrl
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => pll_locked,
+    resetn    => flash_lock,
     ready     => open,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),
@@ -1253,7 +1255,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1491,7 +1493,7 @@ port map
 mc_nvram_inst: entity work.megacart_nvram
    port map (
 	clk_a          => clk32,
-	a_a            => vic_addr(12 downto 0), -- sdram_vic20_a,
+	a_a            => vic_addr(12 downto 0),
 	d_a            => vic_data,
 	q_a            => mc_nvram_out,
 	we_a           => mc_nvram_sel and not mc_wr_n,
@@ -1517,15 +1519,15 @@ mc_nvram_inst: entity work.megacart_nvram
 -------------- TAP -------------------
 
 tap_download <= ioctl_download and load_tap;
-tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
+tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = TAP_ADDR or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
 tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
  if rising_edge(clk32) then
       if tap_reset = '1' then
-        tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
-        tap_play_addr <= (others => '0');
+        tap_last_addr <= ioctl_addr + 2 + TAP_ADDR when tap_download = '1' else TAP_ADDR;
+        tap_play_addr <= TAP_ADDR;
         tap_sdram_oe <= '0';
         tap_autoplay <= tap_download;
     else
@@ -1535,17 +1537,17 @@ begin
 
         if p2_hD and not p2_h and not tap_download and tap_loaded and not tap_wrfull then 
           tap_sdram_oe <= '1'; 
-      end if;
+        end if;
 
         if tap_sdram_oe then 
           tap_data_in <= sdram_out;
-      end if;
+        end if;
 
-      if p2_h and not p2_hD and tap_sdram_oe then
-          tap_play_addr <= tap_play_addr + 1;
-          tap_sdram_oe <= '0';
-          tap_wrreq <= '1';
-      end if;
+        if p2_h and not p2_hD and tap_sdram_oe then
+            tap_play_addr <= tap_play_addr + 1;
+            tap_sdram_oe <= '0';
+            tap_wrreq <= '1';
+        end if;
     end if;
  end if;
 end process;

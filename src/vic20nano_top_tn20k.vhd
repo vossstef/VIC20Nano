@@ -1066,7 +1066,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1301,30 +1301,30 @@ port map
 	mc_soft_reset   => mc_reset
 );
 
---mc_nvram_inst: entity work.megacart_nvram
---    port map (
---	clk_a          => clk32,
---	reset_n        => pll_locked and not st_cart_unload,
---	a_a            => sdram_vic20_a,
---	d_a            => from_vic,
---	q_a            => mc_nvram_out,
---	we_a           => mc_nvram_sel and  not mc_sdram_wr_n,
--- UserIO interface
---	clk_b          => clk32,
---	readnv         => img_mounted(1),
---	writenv        => st_writenv,
---	uio_busy       => sd_busy_1541,
---	nvram_sel      => uio_sel_nvram,
---	sd_lba         => sd_lba_nvram,
---	sd_rd          => sd_rd_nvram,
---	sd_wr          => sd_wr_nvram,
---	sd_ack         => sd_ack_nvram,
---	sd_buff_din    => sd_din_nvram,
---	sd_buff_dout   => sd_dout,
---	sd_buff_wr     => sd_strobe_nvram,
---	sd_buff_addr   => sd_buff_addr,
---	img_size       => img_size
---);
+mc_nvram_inst: entity work.megacart_nvram
+   port map (
+	clk_a          => clk32,
+	a_a            => vic_addr(12 downto 0),
+	d_a            => vic_data,
+	q_a            => mc_nvram_out,
+	we_a           => mc_nvram_sel and not mc_wr_n,
+	-- UserIO interface
+	clk_b          => clk32,
+	reset_n        => system_reset(0),
+	readnv         => '0', -- img_mounted(1),
+	writenv        => '0', -- st_writenv,
+	uio_busy       => '0' ,-- sd_busy_1541,
+	nvram_sel      => open, -- uio_sel_nvram,
+	sd_lba         => open, -- sd_lba_nvram,
+	sd_rd          => open, -- sd_rd_nvram,
+	sd_wr          => open, -- sd_wr_nvram,
+	sd_ack         => '0', -- sd_ack_nvram,
+	sd_buff_din    => open, -- sd_din_nvram,
+	sd_buff_dout   => sd_rd_data,
+	sd_buff_wr     => '0', --sd_strobe_nvram,
+	sd_buff_addr   => sd_byte_index,
+	img_size       => sd_img_size
+);
 
 -------------- TAP -------------------
 

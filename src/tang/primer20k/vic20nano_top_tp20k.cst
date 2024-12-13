@@ -186,10 +186,10 @@ IO_PORT "DDR3_DQ[0]" IO_TYPE=SSTL15 PULL_MODE=NONE DRIVE=8 VREF=INTERNAL BANK_VC
 // M0S Dock BL616
 
 // external UART hw pin
-IO_PORT "uart_ext_rx" PULL_MODE=UP IO_TYPE=LVCMOS33; // UART RX
-IO_LOC "uart_ext_rx" P9;
-IO_PORT "uart_ext_tx" PULL_MODE=NONE IO_TYPE=LVCMOS33; // UART TX
-IO_LOC "uart_ext_tx" P8;  // T9 already in use !
+//IO_PORT "uart_ext_rx" PULL_MODE=UP IO_TYPE=LVCMOS33; // UART RX
+//IO_LOC "uart_ext_rx" P9;
+//IO_PORT "uart_ext_tx" PULL_MODE=NONE IO_TYPE=LVCMOS33; // UART TX
+//IO_LOC "uart_ext_tx" P8;  // T9 already in use !
 
 //IO_LOC "m0s[5]" P8; // unused
 //IO_PORT "m0s[5]" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
