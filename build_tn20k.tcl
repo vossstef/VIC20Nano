@@ -61,6 +61,7 @@ add_file src/loader_sd_card.sv
 add_file src/c1530.vhd
 add_file src/fifo_sc_hs/fifo_sc_hs.vhd
 add_file src/megacart.v
+add_file src/megacart_nvram.v
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name vic20nano_tn20k
