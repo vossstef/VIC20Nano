@@ -20,8 +20,8 @@ entity VIC20_TOP_tp20k is
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
     -- external hw pin UART
- --   uart_ext_rx : in std_logic;
- --   uart_ext_tx : out std_logic;
+    uart_ext_rx : in std_logic;
+    uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
     --
@@ -381,8 +381,8 @@ signal tap_data_in       : std_logic_vector(7 downto 0);
 signal p2_hD             : std_logic;
 signal system_uart       : std_logic_vector(1 downto 0);
 signal uart_rx_muxed     : std_logic;
-signal uart_ext_rx       : std_logic;
-signal uart_ext_tx       : std_logic;
+--signal uart_ext_rx       : std_logic;
+--signal uart_ext_tx       : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -1233,7 +1233,7 @@ module_inst: entity work.sysctrl
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => pll_locked,
+    resetn    => flash_lock,
     ready     => open,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),
@@ -1255,7 +1255,7 @@ ext_ro <=   (cart_blk(4) and not crt_writeable)
 i_ram_ext_ro <= "00000" when mc_loaded else ext_ro;
 i_ram_ext <= "11111" when mc_loaded else extram or cart_blk;
 
-resetvic20 <= system_reset(0) or not flash_lock or not pll_locked or detach_reset or cart_reset or mc_reset;
+resetvic20 <= system_reset(0) or not pll_locked or detach_reset or cart_reset or mc_reset;
 
 vic_inst: entity work.VIC20
 	port map(
@@ -1490,40 +1490,44 @@ port map
 	mc_soft_reset   => mc_reset
 );
 
--- 8k megacart NVRAM
--- TM60k / TM138k
---mc_nvram_inst: entity work.Gowin_DPB_8k
---    port map (
---        douta   => mc_nvram_out,
---        doutb   => sd_buff_din(0),
---        clka    => clk32,
---        ocea    => '1',
---        cea     => '1',
---        reseta  => '0',
---        wrea    => mc_nvram_sel and not mc_wr_n,
---        clkb    => clk32,
---        oceb    => '1',
---        ceb     => '1',
---        resetb  => '0',
---        wreb    => insd_buff_wr and sd_ack(0),
---        ada     => vic_addr,
---        dina    => vic_data,
---        adb     => sd_buff_addr,
---        dinb    => sd_buff_dout
--- );
+mc_nvram_inst: entity work.megacart_nvram
+   port map (
+	clk_a          => clk32,
+	a_a            => vic_addr(12 downto 0),
+	d_a            => vic_data,
+	q_a            => mc_nvram_out,
+	we_a           => mc_nvram_sel and not mc_wr_n,
+
+-- UserIO interface
+	clk_b          => clk32,
+	reset_n        => pll_locked,
+	readnv         => '0', -- img_mounted(1),
+	writenv        => '0', -- st_writenv,
+	uio_busy       => '0' ,-- sd_busy_1541,
+	nvram_sel      => open, -- uio_sel_nvram,
+	sd_lba         => open, -- sd_lba_nvram,
+	sd_rd          => open, -- sd_rd_nvram,
+	sd_wr          => open, -- sd_wr_nvram,
+	sd_ack         => '0', -- sd_ack_nvram,
+	sd_buff_din    => open, -- sd_din_nvram,
+	sd_buff_dout   => (others => '0'), -- sd_dout,
+	sd_buff_wr     => '0', --sd_strobe_nvram,
+	sd_buff_addr   => (others => '0'), -- sd_buff_addr,
+	img_size       => (others => '0') --img_size
+);
 
 -------------- TAP -------------------
 
 tap_download <= ioctl_download and load_tap;
-tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = 0 or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
+tap_reset <= '1' when resetvic20 = '1' or tap_download = '1' or tap_last_addr = TAP_ADDR or cass_finish = '1' or (cass_run = '1'and ((unsigned(tap_last_addr) - unsigned(tap_play_addr)) < 80)) else '0';
 tap_loaded <= '1' when tap_play_addr < tap_last_addr else '0';
 
 process(clk32)
 begin
-if rising_edge(clk32) then
+ if rising_edge(clk32) then
       if tap_reset = '1' then
-        tap_last_addr <= ioctl_addr + 2 when tap_download = '1' else (others => '0');
-        tap_play_addr <= (others => '0');
+        tap_last_addr <= ioctl_addr + 2 + TAP_ADDR when tap_download = '1' else TAP_ADDR;
+        tap_play_addr <= TAP_ADDR;
         tap_sdram_oe <= '0';
         tap_autoplay <= tap_download;
     else
@@ -1540,12 +1544,12 @@ if rising_edge(clk32) then
         end if;
 
         if p2_h and not p2_hD and tap_sdram_oe then
-          tap_play_addr <= tap_play_addr + 1;
-          tap_sdram_oe <= '0';
-          tap_wrreq <= '1';
-        end if;
+            tap_play_addr <= tap_play_addr + 1;
+            tap_sdram_oe <= '0';
+            tap_wrreq <= '1';
         end if;
     end if;
+ end if;
 end process;
 
 c1530_inst: entity work.c1530

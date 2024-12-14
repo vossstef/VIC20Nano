@@ -66,5 +66,6 @@
         <File path="src/vic20nano_top_tn20k.vhd" type="file.vhdl" enable="1"/>
         <File path="src/vic20nano_top_tn20k.cst" type="file.cst" enable="1"/>
         <File path="src/vic20nano_top_tn20k.sdc" type="file.sdc" enable="1"/>
+        <File path="src/megacart_nvram.v" type="file.verilog" enable="1"/>
     </FileList>
 </Project>
