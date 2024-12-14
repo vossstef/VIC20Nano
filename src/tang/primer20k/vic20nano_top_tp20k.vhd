@@ -20,8 +20,8 @@ entity VIC20_TOP_tp20k is
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
     -- external hw pin UART
- --   uart_ext_rx : in std_logic;
- --   uart_ext_tx : out std_logic;
+    uart_ext_rx : in std_logic;
+    uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
     --
@@ -381,8 +381,8 @@ signal tap_data_in       : std_logic_vector(7 downto 0);
 signal p2_hD             : std_logic;
 signal system_uart       : std_logic_vector(1 downto 0);
 signal uart_rx_muxed     : std_logic;
-signal uart_ext_rx       : std_logic;
-signal uart_ext_tx       : std_logic;
+--signal uart_ext_rx       : std_logic;
+--signal uart_ext_tx       : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
