@@ -63,6 +63,17 @@ end;
 
 architecture Behavioral_top of VIC20_TOP is
 
+type states is (
+  FSM_RESET,
+  FSM_WAIT_LOCK,
+  FSM_LOCKED,
+  FSM_WAIT4SWITCH,
+  FSM_PAL,
+  FSM_NTSC,
+  FSM_SWITCHED
+);
+
+signal statepll          : states := FSM_RESET;
 signal clk64          : std_logic;
 signal clk32          : std_logic;
 signal pll_locked     : std_logic;
@@ -225,6 +236,8 @@ signal key_right       : std_logic;
 signal key_start       : std_logic;
 signal key_select      : std_logic;
 signal ntscModeD       : std_logic;
+signal ntscModeD1      : std_logic;
+signal ntscModeD2      : std_logic;
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
@@ -349,6 +362,9 @@ signal ds_miso           : std_logic;
 signal ds_cs             : std_logic;
 signal uart_ext_rx       : std_logic := '1';
 signal uart_ext_tx       : std_logic;
+signal pll_locked_d      : std_logic;
+signal pll_locked_d1     : std_logic;
+signal pll_locked_hid    : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -702,13 +718,64 @@ dram_inst: entity work.sdram
 -- FBDIV_SEL   52         60
 -- ODIV_SEL     2         2
 
-process(clk32)
+--process(clk32)
+--begin
+--  if rising_edge(clk32) then
+--    ntscModeD <= ntscMode;
+--    IDSEL  <= "111100" when ntscModeD = '0' else "111011";
+--    FBDSEL <= "001011" when ntscModeD = '0' else "000011";
+--  end if;
+--end process;
+
+fsm_inst: process (all)
 begin
-  if rising_edge(clk32) then
-    ntscModeD <= ntscMode;
-    IDSEL  <= "111100" when ntscModeD = '0' else "111011";
-    FBDSEL <= "001011" when ntscModeD = '0' else "000011";
-  end if;
+  ntscModeD <= ntscMode;
+  ntscModeD1 <= ntscModeD;
+  ntscModeD2 <= ntscModeD1;
+  pll_locked_d <= pll_locked;
+  pll_locked_d1 <= pll_locked_d;
+
+  if rising_edge(flash_clk) then
+    if flash_lock = '0' then
+      pll_locked_hid <= '0';
+      statepll <= FSM_RESET;
+      IDSEL <= "111100"; -- PAL
+      FBDSEL <= "001011";
+    else
+    case statepll is
+        when FSM_RESET => 
+          pll_locked_hid <= '0';
+          IDSEL <= "111100"; -- PAL
+          FBDSEL <= "001011";
+          statepll <= FSM_WAIT_LOCK;
+        when FSM_WAIT_LOCK =>
+          if pll_locked_d1 = '1' and pll_locked_d = '1' then
+              statepll <= FSM_LOCKED;
+          end if;
+        when FSM_LOCKED =>
+          pll_locked_hid <= '1';
+          statepll <= FSM_WAIT4SWITCH;
+        when FSM_WAIT4SWITCH =>
+          if ntscModeD2 = '0' and ntscModeD1 = '1' then -- rising edge  NTSC
+              statepll <= FSM_NTSC;
+          elsif ntscModeD2 = '1' and ntscModeD1 = '0' then -- falling edge PAL
+              statepll <= FSM_PAL;
+          end if;
+        when FSM_NTSC =>
+            IDSEL <= "111011"; -- NTSC
+            FBDSEL <= "000011";
+            statepll <= FSM_SWITCHED;
+        when FSM_PAL =>
+            IDSEL <= "111100"; -- PAL
+            FBDSEL <= "001011";
+            statepll <= FSM_SWITCHED;
+        when FSM_SWITCHED =>
+            statepll <= FSM_WAIT_LOCK;
+        when others =>
+              null;
+			end case;
+		end if;
+	end if;
 end process;
 
 mainclock: rPLL
