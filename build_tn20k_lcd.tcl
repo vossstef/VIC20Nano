@@ -26,7 +26,7 @@ add_file src/misc/sdcmd_ctrl.v
 add_file src/misc/sysctrl.v
 add_file src/misc/video_lcd.v
 add_file src/misc/ws2812.v
-add_file src/sdram8.v
+add_file src/sdram8.sv
 add_file src/c1541/c1541_logic.vhd
 add_file src/c1541/c1541_sd.vhd
 add_file src/c1541/gcr_floppy.vhd
