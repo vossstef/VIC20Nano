@@ -63,6 +63,17 @@ end;
 
 architecture Behavioral_top of VIC20_TOP is
 
+type states is (
+  FSM_RESET,
+  FSM_WAIT_LOCK,
+  FSM_LOCKED,
+  FSM_WAIT4SWITCH,
+  FSM_PAL,
+  FSM_NTSC,
+  FSM_SWITCHED
+);
+
+signal statepll       : states := FSM_RESET;
 signal clk64          : std_logic;
 signal clk32          : std_logic;
 signal pll_locked     : std_logic;
@@ -225,6 +236,8 @@ signal key_right       : std_logic;
 signal key_start       : std_logic;
 signal key_select      : std_logic;
 signal ntscModeD       : std_logic;
+signal ntscModeD1      : std_logic;
+signal ntscModeD2      : std_logic;
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
@@ -341,6 +354,9 @@ signal tap_data_in       : std_logic_vector(7 downto 0);
 signal p2_hD             : std_logic;
 signal system_uart     : std_logic_vector(1 downto 0);
 signal uart_rx_muxed   : std_logic;
+signal pll_locked_d      : std_logic;
+signal pll_locked_d1     : std_logic;
+signal pll_locked_hid    : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -496,9 +512,9 @@ end process;
 disk_reset <= '1' when disk_pause or c1541_osd_reset or c1541_reset or resetvic20 else '0';
 
 -- rising edge sd_change triggers detection of new disk
-process(clk32, pll_locked)
+process(clk32, pll_locked_hid)
   begin
-  if pll_locked = '0' then
+  if pll_locked_hid = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
     sd_img_size_d <= (others => '0');
@@ -594,7 +610,7 @@ generic map (
     CLK_DIV  => 1
   )
     port map (
-    rstn            => pll_locked, 
+    rstn            => pll_locked_hid,
     clk             => clk32,
   
     -- SD card signals
@@ -718,13 +734,55 @@ dram_inst: entity work.sdram
 -- FBDIV_SEL   52         60
 -- ODIV_SEL     2         2
 
-process(clk32)
+fsm_inst: process (all)
 begin
-  if rising_edge(clk32) then
-    ntscModeD <= ntscMode;
-    IDSEL  <= "111100" when ntscModeD = '0' else "111011";
-    FBDSEL <= "001011" when ntscModeD = '0' else "000011";
-  end if;
+  ntscModeD <= ntscMode;
+  ntscModeD1 <= ntscModeD;
+  ntscModeD2 <= ntscModeD1;
+  pll_locked_d <= pll_locked;
+  pll_locked_d1 <= pll_locked_d;
+
+  if rising_edge(flash_clk) then
+    if flash_lock = '0' then
+      pll_locked_hid <= '0';
+      statepll <= FSM_RESET;
+      IDSEL <= "111100"; -- PAL
+      FBDSEL <= "001011";
+    else
+    case statepll is
+        when FSM_RESET => 
+          pll_locked_hid <= '0';
+          IDSEL <= "111100"; -- PAL
+          FBDSEL <= "001011";
+          statepll <= FSM_WAIT_LOCK;
+        when FSM_WAIT_LOCK =>
+          if pll_locked_d1 = '1' and pll_locked_d = '1' then
+              statepll <= FSM_LOCKED;
+          end if;
+        when FSM_LOCKED =>
+          pll_locked_hid <= '1';
+          statepll <= FSM_WAIT4SWITCH;
+        when FSM_WAIT4SWITCH =>
+          if ntscModeD2 = '0' and ntscModeD1 = '1' then -- rising edge  NTSC
+              statepll <= FSM_NTSC;
+          elsif ntscModeD2 = '1' and ntscModeD1 = '0' then -- falling edge PAL
+              statepll <= FSM_PAL;
+          end if;
+        when FSM_NTSC =>
+            IDSEL <= "111011"; -- NTSC
+            FBDSEL <= "000011";
+            statepll <= FSM_SWITCHED;
+        when FSM_PAL =>
+            IDSEL <= "111100"; -- PAL
+            FBDSEL <= "001011";
+            statepll <= FSM_SWITCHED;
+        when FSM_SWITCHED =>
+            statepll <= FSM_WAIT_LOCK;
+        when others =>
+              null;
+			end case;
+		end if;
+	end if;
 end process;
 
 mainclock: rPLL
@@ -940,7 +998,7 @@ end process;
 mcu_spi_inst: entity work.mcu_spi 
 port map (
   clk            => clk32,
-  reset          => not pll_locked,
+  reset          => not pll_locked_hid,
   -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
@@ -964,7 +1022,7 @@ hid_inst: entity work.hid
  port map 
  (
   clk             => clk32,
-  reset           => not pll_locked,
+  reset           => not pll_locked_hid,
   -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe  => mcu_hid_strobe,
   data_in_start   => mcu_start,
@@ -1001,7 +1059,7 @@ module_inst: entity work.sysctrl
  port map 
  (
   clk                 => clk32,
-  reset               => not pll_locked,
+  reset               => not pll_locked_hid,
 --
   data_in_strobe      => mcu_sys_strobe,
   data_in_start       => mcu_start,

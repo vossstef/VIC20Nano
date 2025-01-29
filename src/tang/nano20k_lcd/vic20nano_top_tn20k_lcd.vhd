@@ -73,7 +73,7 @@ type states is (
   FSM_SWITCHED
 );
 
-signal statepll          : states := FSM_RESET;
+signal statepll       : states := FSM_RESET;
 signal clk64          : std_logic;
 signal clk32          : std_logic;
 signal pll_locked     : std_logic;
@@ -718,15 +718,6 @@ dram_inst: entity work.sdram
 -- IDIV_SEL     3         4
 -- FBDIV_SEL   52         60
 -- ODIV_SEL     2         2
-
---process(clk32)
---begin
---  if rising_edge(clk32) then
---    ntscModeD <= ntscMode;
---    IDSEL  <= "111100" when ntscModeD = '0' else "111011";
---    FBDSEL <= "001011" when ntscModeD = '0' else "000011";
---  end if;
---end process;
 
 fsm_inst: process (all)
 begin
