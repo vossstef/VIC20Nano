@@ -8,3 +8,5 @@ grc --config=gw_sh.grc gw_sh ./build_tp25k.tcl
 grc --config=gw_sh.grc gw_sh ./build_tn20k.tcl
 grc --config=gw_sh.grc gw_sh ./build_tp20k.tcl
 grc --config=gw_sh.grc gw_sh ./build_tn9k.tcl
+grc --config=gw_sh.grc gw_sh ./build_tn9k_lcd.tcl
+grc --config=gw_sh.grc gw_sh ./build_tn9k_lcd.tcl

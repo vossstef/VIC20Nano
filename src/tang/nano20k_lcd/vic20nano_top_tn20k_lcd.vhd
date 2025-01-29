@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------
---  VIC20 Top level for Tang Nano
+--  VIC20 Top level for Tang Nano 20k LCD
 --  2024 Stefan Voss
 --  based on the work of many others
 --
@@ -16,20 +16,25 @@ entity VIC20_TOP is
     reset       : in std_logic; -- S2 button
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(5 downto 0);
-    io          : in std_logic_vector(5 downto 0);
     -- USB-C BL616 UART
     uart_rx     : in std_logic;
     uart_tx     : out std_logic;
-    -- external hw pin UART
-    uart_ext_rx : in std_logic;
-    uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
     m0s         : inout std_logic_vector(4 downto 0);
-    --
-    tmds_clk_n  : out std_logic;
-    tmds_clk_p  : out std_logic;
-    tmds_d_n    : out std_logic_vector( 2 downto 0);
-    tmds_d_p    : out std_logic_vector( 2 downto 0);
+    -- internal lcd
+    lcd_dclk    : out std_logic; -- lcd is RGB 565
+    lcd_hs      : out std_logic; -- lcd horizontal synchronization
+    lcd_vs      : out std_logic; -- lcd vertical synchronization        
+    lcd_de      : out std_logic; -- lcd data enable     
+    lcd_bl      : out std_logic; -- lcd backlight control
+    lcd_r       : out std_logic_vector(4 downto 0);  -- lcd red
+    lcd_g       : out std_logic_vector(5 downto 0);  -- lcd green
+    lcd_b       : out std_logic_vector(4 downto 0);  -- lcd blue
+    -- audio
+    hp_bck      : out std_logic;
+    hp_ws       : out std_logic;
+    hp_din      : out std_logic;
+    pa_en       : out std_logic;
     -- sd interface
     sd_clk      : out std_logic;
     sd_cmd      : inout std_logic;
@@ -46,11 +51,6 @@ entity VIC20_TOP is
     O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
     O_sdram_ba   : out std_logic_vector(1 downto 0);     -- two banks
     O_sdram_dqm  : out std_logic_vector(3 downto 0);     -- 32/4
-    -- Gamepad Dualshock P1
-    ds_clk          : out std_logic;
-    ds_mosi         : out std_logic;
-    ds_miso         : in std_logic; -- midi_out
-    ds_cs           : out std_logic; -- midi_in
     -- spi flash interface
     mspi_cs       : out std_logic;
     mspi_clk      : out std_logic;
@@ -352,8 +352,16 @@ signal system_reset_d    : std_logic;
 signal disk_pause        : std_logic;
 signal tap_data_in       : std_logic_vector(7 downto 0);
 signal p2_hD             : std_logic;
-signal system_uart     : std_logic_vector(1 downto 0);
-signal uart_rx_muxed   : std_logic;
+signal system_uart       : std_logic_vector(1 downto 0);
+signal uart_rx_muxed     : std_logic;
+signal lcd_r_i           : std_logic_vector(5 downto 0);
+signal lcd_b_i           : std_logic_vector(5 downto 0);
+signal ds_clk            : std_logic;
+signal ds_mosi           : std_logic;
+signal ds_miso           : std_logic;
+signal ds_cs             : std_logic;
+signal uart_ext_rx       : std_logic := '1';
+signal uart_ext_tx       : std_logic;
 signal pll_locked_d      : std_logic;
 signal pll_locked_d1     : std_logic;
 signal pll_locked_hid    : std_logic;
@@ -424,43 +432,6 @@ begin
   spi_io_ss   <= m0s(2);
   spi_io_clk  <= m0s(3);
   m0s(0)      <= spi_io_dout; -- M0 Dock
-
--- https://store.curiousinventor.com/guides/PS2/
--- https://hackaday.io/project/170365-blueretro/log/186471-playstation-playstation-2-spi-interface
-
-gamepad: entity work.dualshock2
-    port map (
-    clk           => clk32,
-    rst           => resetvic20,
-    vsync         => vsync,
-    ds2_dat       => ds_miso,
-    ds2_cmd       => ds_mosi,
-    ds2_att       => ds_cs,
-    ds2_clk       => ds_clk,
-    ds2_ack       => '0',
-    stick_lx      => paddle_1,
-    stick_ly      => paddle_2,
-    stick_rx      => open,
-    stick_ry      => open,
-    key_up        => key_up,
-    key_down      => key_down,
-    key_left      => key_left,
-    key_right     => key_right,
-    key_l1        => key_l1,
-    key_l2        => key_l2,
-    key_r1        => key_r1,
-    key_r2        => key_r2,
-    key_triangle  => key_triangle,
-    key_square    => key_square,
-    key_circle    => key_circle,
-    key_cross     => key_cross,
-    key_start     => key_start,
-    key_select    => key_select,
-    key_lstick    => open,
-    key_rstick    => open,
-    debug1        => open,
-    debug2        => open
-    );
 
 led_ws2812: entity work.ws2812
   port map
@@ -647,21 +618,25 @@ generic map (
     outbyte         => sd_rd_data         -- a byte of sector content
 );
 
-audio_div  <= to_unsigned(342,9) when ntscMode = '1' else to_unsigned(371,9);
 cass_aud <= cass_read and not cass_sense and not cass_motor;
 audio_l <= (vic_audio & "000000000000") or (5x"00" & cass_aud & 12x"00000");
 audio_r <= audio_l;
 
-video_inst: entity work.video 
+lcd_r <= lcd_r_i(5 downto 1);
+lcd_b <= lcd_b_i(5 downto 1);
+
+video_inst: entity work.video
+generic map
+(
+  STEREO  => false
+)
 port map(
-      pll_lock     => pll_locked, 
-      clk          => clk32,
-      clk_pixel_x5 => clk_pixel_x5,
-      audio_div    => audio_div,
-      
-      v20_en       => v20_en,
+      pll_lock  => pll_locked, 
+      clk       => clk32,
+      v20_en    => v20_en,
 
       ntscmode  => ntscMode,
+
       vb_in     => vblank,
       hb_in     => hblank,
       hs_in_n   => hsync,
@@ -673,7 +648,7 @@ port map(
 
       audio_l => audio_l,
       audio_r => audio_r,
-      osd_status => osd_status,
+      osd_status => open,
 
       mcu_start => mcu_start,
       mcu_osd_strobe => mcu_osd_strobe,
@@ -684,10 +659,20 @@ port map(
       system_scanlines => system_scanlines,
       system_volume => system_volume,
 
-      tmds_clk_n => tmds_clk_n,
-      tmds_clk_p => tmds_clk_p,
-      tmds_d_n   => tmds_d_n,
-      tmds_d_p   => tmds_d_p
+      lcd_clk  => lcd_dclk,
+      lcd_hs_n => lcd_hs,
+      lcd_vs_n => lcd_vs,
+      lcd_de   => lcd_de,
+      lcd_r    => lcd_r_i,
+      lcd_g    => lcd_g,
+      lcd_b    => lcd_b_i,
+      lcd_bl   => lcd_bl,
+
+      hp_bck   => hp_bck,
+      hp_ws    => hp_ws,
+      hp_din   => hp_din,
+      pa_en    => pa_en,
+      dac      => open
       );
 
 -- MegaCart and Tape
@@ -852,18 +837,6 @@ port map(
     CALIB  => '0'
 );
 
-div3_inst: CLKDIV
-generic map(
-    DIV_MODE => "2",
-    GSREN    => "false"
-)
-port map(
-    CLKOUT => clk_pixel_x5,
-    HCLKIN => clk_pixel_x10,
-    RESETN => pll_locked,
-    CALIB  => '0'
-);
-
 -- c1541 ROM's SPI Flash
 -- TN20k  Winbond 25Q64JVIQ
 -- TP25k  XTX XT25F64FWOIG
@@ -919,18 +892,18 @@ leds(0) <= led1541;
 
 --                    6   5  4  3  2  1  0
 --                  TR3 TR2 TR RI LE DN UP digital c64 
-joyDS2_p1  <= key_circle  & key_cross  & key_square  & key_right  & key_left  & key_down  & key_up;
-joyDigital <= not('1'& io(5) & io(0) & io(3) & io(4) & io(1) & io(2));
+joyDS2_p1  <= 7x"00";
+joyDigital <= 7x"00";
 joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3);
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00"; -- DS2 left stick
+joyDS2A_p1 <= 7x"00";
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
 -- send external DB9 joystick port to µC
-db9_joy <= not(io(5) & io(0), io(2), io(1), io(4), io(3));
+db9_joy <= 6x"00";
 
 process(clk32)
 begin
