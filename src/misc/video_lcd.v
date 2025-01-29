@@ -48,7 +48,8 @@ module video
    output hp_bck,
    output hp_ws,
    output hp_din,
-   output pa_en
+   output pa_en,
+   output [15:0] dac
 );
    
 reg vic20_en = 0;
@@ -165,6 +166,7 @@ end
 
 // sign expand and add both channels
 wire [15:0] audio_mix = { audio_vol_l[15], audio_vol_l[15:1]} + { audio_vol_r[15], audio_vol_r[15:1]};
+assign dac = audio_mix;
 
 // shift audio down to reduce amp output volume to a sane range
 localparam AUDIO_SHIFT = (STEREO)?2:3;   // 2 TM138k / TM60k and 3 // TN20k
