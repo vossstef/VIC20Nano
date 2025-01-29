@@ -718,6 +718,7 @@ leds(0) <= led1541;
 
 --                    6   5  4  3  2  1  0
 --                  TR3 TR2 TR RI LE DN UP digital c64 
+joyDigital <= (others => '0');
 joyDS2_p1  <= (others => '0');
 joyDS2_p2  <= (others => '0');
 joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2) & joystick1(3);

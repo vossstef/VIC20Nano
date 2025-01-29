@@ -483,9 +483,9 @@ end process;
 disk_reset <= '1' when disk_pause or c1541_osd_reset or c1541_reset or resetvic20 else '0';
 
 -- rising edge sd_change triggers detection of new disk
-process(clk32, pll_locked)
+process(clk32, pll_locked_hid)
   begin
-  if pll_locked = '0' then
+  if pll_locked_hid = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
     sd_img_size_d <= (others => '0');
@@ -581,7 +581,7 @@ generic map (
     CLK_DIV  => 1
   )
     port map (
-    rstn            => pll_locked, 
+    rstn            => pll_locked_hid,
     clk             => clk32,
   
     -- SD card signals
@@ -671,7 +671,8 @@ port map(
       hp_bck   => hp_bck,
       hp_ws    => hp_ws,
       hp_din   => hp_din,
-      pa_en    => pa_en
+      pa_en    => pa_en,
+      dac      => open
       );
 
 -- MegaCart and Tape
@@ -979,7 +980,7 @@ end process;
 mcu_spi_inst: entity work.mcu_spi 
 port map (
   clk            => clk32,
-  reset          => not pll_locked,
+  reset          => not pll_locked_hid,
   -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
@@ -1003,7 +1004,7 @@ hid_inst: entity work.hid
  port map 
  (
   clk             => clk32,
-  reset           => not pll_locked,
+  reset           => not pll_locked_hid,
   -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe  => mcu_hid_strobe,
   data_in_start   => mcu_start,
@@ -1040,7 +1041,7 @@ module_inst: entity work.sysctrl
  port map 
  (
   clk                 => clk32,
-  reset               => not pll_locked,
+  reset               => not pll_locked_hid,
 --
   data_in_strobe      => mcu_sys_strobe,
   data_in_start       => mcu_start,

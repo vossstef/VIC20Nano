@@ -54,7 +54,7 @@
         <File path="src/tang/nano9k_lcd/vic20nano_top_tn9k_lcd.vhd" type="file.vhdl" enable="1"/>
         <File path="src/vic20_clocks.vhd" type="file.vhdl" enable="1"/>
         <File path="src/vic20_keyboard.vhd" type="file.vhdl" enable="1"/>
-        <File path="src/tang/nano9k_lcd/vic20nano_top_tn9k.cst" type="file.cst" enable="1"/>
-        <File path="src/tang/nano9k_lcd/vic20nano_top_tn9k.sdc" type="file.sdc" enable="1"/>
+        <File path="src/tang/nano9k_lcd/vic20nano_top_tn9k_lcd.cst" type="file.cst" enable="1"/>
+        <File path="src/tang/nano9k_lcd/vic20nano_top_tn9k_lcd.sdc" type="file.sdc" enable="1"/>
     </FileList>
 </Project>
