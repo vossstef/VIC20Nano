@@ -1108,10 +1108,8 @@ joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2)
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyDS2A_p1 <= "00" & '0' & key_cross & key_square      & "00" when port_1_sel = "0110" else
-              "00" & '0' & key_cross2 & key_square2    & "00";
-joyDS2A_p2 <= "00" & '0' & key_triangle & key_circle   & "00" when port_1_sel = "0110" else
-              "00" & '0' & key_triangle2 & key_circle2 & "00";
+joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00";
+joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00";
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
@@ -1142,7 +1140,7 @@ begin
         paddle_2_analogA <= '0';
       when "0110"  => joyA <= joyDS2A_p1;
         paddle_1_analogA <= '1';
-        paddle_2_analogA <= '1';
+        paddle_2_analogA <= '0';
       when "0111"  => joyA <= joyUsb1A;
         paddle_1_analogA <= '0';
         paddle_2_analogA <= '0';
@@ -1156,7 +1154,7 @@ begin
         paddle_1_analogA <= '0';
         paddle_2_analogA <= '0';
       when "1011"  => joyA <= joyDS2A_p2;
-        paddle_1_analogA <= '1';
+        paddle_1_analogA <= '0';
         paddle_2_analogA <= '1';
       when others  => joyA <= (others => '0');
         paddle_1_analogA <= '0';
@@ -1170,7 +1168,9 @@ pot1 <= not paddle_1 when port_1_sel = "0110" else
         not paddle_3 when port_1_sel = "1011" else
         joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else
         joystick2_x_pos(7 downto 0) when port_1_sel = "1000" else
-        '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
+        '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0' when port_1_sel = "0101" else
+        x"ff" when unsigned(port_1_sel) < 5 and joyA(5) = '1' else
+        x"ff" when unsigned(port_1_sel) = "1010" and joyA(5) = '1' else
         x"ff";
 
 pot2 <= not paddle_2 when port_1_sel = "0110" else
@@ -1178,6 +1178,8 @@ pot2 <= not paddle_2 when port_1_sel = "0110" else
         joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else 
         joystick2_y_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
+        x"ff" when unsigned(port_1_sel) < 5 and joyA(6) = '1' else
+        x"ff" when unsigned(port_1_sel) = "1010" and joyA(6) = '1' else
         x"ff";
 
 process(clk32, system_reset(0))
