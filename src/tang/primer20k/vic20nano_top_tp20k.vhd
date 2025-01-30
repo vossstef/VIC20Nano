@@ -71,6 +71,17 @@ end;
 
 architecture Behavioral_top of VIC20_TOP_tp20k is
 
+type states is (
+  FSM_RESET,
+  FSM_WAIT_LOCK,
+  FSM_LOCKED,
+  FSM_WAIT4SWITCH,
+  FSM_PAL,
+  FSM_NTSC,
+  FSM_SWITCHED
+);
+
+signal statepll       : states := FSM_RESET;
 signal clk64          : std_logic;
 signal clk32          : std_logic;
 signal pll_locked     : std_logic;
@@ -240,6 +251,8 @@ signal key_right       : std_logic;
 signal key_start       : std_logic;
 signal key_select      : std_logic;
 signal ntscModeD       : std_logic;
+signal ntscModeD1      : std_logic;
+signal ntscModeD2      : std_logic;
 signal key_r12         : std_logic;
 signal key_r22         : std_logic;
 signal key_l12         : std_logic;
@@ -254,7 +267,6 @@ signal key_left2       : std_logic;
 signal key_right2      : std_logic;
 signal key_start2      : std_logic;
 signal key_select2     : std_logic;
-
 signal audio_div       : unsigned(8 downto 0);
 signal flash_clk       : std_logic;
 signal flash_lock      : std_logic;
@@ -318,28 +330,28 @@ signal extmem_sel      : std_logic;
 signal p2_h            : std_logic;
 signal resetvic20      : std_logic;
 signal old_reset       : std_logic;
-signal tap_play_addr  : std_logic_vector(22 downto 0);
-signal tap_last_addr  : std_logic_vector(22 downto 0);
-signal tap_version    : std_logic_vector(1 downto 0);
-signal cass_write     : std_logic;
-signal cass_motor     : std_logic;
-signal cass_sense     : std_logic;
-signal cass_read      : std_logic;
-signal cass_run       : std_logic;
-signal cass_finish    : std_logic;
-signal cass_snd       : std_logic;
-signal tap_download   : std_logic;
-signal tap_reset      : std_logic;
-signal tap_loaded     : std_logic;
-signal tap_play_btn   : std_logic;
-signal tap_wrreq      : std_logic;
-signal tap_wrfull     : std_logic;
-signal tap_autoplay   : std_logic;
-signal tap_sdram_oe   : std_logic := '0';
-signal tap_wr         : std_logic := '0';
-signal cass_aud       : std_logic;
-signal audio_l        : std_logic_vector(17 downto 0);
-signal audio_r        : std_logic_vector(17 downto 0);
+signal tap_play_addr   : std_logic_vector(22 downto 0);
+signal tap_last_addr   : std_logic_vector(22 downto 0);
+signal tap_version     : std_logic_vector(1 downto 0);
+signal cass_write      : std_logic;
+signal cass_motor      : std_logic;
+signal cass_sense      : std_logic;
+signal cass_read       : std_logic;
+signal cass_run        : std_logic;
+signal cass_finish     : std_logic;
+signal cass_snd        : std_logic;
+signal tap_download    : std_logic;
+signal tap_reset       : std_logic;
+signal tap_loaded      : std_logic;
+signal tap_play_btn    : std_logic;
+signal tap_wrreq       : std_logic;
+signal tap_wrfull      : std_logic;
+signal tap_autoplay    : std_logic;
+signal tap_sdram_oe    : std_logic := '0';
+signal tap_wr          : std_logic := '0';
+signal cass_aud        : std_logic;
+signal audio_l         : std_logic_vector(17 downto 0);
+signal audio_r         : std_logic_vector(17 downto 0);
 signal img_present     : std_logic := '0';
 signal c1541_sd_rd     : std_logic;
 signal c1541_sd_wr     : std_logic;
@@ -365,24 +377,29 @@ signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
 signal detach_reset    : std_logic;
-signal user_port_cb1_in  : std_logic;
-signal user_port_cb2_in  : std_logic;
+signal user_port_cb1_in: std_logic;
+signal user_port_cb2_in: std_logic;
 signal user_port_cb1_out : std_logic;
 signal user_port_cb2_out : std_logic;
-signal user_port_in      : std_logic_vector(7 downto 0);
-signal user_port_out     : std_logic_vector(7 downto 0);
-signal uart_rxD          : std_logic_vector(1 downto 0);
-signal uart_rx_filtered  : std_logic;
-signal clkref            : std_logic;
-signal oe                : std_logic;
-signal system_reset_d    : std_logic;
-signal disk_pause        : std_logic;
-signal tap_data_in       : std_logic_vector(7 downto 0);
-signal p2_hD             : std_logic;
-signal system_uart       : std_logic_vector(1 downto 0);
-signal uart_rx_muxed     : std_logic;
---signal uart_ext_rx       : std_logic;
---signal uart_ext_tx       : std_logic;
+signal user_port_in    : std_logic_vector(7 downto 0);
+signal user_port_out   : std_logic_vector(7 downto 0);
+signal uart_rxD        : std_logic_vector(1 downto 0);
+signal uart_rx_filtered: std_logic;
+signal clkref          : std_logic;
+signal oe              : std_logic;
+signal system_reset_d  : std_logic;
+signal disk_pause      : std_logic;
+signal tap_data_in     : std_logic_vector(7 downto 0);
+signal p2_hD           : std_logic;
+signal system_uart     : std_logic_vector(1 downto 0);
+signal uart_rx_muxed   : std_logic;
+signal pll_locked_d    : std_logic;
+signal pll_locked_d1   : std_logic;
+signal pll_locked_hid  : std_logic;
+signal paddle_1_analogA : std_logic;
+signal paddle_1_analogB : std_logic;
+signal paddle_2_analogA : std_logic;
+signal paddle_2_analogB : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -512,6 +529,7 @@ gamepad_p1: entity work.dualshock2
     ds2_att       => ds_cs,
     ds2_clk       => ds_clk,
     ds2_ack       => '0',
+    analog        => paddle_1_analogA or paddle_1_analogB,
     stick_lx      => paddle_1,
     stick_ly      => paddle_2,
     stick_rx      => open,
@@ -546,6 +564,7 @@ gamepad_p1: entity work.dualshock2
     ds2_att       => ds2_cs,
     ds2_clk       => ds2_clk,
     ds2_ack       => '0',
+    analog        => paddle_2_analogA or paddle_2_analogB,
     stick_lx      => paddle_3,
     stick_ly      => paddle_4,
     stick_rx      => open,
@@ -620,9 +639,9 @@ end process;
 disk_reset <= '1' when disk_pause or c1541_osd_reset or c1541_reset or resetvic20 else '0';
 
 -- rising edge sd_change triggers detection of new disk
-process(clk32, pll_locked)
+process(clk32, pll_locked_hid)
   begin
-  if pll_locked = '0' then
+  if pll_locked_hid = '0' then
     sd_change <= '0';
     disk_g64 <= '0';
     sd_img_size_d <= (others => '0');
@@ -718,7 +737,7 @@ generic map (
     CLK_DIV  => 1
   )
     port map (
-    rstn            => pll_locked, 
+    rstn            => pll_locked_hid,
     clk             => clk32,
   
     -- SD card signals
@@ -781,7 +800,7 @@ port map(
 
       audio_l => audio_l,
       audio_r => audio_r,
-      osd_status => osd_status,
+      osd_status => open,
 
       mcu_start => mcu_start,
       mcu_osd_strobe => mcu_osd_strobe,
@@ -883,13 +902,55 @@ port map(
 -- FBDIV_SEL   52         60
 -- ODIV_SEL     2         2
 
-process(clk32)
+fsm_inst: process (all)
 begin
-  if rising_edge(clk32) then
-    ntscModeD <= ntscMode;
-    IDSEL  <= "111100" when ntscModeD = '0' else "111011";
-    FBDSEL <= "001011" when ntscModeD = '0' else "000011";
-  end if;
+  ntscModeD <= ntscMode;
+  ntscModeD1 <= ntscModeD;
+  ntscModeD2 <= ntscModeD1;
+  pll_locked_d <= pll_locked;
+  pll_locked_d1 <= pll_locked_d;
+
+  if rising_edge(flash_clk) then
+    if flash_lock = '0' then
+      pll_locked_hid <= '0';
+      statepll <= FSM_RESET;
+      IDSEL <= "111100"; -- PAL
+      FBDSEL <= "001011";
+    else
+    case statepll is
+        when FSM_RESET => 
+          pll_locked_hid <= '0';
+          IDSEL <= "111100"; -- PAL
+          FBDSEL <= "001011";
+          statepll <= FSM_WAIT_LOCK;
+        when FSM_WAIT_LOCK =>
+          if pll_locked_d1 = '1' and pll_locked_d = '1' then
+              statepll <= FSM_LOCKED;
+          end if;
+        when FSM_LOCKED =>
+          pll_locked_hid <= '1';
+          statepll <= FSM_WAIT4SWITCH;
+        when FSM_WAIT4SWITCH =>
+          if ntscModeD2 = '0' and ntscModeD1 = '1' then -- rising edge  NTSC
+              statepll <= FSM_NTSC;
+          elsif ntscModeD2 = '1' and ntscModeD1 = '0' then -- falling edge PAL
+              statepll <= FSM_PAL;
+          end if;
+        when FSM_NTSC =>
+            IDSEL <= "111011"; -- NTSC
+            FBDSEL <= "000011";
+            statepll <= FSM_SWITCHED;
+        when FSM_PAL =>
+            IDSEL <= "111100"; -- PAL
+            FBDSEL <= "001011";
+            statepll <= FSM_SWITCHED;
+        when FSM_SWITCHED =>
+            statepll <= FSM_WAIT_LOCK;
+        when others =>
+              null;
+			end case;
+		end if;
+	end if;
 end process;
 
 mainclock: rPLL
@@ -1006,7 +1067,7 @@ flashclock: rPLL
             CLKOUTP  => mspi_clk, -- phase shifted clock SPI Flash
             CLKOUTD  => open,
             CLKOUTD3 => open,
-            RESET    => '0', -- c1541_osd_reset,
+            RESET    => '0',
             RESET_P  => '0',
             CLKIN    => clk_27mhz,
             CLKFB    => '0',
@@ -1047,8 +1108,10 @@ joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2)
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00"; -- DS2 left stick
-joyDS2A_p2 <= "00" & '0' & key_cross2 & key_square2 & "00"; 
+joyDS2A_p1 <= "00" & '0' & key_cross & key_square      & "00" when port_1_sel = "0110" else
+              "00" & '0' & key_cross2 & key_square2    & "00";
+joyDS2A_p2 <= "00" & '0' & key_triangle & key_circle   & "00" when port_1_sel = "0110" else
+              "00" & '0' & key_triangle2 & key_circle2 & "00";
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
@@ -1060,18 +1123,44 @@ begin
 	if rising_edge(clk32) then
     case port_1_sel is
       when "0000"  => joyA <= joyDigital;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';      
       when "0001"  => joyA <= joyUsb1;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0010"  => joyA <= joyUsb2;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0011"  => joyA <= joyNumpad;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0100"  => joyA <= joyDS2_p1;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0101"  => joyA <= joyMouse;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "0110"  => joyA <= joyDS2A_p1;
+        paddle_1_analogA <= '1';
+        paddle_2_analogA <= '1';
       when "0111"  => joyA <= joyUsb1A;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       when "1000"  => joyA <= joyUsb2A;
-      when "1001"  => joyA <= (others => '0');--9
-      when "1010"  => joyA <= joyDS2_p2;   -- 10
-      when "1011"  => joyA <= joyDS2A_p2;  -- 11
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
+      when "1001"  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
+      when "1010"  => joyA <= joyDS2_p2;
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
+      when "1011"  => joyA <= joyDS2A_p2;
+        paddle_1_analogA <= '1';
+        paddle_2_analogA <= '1';
       when others  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
+        paddle_2_analogA <= '0';
       end case;
   end if;
 end process;
@@ -1121,7 +1210,7 @@ end process;
 mcu_spi_inst: entity work.mcu_spi 
 port map (
   clk            => clk32,
-  reset          => not pll_locked,
+  reset          => not pll_locked_hid,
   -- SPI interface to BL616 MCU
   spi_io_ss      => spi_io_ss,      -- SPI CSn
   spi_io_clk     => spi_io_clk,     -- SPI SCLK
@@ -1145,7 +1234,7 @@ hid_inst: entity work.hid
  port map 
  (
   clk             => clk32,
-  reset           => not pll_locked,
+  reset           => not pll_locked_hid,
   -- interface to receive user data from MCU (mouse, kbd, ...)
   data_in_strobe  => mcu_hid_strobe,
   data_in_start   => mcu_start,
@@ -1182,7 +1271,7 @@ module_inst: entity work.sysctrl
  port map 
  (
   clk                 => clk32,
-  reset               => not pll_locked,
+  reset               => not pll_locked_hid,
 --
   data_in_strobe      => mcu_sys_strobe,
   data_in_start       => mcu_start,

@@ -12,52 +12,57 @@ use IEEE.numeric_std.ALL;
 entity VIC20_TOP is
   port
   (
-    clk_27mhz   : in std_logic;
-    reset       : in std_logic; -- S2 button
-    user        : in std_logic; -- S1 button
-    leds_n      : out std_logic_vector(5 downto 0);
-    io          : in std_logic_vector(5 downto 0);
+    clk_27mhz    : in std_logic;
+    reset        : in std_logic; -- S2 button
+    user         : in std_logic; -- S1 button
+    leds_n       : out std_logic_vector(5 downto 0);
+    io           : in std_logic_vector(5 downto 0);
     -- USB-C BL616 UART
-    uart_rx     : in std_logic;
-    uart_tx     : out std_logic;
+    uart_rx      : in std_logic;
+    uart_tx      : out std_logic;
     -- external hw pin UART
-    uart_ext_rx : in std_logic;
-    uart_ext_tx : out std_logic;
+    uart_ext_rx  : in std_logic;
+    uart_ext_tx  : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
-    m0s         : inout std_logic_vector(4 downto 0);
+    m0s          : inout std_logic_vector(4 downto 0);
     --
-    tmds_clk_n  : out std_logic;
-    tmds_clk_p  : out std_logic;
-    tmds_d_n    : out std_logic_vector( 2 downto 0);
-    tmds_d_p    : out std_logic_vector( 2 downto 0);
+    tmds_clk_n   : out std_logic;
+    tmds_clk_p   : out std_logic;
+    tmds_d_n     : out std_logic_vector( 2 downto 0);
+    tmds_d_p     : out std_logic_vector( 2 downto 0);
     -- sd interface
-    sd_clk      : out std_logic;
-    sd_cmd      : inout std_logic;
-    sd_dat      : inout std_logic_vector(3 downto 0);
-    ws2812      : out std_logic;
+    sd_clk       : out std_logic;
+    sd_cmd       : inout std_logic;
+    sd_dat       : inout std_logic_vector(3 downto 0);
+    ws2812       : out std_logic;
     -- "Magic" port names that the gowin compiler connects to the on-chip SDRAM
     O_sdram_clk  : out std_logic;
     O_sdram_cke  : out std_logic;
     O_sdram_cs_n : out std_logic;            -- chip select
-    O_sdram_cas_n : out std_logic;           -- columns address select
-    O_sdram_ras_n : out std_logic;           -- row address select
-    O_sdram_wen_n : out std_logic;           -- write enable
+    O_sdram_cas_n: out std_logic;           -- columns address select
+    O_sdram_ras_n: out std_logic;           -- row address select
+    O_sdram_wen_n: out std_logic;           -- write enable
     IO_sdram_dq  : inout std_logic_vector(31 downto 0); -- 32 bit bidirectional data bus
     O_sdram_addr : out std_logic_vector(10 downto 0);  -- 11 bit multiplexed address bus
     O_sdram_ba   : out std_logic_vector(1 downto 0);     -- two banks
     O_sdram_dqm  : out std_logic_vector(3 downto 0);     -- 32/4
     -- Gamepad Dualshock P1
-    ds_clk          : out std_logic;
-    ds_mosi         : out std_logic;
-    ds_miso         : in std_logic; -- midi_out
-    ds_cs           : out std_logic; -- midi_in
+    ds_clk       : out std_logic;
+    ds_mosi      : out std_logic;
+    ds_miso      : in std_logic; -- midi_out
+    ds_cs        : out std_logic; -- midi_in
+    -- Gamepad DualShock P1 misteryshield20k
+    ds2_clk      : out std_logic;
+    ds2_mosi     : out std_logic;
+    ds2_miso     : in std_logic;
+    ds2_cs       : out std_logic;
     -- spi flash interface
-    mspi_cs       : out std_logic;
-    mspi_clk      : out std_logic;
-    mspi_di       : inout std_logic;
-    mspi_hold     : inout std_logic;
-    mspi_wp       : inout std_logic;
-    mspi_do       : inout std_logic
+    mspi_cs      : out std_logic;
+    mspi_clk     : out std_logic;
+    mspi_di      : inout std_logic;
+    mspi_hold    : inout std_logic;
+    mspi_wp      : inout std_logic;
+    mspi_do      : inout std_logic
     );
 end;
 
@@ -301,28 +306,28 @@ signal extmem_sel      : std_logic;
 signal p2_h            : std_logic;
 signal resetvic20      : std_logic;
 signal old_reset       : std_logic;
-signal tap_play_addr  : std_logic_vector(22 downto 0);
-signal tap_last_addr  : std_logic_vector(22 downto 0);
-signal tap_version    : std_logic_vector(1 downto 0);
-signal cass_write     : std_logic;
-signal cass_motor     : std_logic;
-signal cass_sense     : std_logic;
-signal cass_read      : std_logic;
-signal cass_run       : std_logic;
-signal cass_finish    : std_logic;
-signal cass_snd       : std_logic;
-signal tap_download   : std_logic;
-signal tap_reset      : std_logic;
-signal tap_loaded     : std_logic;
-signal tap_play_btn   : std_logic;
-signal tap_wrreq      : std_logic;
-signal tap_wrfull     : std_logic;
-signal tap_autoplay   : std_logic;
-signal tap_sdram_oe   : std_logic := '0';
-signal tap_wr         : std_logic := '0';
-signal cass_aud       : std_logic;
-signal audio_l        : std_logic_vector(17 downto 0);
-signal audio_r        : std_logic_vector(17 downto 0);
+signal tap_play_addr   : std_logic_vector(22 downto 0);
+signal tap_last_addr   : std_logic_vector(22 downto 0);
+signal tap_version     : std_logic_vector(1 downto 0);
+signal cass_write      : std_logic;
+signal cass_motor      : std_logic;
+signal cass_sense      : std_logic;
+signal cass_read       : std_logic;
+signal cass_run        : std_logic;
+signal cass_finish     : std_logic;
+signal cass_snd        : std_logic;
+signal tap_download    : std_logic;
+signal tap_reset       : std_logic;
+signal tap_loaded      : std_logic;
+signal tap_play_btn    : std_logic;
+signal tap_wrreq       : std_logic;
+signal tap_wrfull      : std_logic;
+signal tap_autoplay    : std_logic;
+signal tap_sdram_oe    : std_logic := '0';
+signal tap_wr          : std_logic := '0';
+signal cass_aud        : std_logic;
+signal audio_l         : std_logic_vector(17 downto 0);
+signal audio_r         : std_logic_vector(17 downto 0);
 signal img_present     : std_logic := '0';
 signal c1541_sd_rd     : std_logic;
 signal c1541_sd_wr     : std_logic;
@@ -338,25 +343,28 @@ signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
 signal detach_reset    : std_logic;
-signal user_port_cb1_in  : std_logic;
-signal user_port_cb2_in  : std_logic;
+signal user_port_cb1_in: std_logic;
+signal user_port_cb2_in: std_logic;
 signal user_port_cb1_out : std_logic;
 signal user_port_cb2_out : std_logic;
-signal user_port_in      : std_logic_vector(7 downto 0);
-signal user_port_out     : std_logic_vector(7 downto 0);
-signal uart_rxD          : std_logic_vector(1 downto 0);
-signal uart_rx_filtered  : std_logic;
-signal clkref            : std_logic;
-signal oe                : std_logic;
-signal system_reset_d    : std_logic;
-signal disk_pause        : std_logic;
-signal tap_data_in       : std_logic_vector(7 downto 0);
-signal p2_hD             : std_logic;
+signal user_port_in    : std_logic_vector(7 downto 0);
+signal user_port_out   : std_logic_vector(7 downto 0);
+signal uart_rxD        : std_logic_vector(1 downto 0);
+signal uart_rx_filtered: std_logic;
+signal clkref          : std_logic;
+signal oe              : std_logic;
+signal system_reset_d  : std_logic;
+signal disk_pause      : std_logic;
+signal tap_data_in     : std_logic_vector(7 downto 0);
+signal p2_hD           : std_logic;
 signal system_uart     : std_logic_vector(1 downto 0);
 signal uart_rx_muxed   : std_logic;
-signal pll_locked_d      : std_logic;
-signal pll_locked_d1     : std_logic;
-signal pll_locked_hid    : std_logic;
+signal pll_locked_d    : std_logic;
+signal pll_locked_d1   : std_logic;
+signal pll_locked_hid  : std_logic;
+signal paddle_1_analogA: std_logic;
+signal ds_cs_i         : std_logic;
+signal ds_miso_i       : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -428,16 +436,23 @@ begin
 -- https://store.curiousinventor.com/guides/PS2/
 -- https://hackaday.io/project/170365-blueretro/log/186471-playstation-playstation-2-spi-interface
 
+ds_cs     <= ds_cs_i when port_1_sel <= "0110" else '0';
+ds2_cs    <= ds_cs_i when port_1_sel > "0110" else '0';
+ds_miso_i <= ds_miso when port_1_sel <= "0110" else ds2_miso;
+ds2_mosi  <= ds_mosi;
+ds2_clk   <= ds_clk;
+
 gamepad: entity work.dualshock2
     port map (
     clk           => clk32,
     rst           => resetvic20,
     vsync         => vsync,
-    ds2_dat       => ds_miso,
+    ds2_dat       => ds_miso_i,
     ds2_cmd       => ds_mosi,
-    ds2_att       => ds_cs,
+    ds2_att       => ds_cs_i,
     ds2_clk       => ds_clk,
     ds2_ack       => '0',
+    analog        => paddle_1_analogA,
     stick_lx      => paddle_1,
     stick_ly      => paddle_2,
     stick_rx      => open,
@@ -673,7 +688,7 @@ port map(
 
       audio_l => audio_l,
       audio_r => audio_r,
-      osd_status => osd_status,
+      osd_status => open,
 
       mcu_start => mcu_start,
       mcu_osd_strobe => mcu_osd_strobe,
@@ -925,7 +940,7 @@ joyUsb1    <= joystick1(6 downto 4) & joystick1(0) & joystick1(1) & joystick1(2)
 joyUsb2    <= joystick2(6 downto 4) & joystick2(0) & joystick2(1) & joystick2(2) & joystick2(3);
 joyNumpad  <= '0' & numpad(5 downto 4) & numpad(0) & numpad(1) & numpad(2) & numpad(3);
 joyMouse   <= "00" & mouse_btns(0) & "000" & mouse_btns(1);
-joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00"; -- DS2 left stick
+joyDS2A_p1 <= "00" & '0' & key_cross  & key_square  & "00";
 joyUsb1A   <= "00" & '0' & joystick1(5) & joystick1(4) & "00"; -- Y,X button
 joyUsb2A   <= "00" & '0' & joystick2(5) & joystick2(4) & "00"; -- Y,X button
 
@@ -937,32 +952,45 @@ begin
 	if rising_edge(clk32) then
     case port_1_sel is
       when "0000"  => joyA <= joyDigital;
+        paddle_1_analogA <= '0';
       when "0001"  => joyA <= joyUsb1;
+        paddle_1_analogA <= '0';
       when "0010"  => joyA <= joyUsb2;
+        paddle_1_analogA <= '0';
       when "0011"  => joyA <= joyNumpad;
+        paddle_1_analogA <= '0';
       when "0100"  => joyA <= joyDS2_p1;
+        paddle_1_analogA <= '0';
       when "0101"  => joyA <= joyMouse;
+        paddle_1_analogA <= '0';
       when "0110"  => joyA <= joyDS2A_p1;
+        paddle_1_analogA <= '1';
       when "0111"  => joyA <= joyUsb1A;
+        paddle_1_analogA <= '0';
       when "1000"  => joyA <= joyUsb2A;
-      when "1001"  => joyA <= (others => '0');--9
-      when "1010"  => joyA <= joyDS2_p2;   -- 10
-      when "1011"  => joyA <= joyDS2A_p2;  -- 11
+        paddle_1_analogA <= '0';
+      when "1001"  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
+      when "1010"  => joyA <= joyDS2_p2;
+        paddle_1_analogA <= '0';
+      when "1011"  => joyA <= joyDS2A_p2;
+        paddle_1_analogA <= '0';
       when others  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
       end case;
   end if;
 end process;
 
 -- paddle pins - mouse
-pot1 <= not paddle_1 when port_1_sel = "0110" else 
-        not paddle_3 when port_1_sel = "1011" else
+pot1 <= not paddle_1 when port_1_sel = "0110" else -- J2D TN20k single DS2 mode
+        not paddle_1 when port_1_sel = "1011" else -- MS20k cable
         joystick1_x_pos(7 downto 0) when port_1_sel = "0111" else
         joystick2_x_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_x_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
         x"ff";
 
 pot2 <= not paddle_2 when port_1_sel = "0110" else
-        not paddle_4 when port_1_sel = "1011" else
+        not paddle_2 when port_1_sel = "1011" else
         joystick1_y_pos(7 downto 0) when port_1_sel = "0111" else 
         joystick2_y_pos(7 downto 0) when port_1_sel = "1000" else
         '0' & std_logic_vector(mouse_y_pos(6 downto 1)) & '0' when port_1_sel = "0101" else 
@@ -1102,7 +1130,7 @@ module_inst: entity work.sysctrl
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => pll_locked,
+    resetn    => flash_lock,
     ready     => open,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),
