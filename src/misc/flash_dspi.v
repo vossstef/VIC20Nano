@@ -38,7 +38,7 @@ wire [1:0]	   dspi_out;
 // drive hold and wp to their static default
 assign mspi_hold = 1'b1;
 assign mspi_wp   = 1'b0;
-
+      
 // use "fast read dual IO" command
 wire [7:0]   CMD_RD_DIO = 8'hbb;  
 
@@ -101,8 +101,6 @@ always @(posedge clk or negedge resetn) begin
       busy <= 1'b0;
       init <= 5'd20;
       csD <= 1'b0;
-      csD2 <= 1'b0;
-
    end else begin
       csD <= cs;     // bring cs into local clock domain
       csD2 <= csD;   // delay to detect rising edge
@@ -135,12 +133,12 @@ always @(posedge clk or negedge resetn) begin
             dspi_mode <= 1'b1;
 
         // latch output
-        if(state == 6'd24) dout[7:6] <= dspi_in;
-        if(state == 6'd25) dout[5:4] <= dspi_in;
-        if(state == 6'd26) dout[3:2] <= dspi_in;
-        if(state == 6'd27) dout[1:0] <= dspi_in;
+        if(state == 6'd25) dout[7:6] <= dspi_in;
+        if(state == 6'd26) dout[5:4] <= dspi_in;
+        if(state == 6'd27) dout[3:2] <= dspi_in;
+        if(state == 6'd28) dout[1:0] <= dspi_in;
         // signal that the transfer is done
-        if(state == 6'd27) begin
+        if(state == 6'd28) begin
             state <= 6'd0;	    
             busy <= 1'b0;
             mspi_cs <= 1'b1;	// deselect flash chip	 
