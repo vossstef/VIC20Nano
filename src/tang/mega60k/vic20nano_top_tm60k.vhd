@@ -507,10 +507,13 @@ led_ws2812: entity work.ws2812
       elsif rising_edge(clk32) then
 			if reset_cnt /= 0 then
 				reset_cnt := reset_cnt - 1;
-      disk_chg_trg <= '0';
-    elsif reset_cnt = 0 then
-      disk_chg_trg <= '1';
 			end if;
+		end if;
+
+  if reset_cnt = 0 then
+    disk_chg_trg <= '1';
+  else 
+    disk_chg_trg <= '0';
   end if;
 end process;
 
@@ -525,9 +528,12 @@ variable pause_cnt : integer range 0 to 2147483647;
     if pause_cnt /= 0 then
       pause_cnt := pause_cnt - 1;
     end if;
+  end if;
+
   if pause_cnt = 0 then 
     disk_pause <= '0';
-    end if;
+  else
+    disk_pause <= '1';
   end if;
 end process;
 
@@ -615,7 +621,7 @@ port map
     sd_buff_wr    => sd_rd_byte_strobe,
 
     led           => led1541,
-    ext_en        => ext_en,
+    ext_en        => '0',
     c1541rom_cs   => c1541rom_cs,
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data

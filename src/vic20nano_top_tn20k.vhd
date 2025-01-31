@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------
---  VIC20 Top level for Tang Nano
+--  VIC20 Top level for Tang Nano TN20k
 --  2024 Stefan Voss
 --  based on the work of many others
 --
@@ -608,7 +608,7 @@ port map
     sd_buff_wr    => sd_rd_byte_strobe,
 
     led           => led1541,
-    ext_en        => ext_en,
+    ext_en        => '0',
     c1541rom_cs   => c1541rom_cs,
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
@@ -883,20 +883,19 @@ port map(
 -- TN20k  Winbond 25Q64JVIQ
 -- TP25k  XTX XT25F64FWOIG
 -- TM138k Winbond 25Q128BVEA
--- phase shift 135° TN, TP and 270° TM
 
--- 64.125Mhz for flash controller c1541 ROM
+-- 100Mhz for flash controller c1541 ROM
 flashclock: rPLL
         generic map (
           FCLKIN => "27",
           DEVICE => "GW2AR-18C",
           DYN_IDIV_SEL => "false",
-          IDIV_SEL => 7,
+          IDIV_SEL => 6,
           DYN_FBDIV_SEL => "false",
-          FBDIV_SEL => 18,
+          FBDIV_SEL => 25,
           DYN_ODIV_SEL => "false",
           ODIV_SEL => 8,
-          PSDA_SEL => "0110", -- phase shift 135°
+          PSDA_SEL => "1111",
           DYN_DA_EN => "false",
           DUTYDA_SEL => "1000",
           CLKOUT_FT_DIR => '1',

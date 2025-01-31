@@ -368,41 +368,35 @@ begin
   m0s(0)      <= spi_io_dout; -- M0 Dock
 
 process(clk32, disk_reset)
-    variable reset_cnt : integer range 0 to 2147483647;
-    begin
-		if disk_reset = '1' then
-      disk_chg_trg <= '0';
-			reset_cnt := 64000000;
-      elsif rising_edge(clk32) then
-			if reset_cnt /= 0 then
-				reset_cnt := reset_cnt - 1;
-			end if;
-		end if;
-
-  if reset_cnt = 0 then
-    disk_chg_trg <= '1';
-  else 
+variable reset_cnt : integer range 0 to 2147483647;
+  begin
+  if disk_reset = '1' then
     disk_chg_trg <= '0';
+    reset_cnt := 64000000;
+  elsif rising_edge(clk32) then
+    if reset_cnt /= 0 then
+      reset_cnt := reset_cnt - 1;
+      disk_chg_trg <= '0';
+    elsif reset_cnt = 0 then
+      disk_chg_trg <= '1';
+    end if;
   end if;
 end process;
 
 -- delay disk start to keep loader at power-up intact
 process(clk32, resetvic20)
-variable pause_cnt : integer range 0 to 2147483647;
+  variable pause_cnt : integer range 0 to 2147483647;
   begin
   if resetvic20 = '1' then
     disk_pause <= '1';
     pause_cnt := 34000000;
-    elsif rising_edge(clk32) then
+  elsif rising_edge(clk32) then
     if pause_cnt /= 0 then
       pause_cnt := pause_cnt - 1;
     end if;
-  end if;
-
-  if pause_cnt = 0 then 
-    disk_pause <= '0';
-  else
-    disk_pause <= '1';
+    if pause_cnt = 0 then 
+      disk_pause <= '0';
+    end if;
   end if;
 end process;
 
@@ -490,7 +484,7 @@ port map
     sd_buff_wr    => sd_rd_byte_strobe,
 
     led           => led1541,
-    ext_en        => ext_en,
+    ext_en        => '0',
     c1541rom_cs   => c1541rom_cs,
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
@@ -570,7 +564,7 @@ port map(
 
       audio_l => audio_l,
       audio_r => audio_r,
-      osd_status => osd_status,
+      osd_status => open,
 
       mcu_start => mcu_start,
       mcu_osd_strobe => mcu_osd_strobe,

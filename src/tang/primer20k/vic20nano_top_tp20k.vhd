@@ -714,7 +714,7 @@ port map
     sd_buff_wr    => sd_rd_byte_strobe,
 
     led           => led1541,
-    ext_en        => ext_en,
+    ext_en        => '0',
     c1541rom_cs   => c1541rom_cs,
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
@@ -1030,7 +1030,7 @@ port map(
 -- phase shift 135° TN20k, TP25k
 --             270° TM 138k
 --              90° TP20k
--- 64.125Mhz for flash controller c1541 ROM
+-- 100Mhz for flash controller c1541 ROM
 flashclock: rPLL
         generic map (
           FCLKIN => "27",
