@@ -1,4 +1,4 @@
-set_device GW5A-LV25MG121NC1/I0 -name GW5A-25A
+set_device GW2A-LV18PG256C8/I7 -name GW2A-18C
 
 add_file src/c1541/mist_sd_card.sv
 add_file src/gowin_dpb/gowin_dpb_track_buffer_b.v
@@ -23,9 +23,8 @@ add_file src/misc/sd_card.v
 add_file src/misc/sd_rw.v
 add_file src/misc/sdcmd_ctrl.v
 add_file src/misc/sysctrl.v
-add_file src/misc/video.v
-add_file src/misc/video_analyzer.v
-add_file src/sdram.sv
+add_file src/misc/video_lcd.v
+add_file src/misc/ws2812.v
 add_file src/c1541/c1541_logic.vhd
 add_file src/c1541/c1541_sd.vhd
 add_file src/c1541/gcr_floppy.vhd
@@ -36,7 +35,7 @@ add_file src/gowin_dpb/gowin_dpb_2k.vhd
 add_file src/gowin_dpb/gowin_dpb_8k.vhd
 add_file src/gowin_prom/gowin_prom_basic.vhd
 add_file src/gowin_prom/gowin_prom_char.vhd
-add_file src/gowin_sdpb/gowin_sdpb_kernal_8k_gw5a.vhd
+add_file src/gowin_sdpb/gowin_sdpb_kernal_8k.vhd
 add_file src/gowin_sp/gowin_sp_2k.vhd
 add_file src/gowin_sp/gowin_sp_8k.vhd
 add_file src/m6522.vhd
@@ -49,34 +48,33 @@ add_file src/t65/T65.vhd
 add_file src/t65/T65_ALU.vhd
 add_file src/t65/T65_MCode.vhd
 add_file src/t65/T65_Pack.vhd
-add_file src/vic20_tp25k.vhd
+add_file src/vic20.vhd
 add_file src/vic20_clocks.vhd
 add_file src/vic20_keyboard.vhd
-add_file src/gowin_pll/gowin_pll_flash.vhd
-add_file src/gowin_pll/gowin_pll_ntsc.vhd
-add_file src/gowin_pll/gowin_pll_pal.vhd
-add_file src/tang/primer25k/vic20nano_top_tp25k.vhd
-add_file src/tang/primer25k/vic20nano_top_tp25k.cst
-add_file src/tang/primer25k/vic20nano_top_tp25k.sdc
+add_file src/tang/primer20k_lcd/vic20nano_top_tp20k_lcd.vhd
+add_file src/tang/primer20k_lcd/vic20nano_top_tp20k_lcd.cst
+add_file src/tang/primer20k_lcd/vic20nano_top_tp20k_lcd.sdc
 add_file src/loader_sd_card.sv
 add_file src/c1530.vhd
-add_file src/fifo_sc_hs/FIFO_SC_HS_Top_gw5a.vhd
+add_file src/fifo_sc_hs/fifo_sc_hs.vhd
+add_file src/tang/primer20k/memtest.sv
+add_file src/tang/primer20k/memory_controller.v
+add_file src/tang/primer20k/ddr3_controller.v
+add_file src/tang/primer20k/ddr3_tester.v
 add_file src/megacart.v
+add_file src/megacart_nvram.v
 
 set_option -synthesis_tool gowinsynthesis
-set_option -output_base_name vic20nano_tp25k
+set_option -output_base_name vic20nano_tp20k_lcd
 set_option -verilog_std sysv2017
 set_option -vhdl_std vhd2008
-set_option -top_module vic20nano_top_tp25k
+set_option -top_module VIC20_TOP_tp20k
 set_option -use_mspi_as_gpio 1
 set_option -use_sspi_as_gpio 1
-set_option -use_done_as_gpio 1
-set_option -use_cpu_as_gpio 1
-set_option -use_i2c_as_gpio 1
 set_option -use_ready_as_gpio 1
+set_option -use_done_as_gpio 1
 set_option -rw_check_on_ram 0
 set_option -user_code 00000001
-set_option -bit_compress 1
 set_option -multi_boot 1
 set_option -mspi_jump 0
 

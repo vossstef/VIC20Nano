@@ -301,28 +301,28 @@ signal extmem_sel      : std_logic;
 signal p2_h            : std_logic;
 signal resetvic20      : std_logic;
 signal old_reset       : std_logic;
-signal tap_play_addr  : std_logic_vector(22 downto 0);
-signal tap_last_addr  : std_logic_vector(22 downto 0);
-signal tap_version    : std_logic_vector(1 downto 0);
-signal cass_write     : std_logic;
-signal cass_motor     : std_logic;
-signal cass_sense     : std_logic;
-signal cass_read      : std_logic;
-signal cass_run       : std_logic;
-signal cass_finish    : std_logic;
-signal cass_snd       : std_logic;
-signal tap_download   : std_logic;
-signal tap_reset      : std_logic;
-signal tap_loaded     : std_logic;
-signal tap_play_btn   : std_logic;
-signal tap_wrreq      : std_logic;
-signal tap_wrfull     : std_logic;
-signal tap_autoplay   : std_logic;
-signal tap_sdram_oe   : std_logic := '0';
-signal tap_wr         : std_logic := '0';
-signal cass_aud       : std_logic;
-signal audio_l        : std_logic_vector(17 downto 0);
-signal audio_r        : std_logic_vector(17 downto 0);
+signal tap_play_addr   : std_logic_vector(22 downto 0);
+signal tap_last_addr   : std_logic_vector(22 downto 0);
+signal tap_version     : std_logic_vector(1 downto 0);
+signal cass_write      : std_logic;
+signal cass_motor      : std_logic;
+signal cass_sense      : std_logic;
+signal cass_read       : std_logic;
+signal cass_run        : std_logic;
+signal cass_finish     : std_logic;
+signal cass_snd        : std_logic;
+signal tap_download    : std_logic;
+signal tap_reset       : std_logic;
+signal tap_loaded      : std_logic;
+signal tap_play_btn    : std_logic;
+signal tap_wrreq       : std_logic;
+signal tap_wrfull      : std_logic;
+signal tap_autoplay    : std_logic;
+signal tap_sdram_oe    : std_logic := '0';
+signal tap_wr          : std_logic := '0';
+signal cass_aud        : std_logic;
+signal audio_l         : std_logic_vector(17 downto 0);
+signal audio_r         : std_logic_vector(17 downto 0);
 signal img_present     : std_logic := '0';
 signal c1541_sd_rd     : std_logic;
 signal c1541_sd_wr     : std_logic;
@@ -338,33 +338,34 @@ signal joystick2_y_pos : std_logic_vector(7 downto 0);
 signal extra_button0   : std_logic_vector(7 downto 0);
 signal extra_button1   : std_logic_vector(7 downto 0);
 signal detach_reset    : std_logic;
-signal user_port_cb1_in  : std_logic;
-signal user_port_cb2_in  : std_logic;
+signal user_port_cb1_in: std_logic;
+signal user_port_cb2_in: std_logic;
 signal user_port_cb1_out : std_logic;
 signal user_port_cb2_out : std_logic;
-signal user_port_in      : std_logic_vector(7 downto 0);
-signal user_port_out     : std_logic_vector(7 downto 0);
-signal uart_rxD          : std_logic_vector(1 downto 0);
-signal uart_rx_filtered  : std_logic;
-signal clkref            : std_logic;
-signal oe                : std_logic;
-signal system_reset_d    : std_logic;
-signal disk_pause        : std_logic;
-signal tap_data_in       : std_logic_vector(7 downto 0);
-signal p2_hD             : std_logic;
-signal system_uart       : std_logic_vector(1 downto 0);
-signal uart_rx_muxed     : std_logic;
-signal lcd_r_i           : std_logic_vector(5 downto 0);
-signal lcd_b_i           : std_logic_vector(5 downto 0);
-signal ds_clk            : std_logic;
-signal ds_mosi           : std_logic;
-signal ds_miso           : std_logic;
-signal ds_cs             : std_logic;
-signal uart_ext_rx       : std_logic := '1';
-signal uart_ext_tx       : std_logic;
-signal pll_locked_d      : std_logic;
-signal pll_locked_d1     : std_logic;
-signal pll_locked_hid    : std_logic;
+signal user_port_in    : std_logic_vector(7 downto 0);
+signal user_port_out   : std_logic_vector(7 downto 0);
+signal uart_rxD        : std_logic_vector(1 downto 0);
+signal uart_rx_filtered: std_logic;
+signal clkref          : std_logic;
+signal oe              : std_logic;
+signal system_reset_d  : std_logic;
+signal disk_pause      : std_logic;
+signal tap_data_in     : std_logic_vector(7 downto 0);
+signal p2_hD           : std_logic;
+signal system_uart     : std_logic_vector(1 downto 0);
+signal uart_rx_muxed   : std_logic;
+signal lcd_r_i         : std_logic_vector(5 downto 0);
+signal lcd_b_i         : std_logic_vector(5 downto 0);
+signal ds_clk          : std_logic;
+signal ds_mosi         : std_logic;
+signal ds_miso         : std_logic;
+signal ds_cs           : std_logic;
+signal uart_ext_rx     : std_logic := '1';
+signal uart_ext_tx     : std_logic;
+signal pll_locked_d    : std_logic;
+signal pll_locked_d1   : std_logic;
+signal pll_locked_hid  : std_logic;
+signal paddle_1_analogA: std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -564,7 +565,7 @@ port map
     sd_buff_wr    => sd_rd_byte_strobe,
 
     led           => led1541,
-    ext_en        => ext_en,
+    ext_en        => '0',
     c1541rom_cs   => c1541rom_cs,
     c1541rom_addr => c1541rom_addr,
     c1541rom_data => c1541rom_data
@@ -841,20 +842,19 @@ port map(
 -- TN20k  Winbond 25Q64JVIQ
 -- TP25k  XTX XT25F64FWOIG
 -- TM138k Winbond 25Q128BVEA
--- phase shift 135° TN, TP and 270° TM
 
--- 64.125Mhz for flash controller c1541 ROM
+-- 100Mhz for flash controller c1541 ROM
 flashclock: rPLL
         generic map (
           FCLKIN => "27",
           DEVICE => "GW2AR-18C",
           DYN_IDIV_SEL => "false",
-          IDIV_SEL => 7,
+          IDIV_SEL => 6,
           DYN_FBDIV_SEL => "false",
-          FBDIV_SEL => 18,
+          FBDIV_SEL => 25,
           DYN_ODIV_SEL => "false",
           ODIV_SEL => 8,
-          PSDA_SEL => "0110", -- phase shift 135°
+          PSDA_SEL => "1111",
           DYN_DA_EN => "false",
           DUTYDA_SEL => "1000",
           CLKOUT_FT_DIR => '1',
@@ -910,18 +910,31 @@ begin
 	if rising_edge(clk32) then
     case port_1_sel is
       when "0000"  => joyA <= joyDigital;
+        paddle_1_analogA <= '0';
       when "0001"  => joyA <= joyUsb1;
+        paddle_1_analogA <= '0';
       when "0010"  => joyA <= joyUsb2;
+        paddle_1_analogA <= '0';
       when "0011"  => joyA <= joyNumpad;
+        paddle_1_analogA <= '0';
       when "0100"  => joyA <= joyDS2_p1;
+        paddle_1_analogA <= '0';
       when "0101"  => joyA <= joyMouse;
+        paddle_1_analogA <= '0';
       when "0110"  => joyA <= joyDS2A_p1;
+        paddle_1_analogA <= '1';
       when "0111"  => joyA <= joyUsb1A;
+        paddle_1_analogA <= '0';
       when "1000"  => joyA <= joyUsb2A;
-      when "1001"  => joyA <= (others => '0');--9
-      when "1010"  => joyA <= joyDS2_p2;   -- 10
-      when "1011"  => joyA <= joyDS2A_p2;  -- 11
+        paddle_1_analogA <= '0';
+      when "1001"  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
+      when "1010"  => joyA <= joyDS2_p2;
+        paddle_1_analogA <= '0';
+      when "1011"  => joyA <= joyDS2A_p2;
+        paddle_1_analogA <= '0';
       when others  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
       end case;
   end if;
 end process;

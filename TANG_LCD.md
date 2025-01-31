@@ -8,7 +8,7 @@ HDMI connector. This is supported by all cores. The Tang 20k, 60k and 138k Pro a
 in handy in this setup to add sound output.
 
 > [!NOTE]
-> TN20k and TN9k: No Dualshock and no D9 retro Joystick support
+> TN20k, TP20k and TN9k: No Dualshock, no D9 retro Joystick, no external RS232 support
 
 # TN20k, LCD, Speaker and M0S
 
@@ -18,6 +18,9 @@ in handy in this setup to add sound output.
 ![wiring](\.assets/wiring_tn20k_lcd.png)
 <br> <br> 
 
+# TP20k, LCD, Speaker, M0S PMOD adapter and M0S
+
+![setup](\.assets/tp20k_lcd.png)
 
 
 # TN9k, LCD, Speaker and M0S
