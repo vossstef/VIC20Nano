@@ -82,6 +82,8 @@ set_option -user_code 00000001
 set_option -bit_compress 1
 set_option -vccx 1.8
 set_option -vcc 0.9
+set_option -multi_boot 1
+set_option -mspi_jump 0
 
 #run syn
 run all
