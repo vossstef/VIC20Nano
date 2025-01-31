@@ -1130,7 +1130,7 @@ module_inst: entity work.sysctrl
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => flash_lock,
+    resetn    => pll_locked,
     ready     => open,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),

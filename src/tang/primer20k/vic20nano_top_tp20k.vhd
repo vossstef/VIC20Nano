@@ -888,10 +888,11 @@ port map(
 -- Clock tree and all frequencies in Hz
 -- TN20k VIC20
 --                  PAL  / NTSC  
--- pll         357750000  329400000
+-- pll ddr     357750000  329400000
 -- serdes      178875000  164700000
--- dram         71550000   65880000
--- core /pixel  35775000   32940000
+-- ddr x4       89437500   82350000
+-- core64       71550000   65880000
+-- core32/pixel 35775000   32940000
 -- IDIV_SEL     3         4
 -- FBDIV_SEL   52         60
 -- ODIV_SEL     2         2
@@ -1318,7 +1319,7 @@ module_inst: entity work.sysctrl
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => flash_lock,
+    resetn    => pll_locked,
     ready     => open,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),
@@ -1575,31 +1576,31 @@ port map
 	mc_soft_reset   => mc_reset
 );
 
-mc_nvram_inst: entity work.megacart_nvram
-   port map (
-	clk_a          => clk32,
-	a_a            => vic_addr(12 downto 0),
-	d_a            => vic_data,
-	q_a            => mc_nvram_out,
-	we_a           => mc_nvram_sel and not mc_wr_n,
+--mc_nvram_inst: entity work.megacart_nvram
+--   port map (
+--	clk_a          => clk32,
+--	a_a            => vic_addr(12 downto 0),
+--	d_a            => vic_data,
+--	q_a            => mc_nvram_out,
+--	we_a           => mc_nvram_sel and not mc_wr_n,
 
 -- UserIO interface
-	clk_b          => clk32,
-	reset_n        => pll_locked,
-	readnv         => '0', -- img_mounted(1),
-	writenv        => '0', -- st_writenv,
-	uio_busy       => '0' ,-- sd_busy_1541,
-	nvram_sel      => open, -- uio_sel_nvram,
-	sd_lba         => open, -- sd_lba_nvram,
-	sd_rd          => open, -- sd_rd_nvram,
-	sd_wr          => open, -- sd_wr_nvram,
-	sd_ack         => '0', -- sd_ack_nvram,
-	sd_buff_din    => open, -- sd_din_nvram,
-	sd_buff_dout   => (others => '0'), -- sd_dout,
-	sd_buff_wr     => '0', --sd_strobe_nvram,
-	sd_buff_addr   => (others => '0'), -- sd_buff_addr,
-	img_size       => (others => '0') --img_size
-);
+--	clk_b          => clk32,
+--	reset_n        => pll_locked,
+--	readnv         => '0', -- img_mounted(1),
+--	writenv        => '0', -- st_writenv,
+--	uio_busy       => '0' ,-- sd_busy_1541,
+--	nvram_sel      => open, -- uio_sel_nvram,
+--	sd_lba         => open, -- sd_lba_nvram,
+--	sd_rd          => open, -- sd_rd_nvram,
+--	sd_wr          => open, -- sd_wr_nvram,
+--	sd_ack         => '0', -- sd_ack_nvram,
+--	sd_buff_din    => open, -- sd_din_nvram,
+--	sd_buff_dout   => (others => '0'), -- sd_dout,
+--	sd_buff_wr     => '0', --sd_strobe_nvram,
+--	sd_buff_addr   => (others => '0'), -- sd_buff_addr,
+--	img_size       => (others => '0') --img_size
+--);
 
 -------------- TAP -------------------
 
