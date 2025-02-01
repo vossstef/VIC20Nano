@@ -10,6 +10,10 @@ in handy in this setup to add sound output.
 > [!NOTE]
 > TN20k, TP20k and TN9k: No Dualshock, no D9 retro Joystick, no external RS232 support
 
+# TM60k NEO, LCD, Speaker and M0S
+
+# TM138k Pro, LCD, Speaker and M0S
+
 # TN20k, LCD, Speaker and M0S
 
 **Pinmap TN20k Interfaces LCD Output**<br>
@@ -29,9 +33,6 @@ TN9k lack Audio support therefore external Filter and Amplifier needed.
 **low pass filter for Audio Amplifier** <br>
 ![pinmap](\.assets/audiofilter.png)<br>
 Tang Nano 5V connected to Audio Amplifier supply.
-Filter Vout connected to input of Amplifier module.
-
-
-
+Filter Vout connected to input of Amplifier module e.g. Mini PAM8403
 
  
