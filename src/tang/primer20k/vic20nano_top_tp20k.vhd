@@ -606,7 +606,7 @@ variable reset_cnt : integer range 0 to 2147483647;
   elsif rising_edge(clk32) then
     if reset_cnt /= 0 then
       reset_cnt := reset_cnt - 1;
-      disk_chg_trg <= '0';
+
     elsif reset_cnt = 0 then
       disk_chg_trg <= '1';
     end if;
@@ -615,16 +615,15 @@ end process;
 
 -- delay disk start to keep loader at power-up intact
 process(clk32, resetvic20)
-  variable pause_cnt : integer range 0 to 2147483647;
+variable pause_cnt : integer range 0 to 2147483647;
   begin
   if resetvic20 = '1' then
     disk_pause <= '1';
     pause_cnt := 34000000;
-  elsif rising_edge(clk32) then
+    elsif rising_edge(clk32) then
     if pause_cnt /= 0 then
       pause_cnt := pause_cnt - 1;
-    end if;
-    if pause_cnt = 0 then 
+    elsif pause_cnt = 0 then 
       disk_pause <= '0';
     end if;
   end if;

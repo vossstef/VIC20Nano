@@ -498,22 +498,19 @@ led_ws2812: entity work.ws2812
    data   => ws2812
   );
 
-	process(clk32, disk_reset)
-    variable reset_cnt : integer range 0 to 2147483647;
-    begin
-		if disk_reset = '1' then
-      disk_chg_trg <= '0';
-			reset_cnt := 64000000;
-      elsif rising_edge(clk32) then
-			if reset_cnt /= 0 then
-				reset_cnt := reset_cnt - 1;
-			end if;
-		end if;
-
-  if reset_cnt = 0 then
-    disk_chg_trg <= '1';
-  else 
+process(clk32, disk_reset)
+variable reset_cnt : integer range 0 to 2147483647;
+  begin
+  if disk_reset = '1' then
     disk_chg_trg <= '0';
+    reset_cnt := 64000000;
+  elsif rising_edge(clk32) then
+    if reset_cnt /= 0 then
+      reset_cnt := reset_cnt - 1;
+
+    elsif reset_cnt = 0 then
+      disk_chg_trg <= '1';
+    end if;
   end if;
 end process;
 
@@ -527,13 +524,9 @@ variable pause_cnt : integer range 0 to 2147483647;
     elsif rising_edge(clk32) then
     if pause_cnt /= 0 then
       pause_cnt := pause_cnt - 1;
+    elsif pause_cnt = 0 then 
+      disk_pause <= '0';
     end if;
-  end if;
-
-  if pause_cnt = 0 then 
-    disk_pause <= '0';
-  else
-    disk_pause <= '1';
   end if;
 end process;
 
