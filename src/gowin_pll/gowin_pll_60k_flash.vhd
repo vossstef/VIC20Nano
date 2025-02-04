@@ -5,7 +5,7 @@
 --Part Number: GW5AT-LV60PG484AC1/I0
 --Device: GW5AT-60
 --Device Version: B
---Created Time: Fri Jan 31 20:22:26 2025
+--Created Time: Tue Feb  4 22:53:57 2025
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -161,14 +161,14 @@ begin
             FCLKIN => "50",
             IDIV_SEL => 1,
             FBDIV_SEL => 1,
-            ODIV0_SEL => 8,
-            ODIV1_SEL => 8,
+            ODIV0_SEL => 25,
+            ODIV1_SEL => 25,
             ODIV2_SEL => 8,
             ODIV3_SEL => 8,
             ODIV4_SEL => 8,
             ODIV5_SEL => 8,
             ODIV6_SEL => 8,
-            MDIV_SEL => 16,
+            MDIV_SEL => 32,
             MDIV_FRAC_SEL => 0,
             ODIV0_FRAC_SEL => 0,
             CLKOUT0_EN => "TRUE",
@@ -204,8 +204,8 @@ begin
             DYN_DPA_EN => "FALSE",
             CLKOUT0_PE_COARSE => 0,
             CLKOUT0_PE_FINE => 0,
-            CLKOUT1_PE_COARSE => 1,
-            CLKOUT1_PE_FINE => 0,
+            CLKOUT1_PE_COARSE => 9,
+            CLKOUT1_PE_FINE => 3,
             CLKOUT2_PE_COARSE => 0,
             CLKOUT2_PE_FINE => 0,
             CLKOUT3_PE_COARSE => 0,
