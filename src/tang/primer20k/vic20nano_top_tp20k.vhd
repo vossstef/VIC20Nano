@@ -510,7 +510,6 @@ end component;
 
 begin
 -- ----------------- SPI input parser ----------------------
--- map output data onto both spi outputs
   spi_io_din  <= m0s(1);
   spi_io_ss   <= m0s(2);
   spi_io_clk  <= m0s(3);
@@ -606,7 +605,6 @@ variable reset_cnt : integer range 0 to 2147483647;
   elsif rising_edge(clk32) then
     if reset_cnt /= 0 then
       reset_cnt := reset_cnt - 1;
-
     elsif reset_cnt = 0 then
       disk_chg_trg <= '1';
     end if;

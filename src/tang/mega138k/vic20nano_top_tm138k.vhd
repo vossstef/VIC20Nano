@@ -504,7 +504,6 @@ variable reset_cnt : integer range 0 to 2147483647;
   elsif rising_edge(clk32) then
     if reset_cnt /= 0 then
       reset_cnt := reset_cnt - 1;
-
     elsif reset_cnt = 0 then
       disk_chg_trg <= '1';
     end if;
