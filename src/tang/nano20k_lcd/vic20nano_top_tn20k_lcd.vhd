@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------
 --  VIC20 Top level for Tang Nano 20k LCD
---  2024 Stefan Voss
+--  2025 Stefan Voss
 --  based on the work of many others
 --
 -------------------------------------------------------------------------
@@ -366,6 +366,7 @@ signal pll_locked_d    : std_logic;
 signal pll_locked_d1   : std_logic;
 signal pll_locked_hid  : std_logic;
 signal paddle_1_analogA: std_logic;
+signal flash_ready     : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -428,7 +429,6 @@ end component;
 
 begin
 -- ----------------- SPI input parser ----------------------
--- map output data onto both spi outputs
   spi_io_din  <= m0s(1);
   spi_io_ss   <= m0s(2);
   spi_io_clk  <= m0s(3);
@@ -442,22 +442,18 @@ led_ws2812: entity work.ws2812
    data   => ws2812
   );
 
-	process(clk32, disk_reset)
-    variable reset_cnt : integer range 0 to 2147483647;
-    begin
-		if disk_reset = '1' then
-      disk_chg_trg <= '0';
-			reset_cnt := 64000000;
-      elsif rising_edge(clk32) then
-			if reset_cnt /= 0 then
-				reset_cnt := reset_cnt - 1;
-			end if;
-		end if;
-
-  if reset_cnt = 0 then
-    disk_chg_trg <= '1';
-  else 
+process(clk32, disk_reset)
+variable reset_cnt : integer range 0 to 2147483647;
+  begin
+  if disk_reset = '1' then
     disk_chg_trg <= '0';
+    reset_cnt := 64000000;
+  elsif rising_edge(clk32) then
+    if reset_cnt /= 0 then
+      reset_cnt := reset_cnt - 1;
+    elsif reset_cnt = 0 then
+      disk_chg_trg <= '1';
+    end if;
   end if;
 end process;
 
@@ -471,17 +467,13 @@ variable pause_cnt : integer range 0 to 2147483647;
     elsif rising_edge(clk32) then
     if pause_cnt /= 0 then
       pause_cnt := pause_cnt - 1;
+    elsif pause_cnt = 0 then 
+      disk_pause <= '0';
     end if;
-  end if;
-
-  if pause_cnt = 0 then 
-    disk_pause <= '0';
-  else
-    disk_pause <= '1';
   end if;
 end process;
 
-disk_reset <= '1' when disk_pause or c1541_osd_reset or c1541_reset or resetvic20 else '0';
+disk_reset <= '1' when not flash_ready or disk_pause or c1541_osd_reset or c1541_reset or resetvic20 else '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked_hid)
@@ -1089,7 +1081,7 @@ flash_inst: entity work.flash
 port map(
     clk       => flash_clk,
     resetn    => pll_locked,
-    ready     => open,
+    ready     => flash_ready,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,

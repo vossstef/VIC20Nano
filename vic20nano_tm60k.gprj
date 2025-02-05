@@ -3,7 +3,7 @@
 <Project>
     <Template>FPGA</Template>
     <Version>5</Version>
-    <Device name="" pn="GW5AT-LV60PG484AC1/I0">gw5at60b-002</Device>
+    <Device name="GW5AT-60B" pn="GW5AT-LV60PG484AC1/I0">gw5at60b-002</Device>
     <FileList>
         <File path="src/c1541/mist_sd_card.sv" type="file.verilog" enable="1"/>
         <File path="src/dualshock2.v" type="file.verilog" enable="1"/>
@@ -22,7 +22,6 @@
         <File path="src/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
         <File path="src/loader_sd_card.sv" type="file.verilog" enable="1"/>
         <File path="src/megacart.v" type="file.verilog" enable="1"/>
-        <File path="src/misc/flash_dspi.v" type="file.verilog" enable="1"/>
         <File path="src/misc/hid.v" type="file.verilog" enable="1"/>
         <File path="src/misc/mcu_spi.v" type="file.verilog" enable="1"/>
         <File path="src/misc/osd_u8g2.v" type="file.verilog" enable="1"/>
@@ -35,6 +34,7 @@
         <File path="src/misc/video_analyzer.v" type="file.verilog" enable="1"/>
         <File path="src/misc/ws2812.v" type="file.verilog" enable="1"/>
         <File path="src/sdram.sv" type="file.verilog" enable="1"/>
+        <File path="src/misc/flash_dspi_gw5a.v" type="file.verilog" enable="1"/>
         <File path="src/c1530.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_logic.vhd" type="file.vhdl" enable="1"/>
         <File path="src/c1541/c1541_sd.vhd" type="file.vhdl" enable="1"/>

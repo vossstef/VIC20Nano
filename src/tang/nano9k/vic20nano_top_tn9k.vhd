@@ -350,6 +350,7 @@ signal system_uart       : std_logic_vector(1 downto 0);
 signal uart_rx_muxed     : std_logic;
 signal uart_ext_rx       : std_logic;
 signal uart_ext_tx       : std_logic;
+signal paddle_1_analogA  : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -430,6 +431,7 @@ gamepad: entity work.dualshock2
     ds2_att       => ds_cs,
     ds2_clk       => ds_clk,
     ds2_ack       => '0',
+    analog        => paddle_1_analogA,
     stick_lx      => paddle_1,
     stick_ly      => paddle_2,
     stick_rx      => open,
@@ -528,7 +530,7 @@ port map(
 
       audio_l => audio_l,
       audio_r => audio_r,
-      osd_status => osd_status,
+      osd_status => open,
 
       mcu_start => mcu_start,
       mcu_osd_strobe => mcu_osd_strobe,
@@ -764,18 +766,31 @@ begin
 	if rising_edge(clk32) then
     case port_1_sel is
       when "0000"  => joyA <= joyDigital;
+        paddle_1_analogA <= '0';
       when "0001"  => joyA <= joyUsb1;
+        paddle_1_analogA <= '0';
       when "0010"  => joyA <= joyUsb2;
+        paddle_1_analogA <= '0';
       when "0011"  => joyA <= joyNumpad;
+        paddle_1_analogA <= '0';
       when "0100"  => joyA <= joyDS2_p1;
+        paddle_1_analogA <= '0';
       when "0101"  => joyA <= joyMouse;
+        paddle_1_analogA <= '0';
       when "0110"  => joyA <= joyDS2A_p1;
+        paddle_1_analogA <= '1';
       when "0111"  => joyA <= joyUsb1A;
+        paddle_1_analogA <= '0';
       when "1000"  => joyA <= joyUsb2A;
-      when "1001"  => joyA <= (others => '0');--9
-      when "1010"  => joyA <= joyDS2_p2;   -- 10
-      when "1011"  => joyA <= joyDS2A_p2;  -- 11
+        paddle_1_analogA <= '0';
+      when "1001"  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
+      when "1010"  => joyA <= joyDS2_p2;
+        paddle_1_analogA <= '0';
+      when "1011"  => joyA <= joyDS2A_p2;
+        paddle_1_analogA <= '0';
       when others  => joyA <= (others => '0');
+        paddle_1_analogA <= '0';
       end case;
   end if;
 end process;
