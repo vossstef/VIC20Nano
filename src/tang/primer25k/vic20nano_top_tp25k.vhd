@@ -339,8 +339,9 @@ signal system_reset_d    : std_logic;
 signal disk_pause        : std_logic;
 signal tap_data_in       : std_logic_vector(7 downto 0);
 signal p2_hD             : std_logic;
-signal system_uart     : std_logic_vector(1 downto 0);
-signal uart_rx_muxed   : std_logic;
+signal system_uart       : std_logic_vector(1 downto 0);
+signal uart_rx_muxed     : std_logic;
+signal flash_ready       : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -397,7 +398,7 @@ variable pause_cnt : integer range 0 to 2147483647;
   end if;
 end process;
 
-disk_reset <= '1' when disk_pause or c1541_osd_reset or c1541_reset or resetvic20 else '0';
+disk_reset <= '1' when not flash_ready or disk_pause or c1541_osd_reset or c1541_reset or resetvic20 else '0';
 
 -- rising edge sd_change triggers detection of new disk
 process(clk32, pll_locked)
@@ -654,7 +655,6 @@ flashclock: entity work.Gowin_PLL_flash
         lock => flash_lock,
         clkout0 => flash_clk,
         clkout1 => mspi_clk,
-        clkout2 => open, -- 32,0M
         clkin => clk
     );
 
@@ -873,7 +873,7 @@ flash_inst: entity work.flash
 port map(
     clk       => flash_clk,
     resetn    => pll_locked,
-    ready     => open,
+    ready     => flash_ready,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),
     cs        => c1541rom_cs,

@@ -15,7 +15,7 @@ add_file src/hdmi/packet_picker.sv
 add_file src/hdmi/serializer.sv
 add_file src/hdmi/source_product_description_info_frame.sv
 add_file src/hdmi/tmds_channel.sv
-add_file src/misc/flash_dspi.v
+add_file src/misc/flash_dspi_gw5a.v
 add_file src/misc/hid.v
 add_file src/misc/mcu_spi.v
 add_file src/misc/osd_u8g2.v
