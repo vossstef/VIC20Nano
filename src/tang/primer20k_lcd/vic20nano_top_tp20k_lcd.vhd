@@ -399,7 +399,8 @@ signal lcd_r_i          : std_logic_vector(5 downto 0);
 signal lcd_b_i          : std_logic_vector(5 downto 0);
 signal uart_ext_rx      : std_logic := '1';
 signal uart_ext_tx      : std_logic;
-signal flash_ready     : std_logic;
+signal flash_ready      : std_logic;
+signal pll_locked_comb  : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -956,6 +957,8 @@ port map(
 -- phase shift 135° TN20k, TP25k
 --             270° TM 138k
 --              90° TP20k
+pll_locked_comb <= pll_locked_hid and flash_lock;
+
 -- 100Mhz for flash controller c1541 ROM
 flashclock: rPLL
         generic map (
@@ -1245,7 +1248,7 @@ module_inst: entity work.sysctrl
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => pll_locked,
+    resetn    => pll_locked_comb,
     ready     => flash_ready,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),

@@ -367,6 +367,7 @@ signal pll_locked_d1   : std_logic;
 signal pll_locked_hid  : std_logic;
 signal paddle_1_analogA: std_logic;
 signal flash_ready     : std_logic;
+signal pll_locked_comb : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -835,6 +836,8 @@ port map(
 -- TP25k  XTX XT25F64FWOIG
 -- TM138k Winbond 25Q128BVEA
 
+pll_locked_comb <= pll_locked_hid and flash_lock;
+
 -- 100Mhz for flash controller c1541 ROM
 flashclock: rPLL
         generic map (
@@ -1080,7 +1083,7 @@ module_inst: entity work.sysctrl
 flash_inst: entity work.flash 
 port map(
     clk       => flash_clk,
-    resetn    => pll_locked,
+    resetn    => pll_locked_comb,
     ready     => flash_ready,
     busy      => open,
     address   => (x"2" & "000" & dos_sel & c1541rom_addr),
