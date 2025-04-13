@@ -1109,8 +1109,16 @@ module_inst: entity work.sysctrl
   system_i_center     => i_center,
   system_crt_write    => crt_writeable,
   system_detach_reset => detach_reset,
-  cold_boot           => open,
   system_uart         => system_uart,
+
+  -- port io (used to expose rs232)
+  port_status         => (others => '0'),
+  port_out_available  => (others => '0'),
+  port_out_strobe     => open,
+  port_out_data       => (others => '0'),
+  port_in_available   => (others => '0'),
+  port_in_strobe      => open,
+  port_in_data        => open,
 
   int_out_n           => m0s(4),
   int_in              => unsigned'(x"0" & sdc_int & '0' & hid_int & '0'),
