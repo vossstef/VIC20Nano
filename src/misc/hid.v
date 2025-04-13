@@ -123,7 +123,7 @@ always @(posedge clk) begin
             // CMD 1: keyboard data
             if(command == 8'd1) begin
 	       // kbd_column and kbd_row are derived from data_in
-               if(state == 4'd0) keyboard[kbd_column][kbd_row] <= data_in[7]; 
+               if(state == 4'd0) keyboard[kbd_row][kbd_column] <= data_in[7]; // row / colum !
             end
 	       
             // CMD 2: mouse data
