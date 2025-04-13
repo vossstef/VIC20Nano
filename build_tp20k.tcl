@@ -65,6 +65,7 @@ add_file src/tang/primer20k/ddr3_controller.v
 add_file src/tang/primer20k/ddr3_tester.v
 add_file src/megacart.v
 add_file src/megacart_nvram.v
+add_file src/misc/vic20_keymap.v
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name vic20nano_tp20k

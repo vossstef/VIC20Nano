@@ -51,6 +51,7 @@ add_file src/tang/nano9k_lcd/vic20nano_top_tn9k_lcd.cst
 add_file src/tang/nano9k_lcd/vic20nano_top_tn9k_lcd.sdc
 add_file src/loader_sd_card.sv
 add_file src/megacart.v
+add_file src/misc/vic20_keymap.v
 
 set_option -synthesis_tool gowinsynthesis
 set_option -output_base_name vic20nano_tn9k_lcd
