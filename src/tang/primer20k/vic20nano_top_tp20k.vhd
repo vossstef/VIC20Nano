@@ -1296,7 +1296,6 @@ module_inst: entity work.sysctrl
   system_i_center     => i_center,
   system_crt_write    => crt_writeable,
   system_detach_reset => detach_reset,
-  cold_boot           => open,
   system_uart         => system_uart,
 
   -- port io (used to expose rs232)
