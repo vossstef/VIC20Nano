@@ -385,6 +385,7 @@ signal paddle_1_analogB : std_logic;
 signal paddle_2_analogA : std_logic;
 signal paddle_2_analogB : std_logic;
 signal flash_ready      : std_logic;
+signal shift_mod       : std_logic_vector(1 downto 0);
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -975,6 +976,7 @@ hid_inst: entity work.hid
   db9_port        => db9_joy,
   irq             => hid_int,
   iack            => int_ack(1),
+  shift_mod       => shift_mod,
   -- output HID data received from USB
   joystick0       => joystick1,
   joystick1       => joystick2,
@@ -1029,6 +1031,7 @@ module_inst: entity work.sysctrl
   system_crt_write    => crt_writeable,
   system_detach_reset => detach_reset,
   system_uart         => system_uart,
+  system_shift_mod    => shift_mod,
 
   -- port io (used to expose rs232)
   port_status         => (others => '0'),

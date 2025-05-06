@@ -12,6 +12,7 @@ The VIC20Nano is a port of some [MiST](https://github.com/mist-devel/mist-board/
 | [Tang Primer 25K](https://wiki.sipeed.com/hardware/en/tang/tang-primer-25k/primer-25k.html) | [GW5A-25](https://www.gowinsemi.com/en/product/detail/60/)  |HDMI|no Dualshock, no Retro D9 Joystick |
 | [Tang Mega 60k NEO](https://wiki.sipeed.com/hardware/en/tang/tang-mega-60k/mega-60k.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/)|HDMI / LCD|two Dualshock, selectable |
 | [Tang Mega 138k Pro](https://wiki.sipeed.com/hardware/en/tang/tang-mega-138k/mega-138k-pro.html)|[GW5AST-138](https://www.gowinsemi.com/en/product/detail/60/) |HDMI / LCD|two Dualshock, selectable |
+| [Tang Console 60K NEO](https://wiki.sipeed.com/hardware/en/tang/tang-console/mega-console.html)|[GW5AT-60](https://www.gowinsemi.com/en/product/detail/60/) | HDMI / LCD |twin Dualshock, no Retro D9 Joystick|
 
 Be aware that the [C64](https://en.wikipedia.org/wiki/Commodore_64) had been ported too in similar manner ([C64Nano](https://github.com/vossstef/tang_nano_20k_c64)).
 Also the [Atari 2600 VCS](https://en.wikipedia.org/wiki/Atari_2600) had been ported ([A2600Nano](https://github.com/vossstef/A2600Nano)).
@@ -31,7 +32,7 @@ and for the Raspberry PiPico (RP2040 µC) there is a:
 
 * [Optional custom carrier board MiSTeryShield20k Raspberry PiPico](https://github.com/vossstef/tang_nano_20k_c64/tree/main/board/misteryshield20k_rpipico/README.md)
 * [Dualshock Adapter / Cable](https://github.com/vossstef/tang_nano_20k_c64/tree/main/board/misteryshield20k_ds2_adapter/misteryshield20k_ds2_adapter_cable.md)
-* [Optional custom PMOD RP2040-Zero](https://github.com/vossstef/tang_nano_20k_c64/tree/main/board/pizero_pmod/README.md) for Primer / Mega Boards
+* [Optional custom PMOD RP2040-Zero](https://github.com/vossstef/tang_nano_20k_c64/tree/main/board/pizero_pmod/README.md) for Primer / Mega / Console Boards
 * Optional case (upcoming)
 
 Features:
@@ -85,6 +86,10 @@ See [Tang Mega 60K NEO](TANG_MEGA_60K.md)
 ## VIC20Nano on Tang Mega 138K Pro
 
 See [Tang Mega 138K Pro](TANG_MEGA_138K.md)
+
+## VIC20Nano on Tang Console 60k NEO
+
+See [Tang Console 60K NEO](TANG_CONSOLE_60K.md)
 
 ## VIC20Nano with LCD and Speaker
 
@@ -203,7 +208,7 @@ The core will after power cycle/ cold-boot start downloading the images on the s
 
 * Nano 20k S2 keep pressed during power-up for FLASH programming of FPGA bitstream
 * Primer 20k: There is by default unfortunately no Button/Switch to prevent FPGA bitstream load from FLASH (see rework how to add).
-* Mega 60k NEO ```SW1 ON``` ```SW6 ON``` + Press & **Hold** ```RECONFIG``` + Power the Board + release ```RECONFIG``` and perform programming.
+* S2 open OSD
 
 > [!CAUTION]
 A FLASH programm attempt without keeping the board in reset may lead to corruption of the C1541 DOS images stored in FLASH requiring re-programming.
@@ -386,13 +391,4 @@ and [PMOD DS2x2](https://wiki.sipeed.com/hardware/en/tang/tang-PMOD/FPGA_PMOD.ht
 and [M0S PMOD adapter](https://github.com/harbaum/MiSTeryNano/tree/main/board/m0s_pmod/README.md)  
 
 microSD or microSDHC card FAT/exFAT formatted  
-TFT Monitor with HDMI Input and Speaker
-
-| HID and Gamecontrol Hardware option | TN20k needs | alternative option |Primer 25K|Mega 60K|Mega 138K|
-| -----------                         | ---         | ---                | ---      | -      | -       |
-| USB Keyboard | [USB-C to USB-A adapter](https://www.aliexpress.us/item/3256805563910755.html) |mini USB-C hub |x|x|x|
-| [USB Joystick(s)](https://www.speedlink.com/en/COMPETITION-PRO-EXTRA-USB-Joystick-black-red/SL-650212-BKRD)|mini USB-C hub | - |x|x|x|
-| USB Mouse   |mini USB-C hub  | -  |x|x|x|
-| USB Gamepad |mini USB-C hub  | -  |x|x|x|
-| Commodore/[Atari](https://en.wikipedia.org/wiki/Atari_CX40_joystick) compatible retro D9 Joystick| [MiSTeryNano shield](https://github.com/harbaum/MiSTeryNano/tree/main/board/misteryshield20k/README.md)|D-SUB 9 M connector, breadboard to wire everything up, some jumper wires|-|adhoc SDRAM1 Joy D9|adhoc PMOD Joy D9|
-| [Dualshock 2 Controller Gamepad](https://en.wikipedia.org/wiki/DualShock) | Gamepad Adapter Board (Sipeed Joystick to DIP) respectively PMOD DS2x2 | breadboard to wire everything up and some jumper wires |-|PMOD DS2x2|PMOD DS2x2|
+TFT Monitor with HDMI Input and Speaker  

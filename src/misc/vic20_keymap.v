@@ -118,16 +118,16 @@ assign { row,column } // vice versa than AtariST
   (code == 7'h41)?{ 4'd7,3'd7}: // 41: F8
   (code == 7'h42)?{ 4'd6,3'd6}: // 42: F9
   (code == 7'h43)?{ 4'd5,3'd6}: // 43: F10
-//  (code == 7'h44)?{ 4'd3,3'd1}: // 44: F11
+//(code == 7'h44)?{ 4'd3,3'd1}: // 44: F11
   (code == 7'h45)?{ 4'd3,3'd1}: // 45: F12 (OSD)
 
   (code == 7'h46)?{ 4'd3,3'd1}: // lshift // 46: PrtScr
   (code == 7'h47)?{ 4'd3,3'd1}: // lshift // 47: Scroll Lock
   (code == 7'h48)?{ 4'd3,3'd1}: // lshift // 48: Pause
-  (code == 7'h49)?{ 4'd7,3'd6}: // 49: Insert as CLR
-  (code == 7'h4a)?{ 4'd3,3'd1}: // lshift // 4a: Home
+  (code == 7'h49)?{ 4'd0,3'd7}: // 49: Insert as DEL
+  (code == 7'h4a)?{ 4'd7,3'd6}: // 4a: Home fix
   (code == 7'h4b)?{ 4'd3,3'd1}: // lshift // 4b: PageUp
-  (code == 7'h4c)?{ 4'd7,3'd6}: // 4c: Delete as CLR
+  (code == 7'h4c)?{ 4'd0,3'd7}: // 4c: Delete as DEL
   (code == 7'h4d)?{ 4'd3,3'd1}: // lshift // 4d: End
   (code == 7'h4e)?{ 4'd3,3'd1}: // lshift // 4e: PageDown
   
