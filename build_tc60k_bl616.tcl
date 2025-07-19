@@ -66,7 +66,7 @@ add_file src/megacart.v
 add_file src/misc/vic20_keymap.v
 
 set_option -synthesis_tool gowinsynthesis
-set_option -output_base_name vic20nano_console60k
+set_option -output_base_name vic20nano_console60k_bl616
 set_option -verilog_std sysv2017
 set_option -vhdl_std vhd2008
 set_option -top_module VIC20_TOP_console60k
@@ -77,14 +77,25 @@ set_option -use_cpu_as_gpio 1
 set_option -use_ready_as_gpio 1
 set_option -use_sspi_as_gpio 1
 set_option -use_i2c_as_gpio 1
-set_option -use_jtag_as_gpio 0
+set_option -use_jtag_as_gpio 1
+set_option -print_all_synthesis_warning 0
+set_option -show_all_warn 1
 set_option -rw_check_on_ram 0
 set_option -user_code 00000001
 set_option -bit_compress 1
 set_option -vccx 1.8
 set_option -vcc 0.9
+set_option -power_on_reset_monitor 1
+set_option -timing_driven 1
+set_option -ireg_in_iob 1
+set_option -oreg_in_iob 1
+set_option -ioreg_in_iob 1
 set_option -multi_boot 0
 set_option -mspi_jump 0
+set_option -cst_warn_to_error 1
+set_option -rpt_auto_place_io_info 1
+set_option -convert_sdp32_36_to_sdp16_18 1
+set_option -correct_hold_violation 1
 
 #run syn
 run all
