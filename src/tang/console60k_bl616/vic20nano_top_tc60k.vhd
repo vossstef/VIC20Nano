@@ -400,6 +400,7 @@ signal shift_mod         : std_logic_vector(1 downto 0);
 signal int_out_n         : std_logic;
 signal uart_rx           : std_logic :='0';
 signal uart_tx           : std_logic;
+signal spi_ext           : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
