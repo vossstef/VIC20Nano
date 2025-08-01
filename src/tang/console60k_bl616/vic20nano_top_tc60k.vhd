@@ -17,13 +17,13 @@ entity VIC20_TOP_console60k is
     user        : in std_logic; -- S1 button
     leds_n      : out std_logic_vector(1 downto 0);
     -- USB-C BL616 UART
-    uart_rx     : in std_logic;
-    uart_tx     : out std_logic;
+  --uart_rx     : in std_logic;
+  --uart_tx     : out std_logic;
     -- external hw pin UART
     uart_ext_rx : in std_logic;
     uart_ext_tx : out std_logic;
     -- SPI interface Sipeed M0S Dock external BL616 uC
-    --m0s         : inout std_logic_vector(4 downto 0);
+    m0s         : inout std_logic_vector(4 downto 0);
     -- SPI connection to onboard BL616
     spi_sclk    : in std_logic;
     spi_csn     : in std_logic;
@@ -398,6 +398,8 @@ signal paddle_2_analogB  : std_logic;
 signal flash_ready       : std_logic;
 signal shift_mod         : std_logic_vector(1 downto 0);
 signal int_out_n         : std_logic;
+signal uart_rx           : std_logic :='0';
+signal uart_tx           : std_logic;
 
 constant TAP_ADDR      : std_logic_vector(22 downto 0) := 23x"200000";
 
@@ -433,19 +435,33 @@ begin
 
 pwr_sav <= '1';
 
--- onboard BL616
-spi_io_din  <= spi_dat;
-spi_io_ss   <= spi_csn;
-spi_io_clk  <= spi_sclk;
-spi_dir     <= spi_io_dout;
-spi_irqn    <= int_out_n;
+-- ----------------- SPI input parser ----------------------
 
--- external M0S Dock BL616 / PiPico  / ESP32
---spi_io_din  <= m0s(1);
---spi_io_ss   <= m0s(2);
---spi_io_clk  <= m0s(3);
---m0s(0)      <= spi_io_dout;
---m0s(4)      <= int_out_n;
+-- by default the internal SPI is being used. Once there is
+-- a select from the external spi (M0S Dock) , then the connection is being switched
+process (clk32, pll_locked)
+begin
+  if pll_locked = '0' then
+    spi_ext <= '0';
+  elsif rising_edge(clk32) then
+    spi_ext <= spi_ext;
+    if m0s(2) = '0' then
+        spi_ext <= '1';
+    end if;
+  end if;
+end process;
+
+  -- map output data onto both spi outputs
+  spi_io_din  <= m0s(1) when spi_ext = '1' else spi_dat;
+  spi_io_ss   <= m0s(2) when spi_ext = '1' else spi_csn;
+  spi_io_clk  <= m0s(3) when spi_ext = '1' else spi_sclk;
+
+  -- onboard BL616
+  spi_dir     <= spi_io_dout;
+  spi_irqn    <= int_out_n;
+  -- external M0S Dock BL616 / PiPico  / ESP32
+  m0s(0)      <= spi_io_dout;
+  m0s(4)      <= int_out_n;
 
 -- https://store.curiousinventor.com/guides/PS2/
 -- https://hackaday.io/project/170365-blueretro/log/186471-playstation-playstation-2-spi-interface
